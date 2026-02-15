@@ -1,0 +1,151 @@
+name: Neon Q‑Emplois preview branch
+
+# --------------------------------------------------------------
+# Run on PR events (open, reopen, sync, close)
+# --------------------------------------------------------------
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+# --------------------------------------------------------------
+# Give the workflow the permissions it needs.
+# GITHUB_TOKEN is provided automatically by GitHub Actions.
+# --------------------------------------------------------------
+permissions:
+  # read the repo contents (checkout)
+  contents: read
+  # write a comment back to the PR (optional – keep if you want schema‑diff)
+  pull-requests: write
+
+# --------------------------------------------------------------
+# Ensure only one run per PR at a time
+# --------------------------------------------------------------
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -----------------------------------------------------------------
+  # 1️⃣ Capture the target branch name (the branch the PR merges into)
+  # -----------------------------------------------------------------
+  setup:
+    name: Capture target branch
+    runs-on: ubuntu-latest
+    outputs:
+      target_branch: ${{ steps.branch_name.outputs.current_branch }}
+    steps:
+      - name: Get branch name
+        id: branch_name
+        uses: tj-actions/branch-names@v8
+
+  # -----------------------------------------------------------------
+  # 2️⃣ Create a Neon preview branch (only for opened/reopened/sync)
+  # -----------------------------------------------------------------
+  create_neon_branch:
+    name: Create Neon preview branch (q‑emplois)
+    needs: setup
+    if: |
+      github.event_name == 'pull_request' &&
+      (github.event.action == 'opened' ||
+       github.event.action == 'reopened' ||
+       github.event.action == 'synchronize')
+    runs-on: ubuntu-latest
+    steps:
+      # --------------------------------------------------------------
+      # Compute expiration (2 weeks from now)
+      # --------------------------------------------------------------
+      - name: Compute expiration date (2 weeks)
+        id: get_expiration_date
+        run: |
+          echo "EXPIRES_AT=$(date -u --date '+14 days' +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+
+      # --------------------------------------------------------------
+      # Create the Neon branch with the prefix "q-emplois"
+      # --------------------------------------------------------------
+      - name: Create Neon branch
+        id: create_neon_branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: q-emplois/pr-${{ github.event.number }}-${{ needs.setup.outputs.target_branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          expires_at: ${{ env.EXPIRES_AT }}
+
+    outputs:
+      # 👉 NEVER echo these – they contain credentials
+      db_url: ${{ steps.create_neon_branch.outputs.db_url }}
+      db_url_with_pooler: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+
+  # -----------------------------------------------------------------
+  # 3️⃣ Run CI (migrations, tests, etc.) against the preview DB
+  # -----------------------------------------------------------------
+  ci_on_preview:
+    name: CI on Q‑Emplois preview DB
+    needs: [setup, create_neon_branch]
+    if: |
+      github.event_name == 'pull_request' &&
+      (github.event.action == 'opened' ||
+       github.event.action == 'reopened' ||
+       github.event.action == 'synchronize')
+    runs-on: ubuntu-latest
+    env:
+      # Use the pooled connection string – safest for CI
+      DATABASE_URL: ${{ needs.create_neon_branch.outputs.db_url_with_pooler }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # --------------------------------------------------------------
+      # OPTIONAL: Run Prisma migrations on the preview branch
+      # --------------------------------------------------------------
+      - name: Run Prisma migrations (deploy)
+        run: npx prisma migrate deploy
+
+      # --------------------------------------------------------------
+      # OPTIONAL: Run your test suite
+      # --------------------------------------------------------------
+      - name: Run tests
+        run: npm test
+
+      # --------------------------------------------------------------
+      # OPTIONAL: Post a Prisma schema diff as a PR comment
+      # --------------------------------------------------------------
+      - name: Generate schema diff
+        id: schema_diff
+        uses: neondatabase/schema-diff-action@v1
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          compare_branch: q-emplois/pr-${{ github.event.number }}-${{ needs.setup.outputs.target_branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Comment schema diff on PR
+        if: steps.schema_diff.outputs.diff != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.number }} \
+            --body "$(printf '### Prisma schema diff 🚀\n```diff\n%s\n```' "${{ steps.schema_diff.outputs.diff }}")"
+
+  # -----------------------------------------------------------------
+  # 4️⃣ Delete the Neon preview branch when the PR is closed
+  # -----------------------------------------------------------------
+  delete_neon_branch:
+    name: Delete Neon preview branch (q‑emplois)
+    needs: setup
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Neon branch
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: q-emplois/pr-${{ github.event.number }}-${{ needs.setup.outputs.target_branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
