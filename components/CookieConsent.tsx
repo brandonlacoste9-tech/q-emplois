@@ -1,10 +1,11 @@
 'use client';
 
 import {useState, useEffect} from 'react';
-import {useTranslations} from 'next-intl';
+import {useTranslations, useLocale} from 'next-intl';
 
 export default function CookieConsent() {
   const t = useTranslations('consent');
+  const locale = useLocale();
   const [showConsent, setShowConsent] = useState(false);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function CookieConsent() {
         </p>
         <div className="flex gap-2">
           <a
-            href="#"
+            href={`/${locale}/privacy`}
             className="text-blue-400 hover:text-blue-300 text-sm underline"
           >
             {t('learnMore')}

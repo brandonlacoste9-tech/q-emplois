@@ -1,9 +1,10 @@
 'use client';
 
-import {useTranslations} from 'next-intl';
+import {useTranslations, useLocale} from 'next-intl';
 
 export default function Footer() {
   const t = useTranslations('footer');
+  const locale = useLocale();
 
   return (
     <footer className="bg-gray-900 text-white mt-16">
@@ -26,10 +27,10 @@ export default function Footer() {
           <div>
             <h4 className="font-bold mb-4">{t('legal')}</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">{t('privacy')}</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">{t('terms')}</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">{t('bill96')}</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">{t('law25')}</a></li>
+              <li><a href={`/${locale}/privacy`} className="text-gray-400 hover:text-white">{t('privacy')}</a></li>
+              <li><a href={`/${locale}/terms`} className="text-gray-400 hover:text-white">{t('terms')}</a></li>
+              <li><a href={`/${locale}/privacy`} className="text-gray-400 hover:text-white">{t('bill96')}</a></li>
+              <li><a href={`/${locale}/privacy`} className="text-gray-400 hover:text-white">{t('law25')}</a></li>
             </ul>
           </div>
         </div>
