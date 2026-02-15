@@ -12,11 +12,18 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Load translations
-const translations = {
-  fr: JSON.parse(fs.readFileSync('./locales/fr.json', 'utf8')),
-  en: JSON.parse(fs.readFileSync('./locales/en.json', 'utf8'))
-};
+// Load translations with error handling
+let translations;
+try {
+  translations = {
+    fr: JSON.parse(fs.readFileSync('./locales/fr.json', 'utf8')),
+    en: JSON.parse(fs.readFileSync('./locales/en.json', 'utf8'))
+  };
+} catch (error) {
+  console.error('Error loading translation files:', error.message);
+  console.error('Please ensure locales/fr.json and locales/en.json exist');
+  process.exit(1);
+}
 
 // Language detection middleware
 app.use((req, res, next) => {
