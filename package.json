@@ -1,0 +1,38 @@
+{
+  "name": "qworks",
+  "version": "1.0.0",
+  "description": "Launch a localized gig platform (like TaskRabbit) tailored for Québec’s French-speaking majority, ensuring full compliance with Bill 96 (language) and Law 25 (privacy) while capitalizing on the lack of such offerings in the market.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brandonlacoste9-tech/QWORKS.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/brandonlacoste9-tech/QWORKS/issues"
+  },
+  "homepage": "https://github.com/brandonlacoste9-tech/QWORKS#readme",
+  "dependencies": {
+    "next": "^16.1.6",
+    "next-intl": "^4.8.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^25.2.3",
+    "@types/react": "^19.2.14",
+    "autoprefixer": "^10.4.24",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3"
+  }
+}

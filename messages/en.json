@@ -1,0 +1,118 @@
+{
+  "nav": {
+    "home": "Home",
+    "tasks": "Tasks",
+    "workers": "Workers",
+    "about": "About",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "home": {
+    "title": "QWORKS - On-Demand Services Platform for Quebec",
+    "subtitle": "Connect with skilled workers in your area",
+    "description": "QWORKS is the first on-demand services platform designed specifically for Quebecers. Fully in French, compliant with Bill 96 and Law 25.",
+    "cta": {
+      "findWorker": "Find a Worker",
+      "becomeWorker": "Become a Worker"
+    },
+    "features": {
+      "title": "Why Choose QWORKS?",
+      "french": {
+        "title": "100% in French",
+        "description": "Platform entirely in French, compliant with Quebec's Charter of the French Language (Bill 96)"
+      },
+      "privacy": {
+        "title": "Privacy Guaranteed",
+        "description": "Compliant with Law 25 on the protection of personal information"
+      },
+      "local": {
+        "title": "Local Service",
+        "description": "Designed for Quebecers, by Quebecers"
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "step1": {
+        "title": "1. Post Your Task",
+        "description": "Describe the service you need"
+      },
+      "step2": {
+        "title": "2. Receive Offers",
+        "description": "Qualified workers offer their services"
+      },
+      "step3": {
+        "title": "3. Choose and Pay",
+        "description": "Select the best worker and pay securely"
+      }
+    }
+  },
+  "footer": {
+    "company": "Company",
+    "about": "About",
+    "careers": "Careers",
+    "contact": "Contact",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "bill96": "Bill 96 Compliance",
+    "law25": "Law 25 Compliance",
+    "copyright": "© 2026 QWORKS. All rights reserved.",
+    "languageDisclaimer": "This platform is compliant with Quebec's Charter of the French Language (Bill 96)."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: {{date}}",
+    "intro": "QWORKS is committed to protecting your personal information in accordance with Quebec's Law 25.",
+    "sections": {
+      "collection": {
+        "title": "Information Collection",
+        "content": "We collect only the information necessary to provide our services."
+      },
+      "usage": {
+        "title": "Information Usage",
+        "content": "Your information is used exclusively to facilitate transactions on our platform."
+      },
+      "protection": {
+        "title": "Data Protection",
+        "content": "We use advanced security measures to protect your personal data."
+      },
+      "rights": {
+        "title": "Your Rights",
+        "content": "You have the right to access, modify, or delete your personal information at any time."
+      }
+    }
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "lastUpdated": "Last updated: {{date}}",
+    "intro": "By using QWORKS, you agree to the following terms.",
+    "sections": {
+      "service": {
+        "title": "Service Description",
+        "content": "QWORKS is a platform that connects clients with service providers."
+      },
+      "obligations": {
+        "title": "User Obligations",
+        "content": "Users must provide accurate information and comply with applicable laws."
+      },
+      "payment": {
+        "title": "Payment and Fees",
+        "content": "Payments are processed securely. Service fees may apply."
+      },
+      "liability": {
+        "title": "Limitation of Liability",
+        "content": "QWORKS acts only as an intermediary and is not responsible for services provided."
+      }
+    }
+  },
+  "consent": {
+    "message": "We use cookies to improve your experience. By continuing, you accept our privacy policy.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "learnMore": "Learn more"
+  },
+  "language": {
+    "current": "English",
+    "switch": "Français"
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "tasks": "Tâches",
+    "workers": "Travailleurs",
+    "about": "À propos",
+    "login": "Connexion",
+    "signup": "S'inscrire"
+  },
+  "home": {
+    "title": "QWORKS - Plateforme de services à la demande pour le Québec",
+    "subtitle": "Connectez-vous avec des travailleurs qualifiés dans votre région",
+    "description": "QWORKS est la première plateforme de services à la demande conçue spécifiquement pour les Québécois. Entièrement en français, conforme à la Loi 96 et à la Loi 25.",
+    "cta": {
+      "findWorker": "Trouver un travailleur",
+      "becomeWorker": "Devenir travailleur"
+    },
+    "features": {
+      "title": "Pourquoi choisir QWORKS?",
+      "french": {
+        "title": "100% en français",
+        "description": "Plateforme entièrement en français, conforme à la Charte de la langue française (Loi 96)"
+      },
+      "privacy": {
+        "title": "Confidentialité garantie",
+        "description": "Conforme à la Loi 25 sur la protection des renseignements personnels"
+      },
+      "local": {
+        "title": "Service local",
+        "description": "Conçu pour les Québécois, par des Québécois"
+      }
+    },
+    "howItWorks": {
+      "title": "Comment ça fonctionne",
+      "step1": {
+        "title": "1. Publiez votre tâche",
+        "description": "Décrivez le service dont vous avez besoin"
+      },
+      "step2": {
+        "title": "2. Recevez des offres",
+        "description": "Les travailleurs qualifiés vous proposent leurs services"
+      },
+      "step3": {
+        "title": "3. Choisissez et payez",
+        "description": "Sélectionnez le meilleur travailleur et payez en toute sécurité"
+      }
+    }
+  },
+  "footer": {
+    "company": "Entreprise",
+    "about": "À propos",
+    "careers": "Carrières",
+    "contact": "Contact",
+    "legal": "Légal",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation",
+    "bill96": "Conformité Loi 96",
+    "law25": "Conformité Loi 25",
+    "copyright": "© 2026 QWORKS. Tous droits réservés.",
+    "languageDisclaimer": "Cette plateforme est conforme à la Charte de la langue française (Loi 96) du Québec."
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "lastUpdated": "Dernière mise à jour : {{date}}",
+    "intro": "QWORKS s'engage à protéger vos renseignements personnels conformément à la Loi 25 du Québec.",
+    "sections": {
+      "collection": {
+        "title": "Collecte de renseignements",
+        "content": "Nous collectons uniquement les renseignements nécessaires pour fournir nos services."
+      },
+      "usage": {
+        "title": "Utilisation des renseignements",
+        "content": "Vos renseignements sont utilisés exclusivement pour faciliter les transactions sur notre plateforme."
+      },
+      "protection": {
+        "title": "Protection des données",
+        "content": "Nous utilisons des mesures de sécurité avancées pour protéger vos données personnelles."
+      },
+      "rights": {
+        "title": "Vos droits",
+        "content": "Vous avez le droit d'accéder, de modifier ou de supprimer vos renseignements personnels à tout moment."
+      }
+    }
+  },
+  "terms": {
+    "title": "Conditions d'utilisation",
+    "lastUpdated": "Dernière mise à jour : {{date}}",
+    "intro": "En utilisant QWORKS, vous acceptez les conditions suivantes.",
+    "sections": {
+      "service": {
+        "title": "Description du service",
+        "content": "QWORKS est une plateforme qui connecte les clients avec des prestataires de services."
+      },
+      "obligations": {
+        "title": "Obligations des utilisateurs",
+        "content": "Les utilisateurs doivent fournir des informations exactes et respecter les lois applicables."
+      },
+      "payment": {
+        "title": "Paiement et frais",
+        "content": "Les paiements sont traités de manière sécurisée. Des frais de service peuvent s'appliquer."
+      },
+      "liability": {
+        "title": "Limitation de responsabilité",
+        "content": "QWORKS agit uniquement en tant qu'intermédiaire et n'est pas responsable des services fournis."
+      }
+    }
+  },
+  "consent": {
+    "message": "Nous utilisons des témoins (cookies) pour améliorer votre expérience. En continuant, vous acceptez notre politique de confidentialité.",
+    "accept": "J'accepte",
+    "decline": "Je refuse",
+    "learnMore": "En savoir plus"
+  },
+  "language": {
+    "current": "Français",
+    "switch": "English"
+  }
+}
