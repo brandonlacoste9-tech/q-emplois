@@ -34,5 +34,25 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3"
+  "description": "French-first Québec-compliant gig marketplace platform",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"No tests specified yet\" && exit 0"
+  },
+  "keywords": [
+    "quebec",
+    "french",
+    "gig-economy",
+    "marketplace",
+    "bill-96",
+    "law-25"
+  ],
+  "author": "QWORKS",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cookie-parser": "^1.4.6"
   }
 }

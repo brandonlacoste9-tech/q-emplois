@@ -1,0 +1,94 @@
+{
+  "site": {
+    "title": "QWORKS - Québec Gig Platform"
+  },
+  "nav": {
+    "home": "Home",
+    "privacy": "Privacy Policy"
+  },
+  "hero": {
+    "title": "Welcome to QWORKS",
+    "subtitle": "The gig platform designed for Québec, fully in French and compliant with Québec laws",
+    "findWork": "Find Work",
+    "hireWorker": "Hire a Worker"
+  },
+  "features": {
+    "title": "Why Choose QWORKS?",
+    "localFirst": "Québec First",
+    "localFirstDesc": "Designed specifically for Quebecers, with French as the primary language",
+    "compliant": "Law Compliant",
+    "compliantDesc": "Complies with Bill 96 (Charter of the French Language) and Law 25 (privacy protection)",
+    "secure": "Secure and Transparent",
+    "secureDesc": "Complete protection of your personal data with clear consent"
+  },
+  "compliance": {
+    "title": "Our Commitment to Québec",
+    "description": "QWORKS is proud to fully comply with Québec's legal requirements:",
+    "bill96": "Bill 96 (Charter of the French Language): Our website is available in French with equal or superior quality to any other language",
+    "law25": "Law 25 (Privacy Protection): We obtain clear consent, publish our privacy policy, and have designated a data protection officer"
+  },
+  "consent": {
+    "message": "We use cookies to improve your experience. In accordance with Law 25, we need your consent.",
+    "accept": "Accept",
+    "reject": "Reject"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "compliance": "Compliant with Bill 96 and Law 25"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "effectiveDate": "Effective Date: February 15, 2026",
+    "overview": {
+      "title": "Overview",
+      "content": "QWORKS is committed to protecting your personal information in accordance with Law 25 (formerly Bill 64) on the protection of personal information in the private sector in Québec. This policy explains how we collect, use, and protect your data."
+    },
+    "collection": {
+      "title": "Information We Collect",
+      "intro": "We collect the following information with your explicit consent:",
+      "items": {
+        "name": "First and last name",
+        "email": "Email address",
+        "phone": "Phone number",
+        "location": "Location (city and region in Québec)",
+        "services": "Information about services offered or requested"
+      }
+    },
+    "usage": {
+      "title": "Use of Your Information",
+      "intro": "We use your personal information only to:",
+      "items": {
+        "matching": "Facilitate matching between workers and clients",
+        "communication": "Contact you regarding services",
+        "payment": "Process payments and transactions",
+        "improvement": "Improve our platform and services",
+        "legal": "Comply with our legal obligations"
+      }
+    },
+    "rights": {
+      "title": "Your Rights",
+      "intro": "In accordance with Law 25, you have the right to:",
+      "items": {
+        "access": "Access your personal information",
+        "correction": "Request correction of your data",
+        "deletion": "Request deletion of your data",
+        "portability": "Receive your data in a structured format",
+        "withdraw": "Withdraw your consent at any time"
+      }
+    },
+    "security": {
+      "title": "Data Security",
+      "content": "We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, modification, disclosure, or destruction."
+    },
+    "contact": {
+      "title": "Data Protection Officer",
+      "dpo": "Our Data Protection Officer is available to answer all your questions:",
+      "email": "Email: dpo@qworks.quebec",
+      "address": "Address: QWORKS, Montreal, Québec, Canada"
+    },
+    "law25": {
+      "title": "Law 25 Compliance",
+      "content": "This privacy policy complies with all requirements of Law 25 on the protection of personal information in the private sector. We are committed to maintaining transparency and protecting your privacy rights."
+    }
+  }
+}

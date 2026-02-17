@@ -1,0 +1,94 @@
+{
+  "site": {
+    "title": "QWORKS - Plateforme de petits boulots pour le Québec"
+  },
+  "nav": {
+    "home": "Accueil",
+    "privacy": "Politique de confidentialité"
+  },
+  "hero": {
+    "title": "Bienvenue sur QWORKS",
+    "subtitle": "La plateforme de petits boulots conçue pour le Québec, entièrement en français et conforme aux lois québécoises",
+    "findWork": "Trouver du travail",
+    "hireWorker": "Embaucher un travailleur"
+  },
+  "features": {
+    "title": "Pourquoi choisir QWORKS?",
+    "localFirst": "Québec d'abord",
+    "localFirstDesc": "Conçu spécifiquement pour les Québécois, avec le français comme langue principale",
+    "compliant": "Conforme aux lois",
+    "compliantDesc": "Respecte la Loi 96 (Charte de la langue française) et la Loi 25 (protection des renseignements personnels)",
+    "secure": "Sécurisé et transparent",
+    "secureDesc": "Protection complète de vos données personnelles avec consentement clair"
+  },
+  "compliance": {
+    "title": "Notre engagement envers le Québec",
+    "description": "QWORKS est fier de respecter pleinement les exigences légales du Québec:",
+    "bill96": "Loi 96 (Charte de la langue française): Notre site est disponible en français de qualité égale ou supérieure à toute autre langue",
+    "law25": "Loi 25 (Loi sur la protection des renseignements personnels): Nous obtenons un consentement clair, publions notre politique de confidentialité et avons désigné un responsable de la protection des données"
+  },
+  "consent": {
+    "message": "Nous utilisons des témoins (cookies) pour améliorer votre expérience. Conformément à la Loi 25, nous avons besoin de votre consentement.",
+    "accept": "Accepter",
+    "reject": "Refuser"
+  },
+  "footer": {
+    "rights": "Tous droits réservés.",
+    "compliance": "Conforme à la Loi 96 et à la Loi 25"
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "effectiveDate": "Date d'entrée en vigueur: 15 février 2026",
+    "overview": {
+      "title": "Aperçu",
+      "content": "QWORKS s'engage à protéger vos renseignements personnels conformément à la Loi 25 (anciennement le projet de loi 64) sur la protection des renseignements personnels dans le secteur privé du Québec. Cette politique explique comment nous recueillons, utilisons et protégeons vos données."
+    },
+    "collection": {
+      "title": "Renseignements que nous recueillons",
+      "intro": "Nous recueillons les renseignements suivants avec votre consentement explicite:",
+      "items": {
+        "name": "Nom et prénom",
+        "email": "Adresse courriel",
+        "phone": "Numéro de téléphone",
+        "location": "Localisation (ville et région au Québec)",
+        "services": "Informations sur les services offerts ou recherchés"
+      }
+    },
+    "usage": {
+      "title": "Utilisation de vos renseignements",
+      "intro": "Nous utilisons vos renseignements personnels uniquement pour:",
+      "items": {
+        "matching": "Faciliter la mise en relation entre les travailleurs et les clients",
+        "communication": "Vous contacter concernant les services",
+        "payment": "Traiter les paiements et les transactions",
+        "improvement": "Améliorer notre plateforme et nos services",
+        "legal": "Respecter nos obligations légales"
+      }
+    },
+    "rights": {
+      "title": "Vos droits",
+      "intro": "Conformément à la Loi 25, vous avez le droit de:",
+      "items": {
+        "access": "Accéder à vos renseignements personnels",
+        "correction": "Demander la correction de vos données",
+        "deletion": "Demander la suppression de vos données",
+        "portability": "Recevoir vos données dans un format structuré",
+        "withdraw": "Retirer votre consentement à tout moment"
+      }
+    },
+    "security": {
+      "title": "Sécurité des données",
+      "content": "Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées pour protéger vos renseignements personnels contre tout accès non autorisé, modification, divulgation ou destruction."
+    },
+    "contact": {
+      "title": "Responsable de la protection des données",
+      "dpo": "Notre responsable de la protection des données est disponible pour répondre à toutes vos questions:",
+      "email": "Courriel: dpo@qworks.quebec",
+      "address": "Adresse: QWORKS, Montréal, Québec, Canada"
+    },
+    "law25": {
+      "title": "Conformité à la Loi 25",
+      "content": "Cette politique de confidentialité respecte toutes les exigences de la Loi 25 sur la protection des renseignements personnels dans le secteur privé. Nous nous engageons à maintenir la transparence et à protéger vos droits à la vie privée."
+    }
+  }
+}

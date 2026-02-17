@@ -1,0 +1,20 @@
+name: rbq_verifier
+version: "1.0.0"
+description: Vérifie la validité d'une licence RBQ (Régie du bâtiment du Québec)
+author: Max/Q-emplois
+entry_point: skill.py
+
+# Paramètres
+config:
+  api_endpoint: "${RBQ_API_URL:http://localhost:3001/api/verify/rbq}"
+  timeout: 30
+
+# Déclencheurs (patterns de détection)
+triggers:
+  - regex: "RBQ[-\\s]?(\\d{4}[-\\s]?\\d{4}(?:[-\\s]?\\d{2})?)"
+  - regex: "licence\\s+(?:RBQ\\s+)?(\\d{4}[-\\s]?\\d{4})"
+  - keywords: ["vérifier RBQ", "licence RBQ", "numéro RBQ", "RBQ valide"]
+
+# Permissions
+permissions:
+  - http_request
