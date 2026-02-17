@@ -1,0 +1,93 @@
+# Q-Emplois Chatbot Configuration
+
+name: qemplois
+version: 1.0.0
+description: Book services via Telegram/WhatsApp chatbot
+
+# Skill endpoints
+skills:
+  - name: booking_request
+    provider: qemplois
+    description: Create a new service booking
+    input:
+      service_type: string
+      date: ISO8601
+      time: string
+      location:
+        address: string
+        lat: float
+        lng: float
+      provider_id: string (optional)
+    output:
+      booking_id: string
+      provider: object
+      price_estimate: number
+      status: pending_payment
+
+  - name: search_services
+    provider: qemplois
+    description: Search for available service providers
+    input:
+      service_type: string
+      date: ISO8601
+      lat: float
+      lng: float
+      radius_km: int (default: 10)
+    output:
+      providers: array
+
+  - name: payment_processing
+    provider: qemplois
+    description: Generate payment link for booking
+    input:
+      booking_id: string
+      amount: number
+    output:
+      payment_url: string
+      status: pending
+
+  - name: notify_provider
+    provider: qemplois
+    description: Send job notification to provider
+    input:
+      provider_id: string
+      job_details: object
+    output:
+      sent: boolean
+
+  - name: authenticate_user
+    provider: qemplois
+    description: Link Telegram/WhatsApp to Q-Emplois account
+    input:
+      platform: string
+      user_id: string
+    output:
+      auth_url: string
+      linked: boolean
+
+# Privacy & Law 25 Compliance
+privacy:
+  # No PII stored in chat logs
+  mask_pii: true
+  # Session data encrypted
+  encrypt_sessions: true
+  # Consent required before storing data
+  require_consent: true
+  # Data retention (days)
+  session_retention_days: 30
+  # Privacy policy URL
+  privacy_policy_url: https://qemplois.ca/politique-confidentialite
+
+# Supported platforms
+platforms:
+  - telegram
+  - whatsapp
+
+# Language
+language: fr
+
+# Conversation settings
+conversation:
+  timeout_minutes: 30
+  max_retries: 3
+  enable_natural_language: true
