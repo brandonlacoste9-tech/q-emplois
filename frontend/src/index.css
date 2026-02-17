@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Q-emplois — Saddle / King Ranch aesthetic tokens */
+:root {
+  --leather-dark: #2d2416;
+  --leather-medium: #3d3220;
+  --leather-light: #4a3f2e;
+  --gold-stitch: #c9a227;
+  --gold-accent: #d4af37;
+  --patina-highlight: #5c4d3a;
+  --text-on-leather: #e8e0d4;
+  --text-muted: #a89f8f;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--leather-dark) 0%, var(--leather-medium) 50%, var(--leather-light) 100%);
+  font-family: "Crimson Pro", Georgia, serif;
+}
