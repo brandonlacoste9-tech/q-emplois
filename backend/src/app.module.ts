@@ -8,6 +8,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ProvidersModule } from './providers/providers.module';
 import { ChatModule } from './chat/chat.module';
+import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { CommonModule } from './common/common.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { RedisModule } from './common/redis/redis.module';
@@ -30,6 +31,7 @@ import { AuditModule } from './common/audit/audit.module';
     PaymentsModule,
     ProvidersModule,
     ChatModule,
+    WhatsAppModule,
     CommonModule,
   ],
 })
