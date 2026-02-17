@@ -9,6 +9,12 @@ lerna-debug.log*
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
+# Auto-Reporter generated files
+reports/
+
+# Backend metrics persistence
+backend/data/
+
 # Runtime data
 pids
 *.pid

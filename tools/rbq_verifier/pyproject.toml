@@ -1,0 +1,16 @@
+[project]
+name = "rbq-verifier"
+version = "0.1.0"
+description = "Vérification des licences RBQ via browser-use — Q-emplois"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "browser-use>=0.11.0",
+    "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.11.0"]
+
+[dependency-groups]
+dev = ["ruff>=0.11.0"]
