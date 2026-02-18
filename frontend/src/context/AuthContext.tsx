@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, TradesmanProfile } from '../types';
-import { api } from './api';
+import type { User, TradesmanProfile, ServiceType } from '../types';
+import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -20,7 +20,7 @@ interface RegisterData {
   firstName: string;
   lastName: string;
   phone: string;
-  serviceTypes: string[];
+  serviceTypes: ServiceType[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

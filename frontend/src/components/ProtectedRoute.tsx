@@ -1,4 +1,3 @@
-import { cn } from '../utils';
 import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {

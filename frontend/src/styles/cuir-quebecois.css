@@ -1,0 +1,7 @@
+/* Quebec brand theme - extends Tailwind */
+:root {
+  --cuir-bleu-fonce: #003DA5;
+  --cuir-bleu-profond: #0C0A09;
+  --or-couture: #C9A34F;
+  --texte-secondaire: #6b7280;
+}

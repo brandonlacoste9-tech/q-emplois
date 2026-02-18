@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/Card';
+import { Card, CardContent } from '../components/Card';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
 import { api } from '../services/api';
@@ -18,9 +18,7 @@ import {
   X, 
   Filter,
   Briefcase,
-  ChevronDown,
-  Loader2,
-  Search
+  Loader2
 } from 'lucide-react';
 import { formatPrice, formatDate, formatDuration, formatDistance, cn } from '../utils';
 

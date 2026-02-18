@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/Card';
 import { Button } from '../components/Button';
@@ -15,7 +15,6 @@ import {
   MapPin, 
   DollarSign, 
   Check, 
-  Upload,
   Edit2,
   Award,
   Save,

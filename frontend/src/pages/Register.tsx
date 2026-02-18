@@ -4,8 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/Card';
-import { Badge } from '../components/Badge';
-import { HardHat, Mail, Lock, User, Phone, Check, AlertCircle } from 'lucide-react';
+import { HardHat, Mail, Lock, Phone, Check, AlertCircle } from 'lucide-react';
 import { SERVICE_TYPE_LABELS, type ServiceType } from '../types';
 
 const SERVICE_TYPES: ServiceType[] = [

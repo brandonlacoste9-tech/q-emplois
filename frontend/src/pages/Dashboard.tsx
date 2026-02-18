@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/Card';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
-import { StarRating } from '../components/StarRating';
 import { 
   Briefcase, 
   DollarSign, 
