@@ -18,7 +18,7 @@ export class ServicesController {
   @ApiResponse({ status: 200, description: 'Liste des services' })
   async findAll(
     @Query('category') category?: string,
-    @CurrentUser('languagePreference') language?: string,
+    
   ) {
     return this.servicesService.findAll(category, (language as 'fr' | 'en') || 'fr');
   }
@@ -36,7 +36,7 @@ export class ServicesController {
   @ApiResponse({ status: 404, description: 'Service non trouvé' })
   async findById(
     @Param('id') id: string,
-    @CurrentUser('languagePreference') language?: string,
+    
   ) {
     return this.servicesService.findById(id, (language as 'fr' | 'en') || 'fr');
   }

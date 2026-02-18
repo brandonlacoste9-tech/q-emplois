@@ -16,7 +16,7 @@ async function bootstrap() {
   });
 
   // Global validation pipe with French error messages
-  app.useGlobalPipe(new ValidationPipe({
+  app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
