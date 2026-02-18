@@ -1,4 +1,4 @@
-export function cn(...inputs: (string | undefined | false | null)[]) {
+export function cn(...inputs: Array<string | undefined | false | null | 0 | 0n>) {
   return inputs.filter(Boolean).join(' ');
 }
 
