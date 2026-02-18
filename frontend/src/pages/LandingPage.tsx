@@ -7,89 +7,89 @@ const T = {
     nav: { find: "Trouver un Pro", become: "Devenir Pro", login: "Connexion", signup: "S'inscrire" },
     hero: {
       h1: "Le bon pro, au bon moment.",
-      sub: "Trouvez de l'aide fiable pour toutes vos t├óches au Qu├⌐bec.",
+      sub: "Trouvez de l'aide fiable pour toutes vos tâches au Québec.",
       ph: "Que faut-il faire ?",
-      cta: "R├⌐server maintenant",
+      cta: "Réserver maintenant",
     },
     cats: {
       title: "Nos services",
       items: [
-        { icon: "≡ƒº╣", name: "T├óches M├⌐nag├¿res", desc: "Trouvez de l'aide pour vos t├óches m├⌐nag├¿res." },
-        { icon: "≡ƒöº", name: "R├⌐parations", desc: "Aide fiable pour toutes r├⌐parations au Qu├⌐bec." },
-        { icon: "≡ƒÜÜ", name: "D├⌐m├⌐nagement", desc: "D├⌐m├⌐nagement, entreposage, transport." },
-        { icon: "ΓÜí", name: "├ëlectricit├⌐", desc: "Panneaux, prises, ├⌐clairage ΓÇö licence v├⌐rifi├⌐e." },
-        { icon: "≡ƒö¿", name: "Plomberie", desc: "R├⌐parations, installations, urgences 24/7." },
-        { icon: "Γ¥ä∩╕Å", name: "D├⌐neigement", desc: "Entr├⌐es, toitures, stationnements." },
+        { icon: "🧹", name: "Tâches Ménagères", desc: "Trouvez de l'aide pour vos tâches ménagères." },
+        { icon: "🔧", name: "Réparations", desc: "Aide fiable pour toutes réparations au Québec." },
+        { icon: "🚚", name: "Déménagement", desc: "Déménagement, entreposage, transport." },
+        { icon: "⚡", name: "Électricité", desc: "Panneaux, prises, éclairage — licence vérifiée." },
+        { icon: "🔨", name: "Plomberie", desc: "Réparations, installations, urgences 24/7." },
+        { icon: "❄️", name: "Déneigement", desc: "Entrées, toitures, stationnements." },
       ],
     },
     how: {
-      title: "Comment ├ºa marche",
-      stepLabel: "├ëtape",
+      title: "Comment ça marche",
+      stepLabel: "Étape",
       steps: [
-        { ic: "≡ƒô¥", t: "D├⌐crivez", d: "Mentionnez vos besoins pour trouver le bon pro." },
-        { ic: "≡ƒöì", t: "Trouvez", d: "On jumelle le meilleur pro pr├¿s de chez vous." },
-        { ic: "≡ƒôà", t: "R├⌐servez", d: "R├⌐servez votre cr├⌐neau en quelques clics." },
-        { ic: "≡ƒÆ░", t: "Payez", d: "Payez en ligne de fa├ºon s├⌐curis├⌐e via Stripe." },
+        { ic: "📝", t: "Décrivez", d: "Mentionnez vos besoins pour trouver le bon pro." },
+        { ic: "🔍", t: "Trouvez", d: "On jumelle le meilleur pro près de chez vous." },
+        { ic: "📅", t: "Réservez", d: "Réservez votre créneau en quelques clics." },
+        { ic: "💰", t: "Payez", d: "Payez en ligne de façon sécurisée via Stripe." },
       ],
     },
     wa: {
-      title: "Parlez ├á Max sur WhatsApp",
+      title: "Parlez à Max sur WhatsApp",
       sub: "Notre concierge IA vous trouve un pro en moins de 5 minutes.",
-      cta: "Envoyer un message ├á Max",
+      cta: "Envoyer un message à Max",
       msgs: [
-        { r: "u", t: "Salut Max, j'ai besoin d'un plombier ├á Longueuil" },
-        { r: "b", t: "Envoye! ≡ƒöº J'ai 3 plombiers v├⌐rifi├⌐s disponibles. Voici le meilleur :" },
-        { r: "b", t: "≡ƒæ╖ Jean T. ΓÇö 4.9Γ¡É ΓÇö 45$/h ΓÇö 2.1 km\n≡ƒôà Disponible demain 9h-12h\n\n[Confirmer]  [Voir d'autres]" },
+        { r: "u", t: "Salut Max, j'ai besoin d'un plombier à Longueuil" },
+        { r: "b", t: "Envoye! 🔧 J'ai 3 plombiers vérifiés disponibles. Voici le meilleur :" },
+        { r: "b", t: "👷 Jean T. — 4.9⭐ — 45$/h — 2.1 km\n📅 Disponible demain 9h-12h\n\n[Confirmer]  [Voir d'autres]" },
         { r: "u", t: "Confirmer" },
-        { r: "b", t: "Γ£à C'est book├⌐! Jean sera chez vous demain ├á 9h. Vous recevrez un rappel ce soir. ≡ƒì»" },
+        { r: "b", t: "✅ C'est booké! Jean sera chez vous demain à 9h. Vous recevrez un rappel ce soir. 🍯" },
       ],
       online: "En ligne",
     },
     pro: {
-      title: "Vous ├¬tes un professionnel ?",
-      sub: "Rejoignez Q-emplois et recevez des mandats pr├¿s de chez vous.",
+      title: "Vous êtes un professionnel ?",
+      sub: "Rejoignez Q-emplois et recevez des mandats près de chez vous.",
       perks: [
         "Recevez des demandes directement sur WhatsApp",
-        "Paiements s├⌐curis├⌐s via Stripe ΓÇö fini le cash",
+        "Paiements sécurisés via Stripe — fini le cash",
         "Tableau de bord L'Atelier : revenus, TPS/TVQ, calendrier",
-        "Badge ┬½ V├⌐rifi├⌐ ┬╗ avec votre licence provinciale",
+        "Badge « Vérifié » avec votre licence provinciale",
       ],
       cta: "S'inscrire comme prestataire",
-      sub2: "Gratuit ΓÇö aucun frais jusqu'├á votre premier mandat",
+      sub2: "Gratuit — aucun frais jusqu'à votre premier mandat",
     },
     foot: {
-      tag: "Le bon pro, au bon moment ΓÇö fait au Qu├⌐bec.",
-      legal: "Conforme ├á la Loi 96 (langue) et la Loi 25 (vie priv├⌐e).",
-      copy: "┬⌐ 2026 Q-emplois. Tous droits r├⌐serv├⌐s.",
+      tag: "Le bon pro, au bon moment — fait au Québec.",
+      legal: "Conforme à la Loi 96 (langue) et la Loi 25 (vie privée).",
+      copy: "© 2026 Q-emplois. Tous droits réservés.",
     },
   },
   en: {
     nav: { find: "Find a Pro", become: "Become a Pro", login: "Log in", signup: "Sign up" },
     hero: {
       h1: "The right pro, at the right time.",
-      sub: "Find reliable help for all your tasks in Qu├⌐bec.",
+      sub: "Find reliable help for all your tasks in Québec.",
       ph: "What do you need done?",
       cta: "Book now",
     },
     cats: {
       title: "Our services",
       items: [
-        { icon: "≡ƒº╣", name: "Housekeeping", desc: "Find help for your household tasks." },
-        { icon: "≡ƒöº", name: "Repairs", desc: "Reliable help for all repairs in Qu├⌐bec." },
-        { icon: "≡ƒÜÜ", name: "Moving", desc: "Moving, storage, transportation." },
-        { icon: "ΓÜí", name: "Electrical", desc: "Panels, outlets, lighting ΓÇö licence verified." },
-        { icon: "≡ƒö¿", name: "Plumbing", desc: "Repairs, installations, 24/7 emergencies." },
-        { icon: "Γ¥ä∩╕Å", name: "Snow Removal", desc: "Driveways, roofs, parking lots." },
+        { icon: "🧹", name: "Housekeeping", desc: "Find help for your household tasks." },
+        { icon: "🔧", name: "Repairs", desc: "Reliable help for all repairs in Québec." },
+        { icon: "🚚", name: "Moving", desc: "Moving, storage, transportation." },
+        { icon: "⚡", name: "Electrical", desc: "Panels, outlets, lighting — licence verified." },
+        { icon: "🔨", name: "Plumbing", desc: "Repairs, installations, 24/7 emergencies." },
+        { icon: "❄️", name: "Snow Removal", desc: "Driveways, roofs, parking lots." },
       ],
     },
     how: {
       title: "How it works",
       stepLabel: "Step",
       steps: [
-        { ic: "≡ƒô¥", t: "Describe", d: "Tell us what you need to find the right pro." },
-        { ic: "≡ƒöì", t: "Find", d: "We match the best pro near you." },
-        { ic: "≡ƒôà", t: "Book", d: "Reserve your time slot in a few clicks." },
-        { ic: "≡ƒÆ░", t: "Pay", d: "Pay securely online via Stripe." },
+        { ic: "📝", t: "Describe", d: "Tell us what you need to find the right pro." },
+        { ic: "🔍", t: "Find", d: "We match the best pro near you." },
+        { ic: "📅", t: "Book", d: "Reserve your time slot in a few clicks." },
+        { ic: "💰", t: "Pay", d: "Pay securely online via Stripe." },
       ],
     },
     wa: {
@@ -98,10 +98,10 @@ const T = {
       cta: "Message Max",
       msgs: [
         { r: "u", t: "Hey Max, I need a plumber in Longueuil" },
-        { r: "b", t: "Let's go! ≡ƒöº I've got 3 verified plumbers. Here's the best match:" },
-        { r: "b", t: "≡ƒæ╖ Jean T. ΓÇö 4.9Γ¡É ΓÇö $45/h ΓÇö 2.1 km\n≡ƒôà Available tomorrow 9am-12pm\n\n[Confirm]  [See others]" },
+        { r: "b", t: "Let's go! 🔧 I've got 3 verified plumbers. Here's the best match:" },
+        { r: "b", t: "👷 Jean T. — 4.9⭐ — $45/h — 2.1 km\n📅 Available tomorrow 9am-12pm\n\n[Confirm]  [See others]" },
         { r: "u", t: "Confirm" },
-        { r: "b", t: "Γ£à Booked! Jean will be at your place tomorrow at 9am. You'll get a reminder tonight. ≡ƒì»" },
+        { r: "b", t: "✅ Booked! Jean will be at your place tomorrow at 9am. You'll get a reminder tonight. 🍯" },
       ],
       online: "Online",
     },
@@ -110,17 +110,17 @@ const T = {
       sub: "Join Q-emplois and get jobs near you.",
       perks: [
         "Receive requests directly on WhatsApp",
-        "Secure payments via Stripe ΓÇö no more cash",
+        "Secure payments via Stripe — no more cash",
         "L'Atelier dashboard: revenue, GST/QST, calendar",
         '"Verified" badge with your provincial licence',
       ],
       cta: "Sign up as a provider",
-      sub2: "Free ΓÇö no fees until your first job",
+      sub2: "Free — no fees until your first job",
     },
     foot: {
-      tag: "The right pro, at the right time ΓÇö made in Qu├⌐bec.",
+      tag: "The right pro, at the right time — made in Québec.",
       legal: "Compliant with Bill 96 (language) and Law 25 (privacy).",
-      copy: "┬⌐ 2026 Q-emplois. All rights reserved.",
+      copy: "© 2026 Q-emplois. All rights reserved.",
     },
   },
 };
@@ -172,7 +172,7 @@ export function LandingPage() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { margin: 0; }
 
-        /* ΓöÇΓöÇ LEATHER TEXTURE ΓöÇΓöÇ */
+        /* ── LEATHER TEXTURE ── */
         .leather {
           background-color: #1F2F3F;
           background-image:
@@ -181,7 +181,7 @@ export function LandingPage() {
             url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
         }
 
-        /* ΓöÇΓöÇ STITCHING ΓöÇΓöÇ */
+        /* ── STITCHING ── */
         .stitch-h {
           background-image: repeating-linear-gradient(
             90deg,
@@ -197,7 +197,7 @@ export function LandingPage() {
           box-shadow: inset 0 2px 8px rgba(0,0,0,0.25);
         }
 
-        /* ΓöÇΓöÇ GOLD BUTTON ΓöÇΓöÇ */
+        /* ── GOLD BUTTON ── */
         .gold-btn {
           background: linear-gradient(180deg, #C88B54, #A06A38);
           color: #1F2F3F;
@@ -222,7 +222,7 @@ export function LandingPage() {
           transform: translateY(-1px);
         }
 
-        /* ΓöÇΓöÇ WHATSAPP BUTTON ΓöÇΓöÇ */
+        /* ── WHATSAPP BUTTON ── */
         .wa-btn {
           background: linear-gradient(180deg, #2BD47A, #1FA855);
           color: white;
@@ -240,7 +240,7 @@ export function LandingPage() {
           transform: translateY(-1px);
         }
 
-        /* ΓöÇΓöÇ SERVICE ICON CIRCLE ΓöÇΓöÇ */
+        /* ── SERVICE ICON CIRCLE ── */
         .svc-icon {
           width: 80px; height: 80px;
           border-radius: 50%;
@@ -261,7 +261,7 @@ export function LandingPage() {
             0 8px 25px rgba(184,123,68,0.3);
         }
 
-        /* ΓöÇΓöÇ STEP CIRCLE ΓöÇΓöÇ */
+        /* ── STEP CIRCLE ── */
         .step-circ {
           width: 56px; height: 56px;
           border-radius: 50%;
@@ -274,7 +274,7 @@ export function LandingPage() {
             0 3px 10px rgba(0,0,0,0.3);
         }
 
-        /* ΓöÇΓöÇ CHAT BUBBLE ANIMATION ΓöÇΓöÇ */
+        /* ── CHAT BUBBLE ANIMATION ── */
         .chat-in {
           animation: chatSlide 0.4s ease-out forwards;
           opacity: 0;
@@ -284,13 +284,13 @@ export function LandingPage() {
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* ΓöÇΓöÇ DIVIDER ΓöÇΓöÇ */
+        /* ── DIVIDER ── */
         .divider {
           height: 1px;
           background: linear-gradient(90deg, transparent, rgba(217,179,140,0.15), transparent);
         }
 
-        /* ΓöÇΓöÇ UTILITIES ΓöÇΓöÇ */
+        /* ── UTILITIES ── */
         .serif  { font-family: 'Playfair Display', Georgia, serif; }
         .body-f { font-family: 'Lora', Georgia, serif; }
         .gold   { color: #B87B44; }
@@ -304,7 +304,7 @@ export function LandingPage() {
         a.nav-link:hover { color: #B87B44; }
       `}</style>
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ NAVBAR ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ════════════════ NAVBAR ════════════════ */}
       <nav
         style={{
           position: "fixed",
@@ -357,7 +357,7 @@ export function LandingPage() {
         </div>
       </nav>
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ HERO ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ════════════════ HERO ════════════════ */}
       <section className="leather" style={{ paddingTop: 120, paddingBottom: 80 }}>
         <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
           <h1 className="serif cream-hi" style={{ fontSize: "clamp(2.5rem, 6vw, 4.2rem)", fontWeight: 900, lineHeight: 1.1, marginBottom: 16 }}>
@@ -407,7 +407,7 @@ export function LandingPage() {
 
       <div className="stitch-h" style={{ maxWidth: 1100, margin: "0 auto" }} />
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ SERVICES ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ════════════════ SERVICES ════════════════ */}
       <section id="services" className="leather" style={{ padding: "80px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <h2 className="serif cream-hi" style={{ textAlign: "center", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, marginBottom: 50 }}>
@@ -431,7 +431,7 @@ export function LandingPage() {
 
       <div className="stitch-h" style={{ maxWidth: 1100, margin: "0 auto" }} />
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ HOW IT WORKS ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ════════════════ HOW IT WORKS ════════════════ */}
       <section className="leather" style={{ padding: "80px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <h2 className="serif cream-hi" style={{ textAlign: "center", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, marginBottom: 50 }}>
@@ -458,7 +458,7 @@ export function LandingPage() {
 
       <div className="stitch-h" style={{ maxWidth: 1100, margin: "0 auto" }} />
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ WHATSAPP / MAX ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ════════════════ WHATSAPP / MAX ════════════════ */}
       <section className="leather" style={{ padding: "80px 24px" }}>
         <div style={{ maxWidth: 960, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr", gap: 40 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 40, alignItems: "center" }}>
@@ -506,13 +506,13 @@ export function LandingPage() {
                     fontSize: 18,
                   }}
                 >
-                  ≡ƒñû
+                  🤖
                 </div>
                 <div>
                   <div className="serif" style={{ fontSize: 14, fontWeight: 700, color: "#E8CDB0" }}>
                     Max (Ti-Guy)
                   </div>
-                  <div style={{ fontSize: 11, color: "#4ade80" }}>ΓùÅ {t.wa.online}</div>
+                  <div style={{ fontSize: 11, color: "#4ade80" }}>● {t.wa.online}</div>
                 </div>
               </div>
               <div style={{ minHeight: 220, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -546,7 +546,7 @@ export function LandingPage() {
 
       <div className="stitch-h" style={{ maxWidth: 1100, margin: "0 auto" }} />
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ PROVIDER CTA ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ════════════════ PROVIDER CTA ════════════════ */}
       <section id="providers" className="leather" style={{ padding: "80px 24px" }}>
         <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
           <h2 className="serif cream-hi" style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, marginBottom: 12 }}>
@@ -559,7 +559,7 @@ export function LandingPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
               {t.pro.perks.map((p, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <span style={{ color: "#B87B44", fontSize: 16, marginTop: 2 }}>ΓÜ£</span>
+                  <span style={{ color: "#B87B44", fontSize: 16, marginTop: 2 }}>⚡</span>
                   <span className="body-f" style={{ color: "#D9B38C", fontSize: 13, lineHeight: 1.6 }}>
                     {p}
                   </span>
@@ -576,7 +576,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ FOOTER ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ════════════════ FOOTER ════════════════ */}
       <footer
         style={{
           background: "rgba(18,30,42,0.9)",
