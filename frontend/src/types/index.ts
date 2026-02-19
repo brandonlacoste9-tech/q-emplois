@@ -24,7 +24,9 @@ export interface TradesmanProfile extends User {
   availability: Availability;
 }
 
+// Q-EMPLOIS: Tous types de jobs - pas seulement les métiers traditionnels
 export type ServiceType = 
+  // 🏠 Services à domicile
   | 'plomberie'
   | 'electricite'
   | 'menuiserie'
@@ -36,13 +38,50 @@ export type ServiceType =
   | 'jardinage'
   | 'menage'
   | 'demenagement'
+  | 'montage_meubles'
+  | 'nettoyage'
+  // 🚚 Livraison & Transport
+  | 'livraison'
+  | 'coursier'
+  | 'chauffeur'
+  | 'remorquage'
+  // 💻 Tech & Digital
+  | 'informatique'
+  | 'reparation_tech'
+  | 'aide_informatique'
+  | 'photo_video'
+  | 'graphisme'
+  // 🎓 Éducation & Services
+  | 'tutorat'
+  | 'cours_particuliers'
+  | 'garderie'
+  | 'aide_personnes_agees'
+  | 'promenade_animaux'
+  | 'garde_animaux'
+  // 🎉 Événements & Animation
+  | 'serveur'
+  | 'barman'
+  | 'securite'
+  | 'animateur'
+  | 'dj'
+  // 💪 Physique & Main d'œuvre
+  | 'manutention'
+  | 'aide_menagere'
+  | 'bricolage'
+  | 'portage'
+  // 🎨 Créatif
+  | 'peinture_artistique'
+  | 'couture'
+  | 'decoration'
+  // ✨ Autre
   | 'autre';
 
 export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
+  // Services à domicile
   plomberie: 'Plomberie',
   electricite: 'Électricité',
   menuiserie: 'Menuiserie',
-  peinture: 'Peinture',
+  peinture: 'Peinture (résidentielle)',
   chauffage: 'Chauffage',
   climatisation: 'Climatisation',
   toiture: 'Toiture',
@@ -50,6 +89,42 @@ export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
   jardinage: 'Jardinage',
   menage: 'Ménage',
   demenagement: 'Déménagement',
+  montage_meubles: 'Montage de meubles',
+  nettoyage: 'Nettoyage professionnel',
+  // Livraison & Transport
+  livraison: 'Livraison',
+  coursier: 'Coursier',
+  chauffeur: 'Chauffeur',
+  remorquage: 'Remorquage',
+  // Tech & Digital
+  informatique: 'Informatique',
+  reparation_tech: 'Réparation tech (téléphone, PC)',
+  aide_informatique: 'Aide informatique',
+  photo_video: 'Photo/Vidéo',
+  graphisme: 'Graphisme',
+  // Éducation & Services
+  tutorat: 'Tutorat',
+  cours_particuliers: 'Cours particuliers',
+  garderie: 'Garde d\'enfants',
+  aide_personnes_agees: 'Aide aux personnes âgées',
+  promenade_animaux: 'Promenade d\'animaux',
+  garde_animaux: 'Garde d\'animaux',
+  // Événements
+  serveur: 'Serveur/Serveuse',
+  barman: 'Barman/Barmaid',
+  securite: 'Sécurité/Portier',
+  animateur: 'Animateur',
+  dj: 'DJ',
+  // Main d'œuvre
+  manutention: 'Manutention',
+  aide_menagere: 'Aide ménagère',
+  bricolage: 'Bricolage',
+  portage: 'Portage/Reprise',
+  // Créatif
+  peinture_artistique: 'Peinture artistique',
+  couture: 'Couture/Retouches',
+  decoration: 'Décoration',
+  // Autre
   autre: 'Autre',
 };
 
