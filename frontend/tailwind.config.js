@@ -13,6 +13,10 @@ export default {
           dark: '#0C0A09',
           light: '#FFFFFF',
         },
+        'or-couture': '#D4AF37',
+        'cuir-bleu-fonce': '#1E3A5F',
+        'cuir-bleu-profond': '#0F172A',
+        'texte-secondaire': '#64748B',
         accent: {
           success: '#22C55E',
           error: '#EF4444',
