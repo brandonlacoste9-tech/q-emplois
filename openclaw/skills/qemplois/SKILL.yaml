@@ -1,93 +1,136 @@
-# Q-Emplois Chatbot Configuration
+# Q-Emplois Skill Configuration — KimiClaw Edition
+# Fix 4: Migrated from OpenClaw to KimiClaw
 
 name: qemplois
-version: 1.0.0
-description: Book services via Telegram/WhatsApp chatbot
+display_name: "Q-Emplois"
+description: "Plateforme de mise en relation jobs/services au Québec"
+version: "2.0.0"
+author: "Colony OS"
+provider: kimiclaw  # FIX 4: Changed from openclaw
 
-# Skill endpoints
-skills:
-  - name: booking_request
-    provider: qemplois
-    description: Create a new service booking
-    input:
-      service_type: string
-      date: ISO8601
-      time: string
-      location:
-        address: string
-        lat: float
-        lng: float
-      provider_id: string (optional)
-    output:
-      booking_id: string
-      provider: object
-      price_estimate: number
-      status: pending_payment
-
-  - name: search_services
-    provider: qemplois
-    description: Search for available service providers
-    input:
-      service_type: string
-      date: ISO8601
-      lat: float
-      lng: float
-      radius_km: int (default: 10)
-    output:
-      providers: array
-
-  - name: payment_processing
-    provider: qemplois
-    description: Generate payment link for booking
-    input:
-      booking_id: string
-      amount: number
-    output:
-      payment_url: string
-      status: pending
-
-  - name: notify_provider
-    provider: qemplois
-    description: Send job notification to provider
-    input:
-      provider_id: string
-      job_details: object
-    output:
-      sent: boolean
-
-  - name: authenticate_user
-    provider: qemplois
-    description: Link Telegram/WhatsApp to Q-Emplois account
-    input:
-      platform: string
-      user_id: string
-    output:
-      auth_url: string
-      linked: boolean
-
-# Privacy & Law 25 Compliance
-privacy:
-  # No PII stored in chat logs
-  mask_pii: true
-  # Session data encrypted
-  encrypt_sessions: true
-  # Consent required before storing data
-  require_consent: true
-  # Data retention (days)
-  session_retention_days: 30
-  # Privacy policy URL
-  privacy_policy_url: https://qemplois.ca/politique-confidentialite
-
-# Supported platforms
-platforms:
-  - telegram
-  - whatsapp
-
-# Language
+# Model Configuration
+model: kimi-k2.5
 language: fr
+region: ca-qc
 
-# Conversation settings
-conversation:
-  timeout_minutes: 30
-  max_retries: 3
-  enable_natural_language: true
+# Skills exposed to the LLM
+skills:
+  - name: book_service
+    description: "Réserver un service (plomberie, électricité, etc.)"
+    parameters:
+      - name: service_type
+        type: string
+        required: true
+        enum: [plomberie, électricité, nettoyage, jardinage, déménagement]
+      - name: date
+        type: string
+        required: true
+        description: "Date souhaitée (YYYY-MM-DD)"
+      - name: time
+        type: string
+        required: true
+        description: "Heure souhaitée (HH:MM)"
+      - name: address
+        type: string
+        required: true
+        description: "Adresse complète"
+    handler: booking_flow.BookingFlow.handle_message
+
+  - name: find_providers
+    description: "Trouver des prestataires disponibles"
+    parameters:
+      - name: service_type
+        type: string
+        required: true
+      - name: location
+        type: object
+        required: true
+        properties:
+          lat: number
+          lng: number
+          address: string
+      - name: date
+        type: string
+        required: true
+    handler: booking_flow.BookingFlow._fetch_providers_api
+
+  - name: geocode_address  # FIX 4: New registered skill
+    description: "Convertir une adresse en coordonnées GPS"
+    parameters:
+      - name: address
+        type: string
+        required: true
+    handler: booking_flow.BookingFlow._geocode
+
+  - name: link_account
+    description: "Lier un compte utilisateur à une plateforme"
+    parameters:
+      - name: platform
+        type: string
+        required: true
+        enum: [whatsapp, telegram, signal]
+      - name: user_id
+        type: string
+        required: true
+      - name: phone
+        type: string
+        required: false
+    handler: auth_handler.AuthHandler.create_session
+
+  - name: verify_link
+    description: "Vérifier si un utilisateur est lié"
+    parameters:
+      - name: platform
+        type: string
+        required: true
+      - name: platform_user_id
+        type: string
+        required: true
+    handler: auth_handler.AuthHandler.get_linked_user
+
+# Webhook Configuration
+webhooks:
+  - event: booking.created
+    endpoint: /api/webhooks/booking
+    description: "Nouvelle réservation créée"
+  
+  - event: auth.linked
+    endpoint: /api/webhooks/auth
+    description: "Compte lié à une plateforme"
+  
+  - event: payment.completed
+    endpoint: /api/webhooks/payment
+    description: "Paiement complété"
+
+# Platform Integrations
+platforms:
+  whatsapp:
+    enabled: true
+    bot_handler: bot_handler.WhatsAppHandler
+    webhook_path: /webhooks/whatsapp
+    
+  telegram:
+    enabled: true
+    bot_handler: bot_handler.TelegramHandler
+    webhook_path: /webhooks/telegram
+
+# API Configuration
+api:
+  base_url: https://api.qemplois.ca
+  timeout: 10
+  retry_count: 3
+  
+# Redis Configuration (Law 25 native)
+redis:
+  ttl: 86400  # 24 hours
+  prefix: "qemplois:"
+
+# Quebec-specific settings
+quebec:
+  timezone: America/Toronto
+  currency: CAD
+  tax_rates:
+    tps: 0.05
+    tvq: 0.09975
+  language_default: fr
+  law25_compliant: true

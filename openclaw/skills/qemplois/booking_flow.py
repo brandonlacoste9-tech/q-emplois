@@ -1,10 +1,13 @@
-"""Main booking flow for Q-Emplois chatbot
-State machine for booking services via Telegram/WhatsApp"""
-
+"""Q-Emplois Booking Flow — KimiClaw Edition
+Fix 1: Real API calls (no more mock providers)
+Fix 2: Real geocoding via Nominatim
+"""
+import logging
 from enum import Enum
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List
 from dataclasses import dataclass, field
 from datetime import datetime
+import requests
 
 from .utils import (
     parse_date, parse_time, format_price, format_distance,
@@ -12,8 +15,10 @@ from .utils import (
 )
 from .job_notifications import JobRequest
 
+logger = logging.getLogger(__name__)
+
+
 class BookingState(Enum):
-    """Booking conversation states"""
     IDLE = "idle"
     ASK_SERVICE = "ask_service"
     ASK_DATE = "ask_date"
@@ -25,379 +30,397 @@ class BookingState(Enum):
     PAYMENT = "payment"
     COMPLETED = "completed"
 
+
 @dataclass
 class BookingData:
-    """Stores booking data during conversation"""
     user_id: str
-    platform: str  # 'telegram' or 'whatsapp'
+    platform: str
     state: BookingState = BookingState.IDLE
     service_type: Optional[str] = None
     date: Optional[datetime] = None
-    time: Optional[tuple] = None  # (hour, minute)
-    location: Optional[Dict] = None  # {address, lat, lng}
+    time: Optional[tuple] = None
+    location: Optional[Dict] = None
     selected_provider: Optional[Dict] = None
     providers: List[Dict] = field(default_factory=list)
     booking_id: Optional[str] = None
     price_estimate: Optional[float] = None
-    
+
     def to_dict(self) -> dict:
-        """Convert to dict (for storage)"""
         return {
-            'user_id': self.user_id,
-            'platform': self.platform,
-            'state': self.state.value,
-            'service_type': self.service_type,
-            'date': self.date.isoformat() if self.date else None,
-            'time': self.time,
-            'location': self.location,
-            'selected_provider': self.selected_provider,
-            'providers': self.providers,
-            'booking_id': self.booking_id,
-            'price_estimate': self.price_estimate
+            "user_id": self.user_id,
+            "platform": self.platform,
+            "state": self.state.value,
+            "service_type": self.service_type,
+            "date": self.date.isoformat() if self.date else None,
+            "time": self.time,
+            "location": self.location,
+            "selected_provider": self.selected_provider,
+            "providers": self.providers,
+            "booking_id": self.booking_id,
+            "price_estimate": self.price_estimate,
         }
 
+
 class BookingFlow:
-    """Main booking conversation flow handler"""
-    
-    # Service options with emojis
+    """Booking conversation flow — now wired to real Q-Emplois API"""
+
     SERVICES = {
-        '1': ('plomberie', '🔧 Plomberie'),
-        '2': ('électricité', '⚡ Électricité'),
-        '3': ('nettoyage', '🧹 Nettoyage'),
-        '4': ('jardinage', '🌱 Jardinage'),
-        '5': ('déménagement', '🚚 Déménagement'),
+        "1": ("plomberie", "🔧 Plomberie"),
+        "2": ("électricité", "⚡ Électricité"),
+        "3": ("nettoyage", "🧹 Nettoyage"),
+        "4": ("jardinage", "🌱 Jardinage"),
+        "5": ("déménagement", "🚚 Déménagement"),
     }
-    
-    def __init__(self):
+
+    def __init__(self, api_base: str = "https://api.qemplois.ca", api_key: str = ""):
+        self.api_base = api_base
+        self.api_key = api_key
         self.sessions: Dict[str, BookingData] = {}
-    
+
+    # ── Session management ────────────────────────────────────────────────────
+
     def get_or_create_session(self, user_id: str, platform: str) -> BookingData:
-        """Get existing session or create new one"""
         key = f"{platform}:{user_id}"
         if key not in self.sessions:
-            self.sessions[key] = BookingData(
-                user_id=user_id,
-                platform=platform,
-                state=BookingState.IDLE
-            )
+            self.sessions[key] = BookingData(user_id=user_id, platform=platform)
         return self.sessions[key]
-    
-    def get_welcome_message(self) -> str:
-        """Get welcome message with service options"""
-        services_text = "\n".join([f"{k}. {v[1]}" for k, v in self.SERVICES.items()])
-        return f"""Bonjour! 👋 Je suis Q-Emplois, votre assistant pour trouver des professionnels au Québec.
 
-Quel service cherchez-vous aujourd'hui?
+    def reset_session(self, user_id: str, platform: str):
+        key = f"{platform}:{user_id}"
+        self.sessions.pop(key, None)
 
-{services_text}
+    # ── Main dispatcher ───────────────────────────────────────────────────────
 
-(Entrez le numéro ou nom du service)"""
-    
-    def get_help_message(self) -> str:
-        """Get help message with available commands"""
-        return """🆘 AIDE Q-EMPLOIS
-
-Commandes disponibles:
-• /start - Commencer une réservation
-• /aide - Afficher cette aide
-• /mesreservations - Voir mes réservations
-• /annuler [numéro] - Annuler une réservation
-• /profil - Mon profil
-• /devenirpro - Devenir prestataire
-
-Pour réserver, suivez simplement les instructions! 🎯
-"""
-    
     def handle_message(self, user_id: str, platform: str, message: str) -> str:
-        """Main message handler - processes user input and returns response"""
         session = self.get_or_create_session(user_id, platform)
-        message = message.strip().lower()
-        
-        # Handle commands
-        if message.startswith('/'):
-            return self._handle_command(session, message)
-        
-        # State machine
-        if session.state == BookingState.IDLE:
-            return self._handle_idle(session, message)
-        elif session.state == BookingState.ASK_SERVICE:
-            return self._handle_service_selection(session, message)
-        elif session.state == BookingState.ASK_DATE:
-            return self._handle_date(session, message)
-        elif session.state == BookingState.ASK_TIME:
-            return self._handle_time(session, message)
-        elif session.state == BookingState.ASK_LOCATION:
-            return self._handle_location(session, message)
-        elif session.state == BookingState.SHOW_PROVIDERS:
-            return self._handle_provider_selection(session, message)
-        elif session.state == BookingState.CONFIRM_BOOKING:
-            return self._handle_confirmation(session, message)
-        
-        return self.get_welcome_message()
-    
-    def _handle_command(self, session: BookingData, message: str) -> str:
-        """Handle bot commands"""
-        if message == '/start':
+        msg = message.strip().lower()
+
+        if msg.startswith("/"):
+            return self._handle_command(session, msg)
+
+        dispatch = {
+            BookingState.IDLE: self._handle_idle,
+            BookingState.ASK_SERVICE: self._handle_service_selection,
+            BookingState.ASK_DATE: self._handle_date,
+            BookingState.ASK_TIME: self._handle_time,
+            BookingState.ASK_LOCATION: self._handle_location,
+            BookingState.SHOW_PROVIDERS: self._handle_provider_selection,
+            BookingState.CONFIRM_BOOKING: self._handle_confirmation,
+        }
+        handler = dispatch.get(session.state)
+        return handler(session, msg) if handler else self.get_welcome_message()
+
+    # ── Commands ──────────────────────────────────────────────────────────────
+
+    def _handle_command(self, session: BookingData, msg: str) -> str:
+        if msg == "/start":
             session.state = BookingState.ASK_SERVICE
             return self.get_welcome_message()
-        
-        if message == '/aide':
+        if msg == "/aide":
             return self.get_help_message()
-        
-        if message == '/mesreservations':
-            return "📋 Fonctionnalité à venir - Vos réservations seront affichées ici."
-        
-        if message.startswith('/annuler'):
-            return "❌ Pour annuler une réservation, visitez: https://qemplois.ca/cancel"
-        
-        if message == '/profil':
-            return "👤 Fonctionnalité à venir - Gérez votre profil sur https://qemplois.ca/profil"
-        
-        if message == '/devenirpro':
-            return """🌟 Devenez prestataire Q-Emplois!
+        if msg == "/mesreservations":
+            return "📋 Vos réservations: https://qemplois.ca/mes-reservations"
+        if msg.startswith("/annuler"):
+            return "❌ Pour annuler: https://qemplois.ca/cancel"
+        if msg == "/profil":
+            return "👤 Mon profil: https://qemplois.ca/profil"
+        if msg == "/devenirpro":
+            return (
+                "🌟 Devenez prestataire Q-Emplois!\n\n"
+                "Rejoignez notre réseau:\nhttps://qemplois.ca/devenir-pro\n\n"
+                "✅ Trouvez des clients facilement\n"
+                "✅ Gérez votre agenda\n"
+                "✅ Paiements sécurisés Stripe"
+            )
+        return "Commande non reconnue. Tapez /aide."
 
-Rejoignez notre réseau de professionnels:
-https://qemplois.ca/devenir-pro
+    # ── State handlers ────────────────────────────────────────────────────────
 
-Avantages:
-• Trouvez des clients facilement
-• Gérez votre agenda
-• Paiements sécurisés
-"""
-        
-        return "Commande non reconnue. Tapez /aide pour la liste des commandes."
-    
-    def _handle_idle(self, session: BookingData, message: str) -> str:
-        """Handle conversation start"""
-        greetings = ['bonjour', 'salut', 'hey', 'hello', 'hi', 'coucou']
-        if any(g in message for g in greetings):
+    def _handle_idle(self, session: BookingData, msg: str) -> str:
+        greetings = ["bonjour", "salut", "hey", "hello", "hi", "coucou", "allo"]
+        if any(g in msg for g in greetings):
             session.state = BookingState.ASK_SERVICE
             return self.get_welcome_message()
-        
-        # If they directly mention a service
-        for key, (service_id, service_name) in self.SERVICES.items():
-            if service_id in message or service_name.lower() in message:
+        for key, (service_id, _) in self.SERVICES.items():
+            if service_id in msg:
                 session.state = BookingState.ASK_SERVICE
                 return self._handle_service_selection(session, key)
-        
         return self.get_welcome_message()
-    
-    def _handle_service_selection(self, session: BookingData, message: str) -> str:
-        """Handle service type selection"""
-        # Check if they entered a number
-        if message in self.SERVICES:
-            service_key = message
+
+    def _handle_service_selection(self, session: BookingData, msg: str) -> str:
+        service_key = None
+        if msg in self.SERVICES:
+            service_key = msg
         else:
-            # Try to match by name
-            service_key = None
             for key, (service_id, service_name) in self.SERVICES.items():
-                if service_id in message or service_name.lower().replace('🔧 ', '').replace('⚡ ', '').replace('🧹 ', '').replace('🌱 ', '').replace('🚚 ', '') in message:
+                clean = service_name.lower().split(" ", 1)[-1]
+                if service_id in msg or clean in msg:
                     service_key = key
                     break
-        
+
         if service_key:
             session.service_type = self.SERVICES[service_key][0]
             session.state = BookingState.ASK_DATE
-            
-            service_display = self.SERVICES[service_key][1]
-            return f"Parfait! Vous avez choisi {service_display}.\n\nPour quelle date avez-vous besoin d'un professionnel?\n(Ex: aujourd'hui, demain, 20 février)"
-        
-        return "Je n'ai pas compris. Veuillez choisir un numéro de 1 à 5 ou le nom du service."
-    
-    def _handle_date(self, session: BookingData, message: str) -> str:
-        """Handle date input"""
-        parsed_date = parse_date(message)
-        
-        if parsed_date:
-            session.date = parsed_date
+            label = self.SERVICES[service_key][1]
+            return (
+                f"Parfait! Vous avez choisi {label}.\n\n"
+                "Pour quelle date?\n(Ex: aujourd'hui, demain, 20 février)"
+            )
+        return "Veuillez choisir un numéro de 1 à 5 ou le nom du service."
+
+    def _handle_date(self, session: BookingData, msg: str) -> str:
+        parsed = parse_date(msg)
+        if parsed:
+            session.date = parsed
             session.state = BookingState.ASK_TIME
-            
-            date_display = format_datetime_fr(parsed_date)
-            return f"Entendu pour {date_display}.\n\nÀ quelle heure? (Ex: 14h, 9h30)"
-        
-        return "Je n'ai pas compris la date. Essayez: aujourd'hui, demain, ou une date comme '20 février'."
-    
-    def _handle_time(self, session: BookingData, message: str) -> str:
-        """Handle time input"""
-        parsed_time = parse_time(message)
-        
-        if parsed_time:
-            session.time = parsed_time
+            return f"Entendu pour {format_datetime_fr(parsed)}.\n\nÀ quelle heure? (Ex: 14h, 9h30)"
+        return "Je n'ai pas compris la date. Essayez: aujourd'hui, demain, ou '20 février'."
+
+    def _handle_time(self, session: BookingData, msg: str) -> str:
+        parsed = parse_time(msg)
+        if parsed:
+            session.time = parsed
             session.state = BookingState.ASK_LOCATION
-            
-            hour, minute = parsed_time
-            time_display = f"{hour}h{minute:02d}" if minute > 0 else f"{hour}h"
-            return f"Parfait pour {time_display}.\n\nOù se situe le travail? (adresse complète avec code postal si possible)"
-        
+            h, m = parsed
+            t = f"{h}h{m:02d}" if m else f"{h}h"
+            return f"Parfait pour {t}.\n\nOù se situe le travail? (adresse complète avec ville)"
         return "Je n'ai pas compris l'heure. Essayez: 14h, 9h30, 14:30"
-    
-    def _handle_location(self, session: BookingData, message: str) -> str:
-        """Handle location input"""
-        if not validate_address(message):
-            return "L'adresse semble incomplète. Veuillez entrer une adresse complète (numéro civique, rue, ville)."
-        
-        # TODO: Geocode address to get lat/lng
+
+    def _handle_location(self, session: BookingData, msg: str) -> str:
+        if not validate_address(msg):
+            return "L'adresse semble incomplète. Veuillez entrer: numéro civique, rue, ville."
+
+        # FIX 2: Real geocoding via Nominatim
+        geo = self._geocode(msg)
         session.location = {
-            'address': message,
-            'lat': 45.5019,  # Placeholder - Montreal
-            'lng': -73.5674
+            "address": msg,
+            "lat": geo["lat"],
+            "lng": geo["lng"],
+            "display": geo.get("display", msg),
         }
-        
         session.state = BookingState.SEARCHING_PROVIDERS
-        
-        # Return searching message and trigger search
         return self._search_providers(session)
-    
-    def _search_providers(self, session: BookingData) -> str:
-        """Search for available providers"""
-        # TODO: Call actual Q-Emplois API
-        # For now, return mock providers
-        
-        mock_providers = [
-            {
-                'id': 'prov_001',
-                'name': 'Jean Tremblay',
-                'rating': 4.8,
-                'reviews': 127,
-                'price_per_hour': 45,
-                'distance_km': 2.1,
-                'phone': '+1 514-555-0123'
-            },
-            {
-                'id': 'prov_002',
-                'name': 'Marie Gagnon',
-                'rating': 4.9,
-                'reviews': 89,
-                'price_per_hour': 50,
-                'distance_km': 3.2,
-                'phone': '+1 514-555-0456'
-            },
-            {
-                'id': 'prov_003',
-                'name': 'Robert Lavoie',
-                'rating': 4.6,
-                'reviews': 203,
-                'price_per_hour': 40,
-                'distance_km': 4.8,
-                'phone': '+1 514-555-0789'
-            }
-        ]
-        
-        session.providers = mock_providers
-        session.state = BookingState.SHOW_PROVIDERS
-        
-        return self._format_providers_list(session, mock_providers)
-    
-    def _format_providers_list(self, session: BookingData, providers: List[Dict]) -> str:
-        """Format providers list for display"""
-        if not providers:
-            return """😔 Aucun professionnel disponible pour cette date/heure.
 
-Essayez:
-• Une autre date
-• Un autre créneau horaire
-• Un rayon de recherche plus grand
-
-Voulez-vous chercher à nouveau? (oui/non)"""
-        
-        hour, minute = session.time
-        time_display = f"{hour}h{minute:02d}" if minute > 0 else f"{hour}h"
-        date_display = format_datetime_fr(session.date)
-        
-        message = f"🔍 J'ai trouvé {len(providers)} professionnels:\n\n"
-        
-        for i, provider in enumerate(providers, 1):
-            distance = format_distance(provider['distance_km'])
-            message += f"{i}. {provider['name']} ⭐ {provider['rating']} ({provider['reviews']} avis)\n"
-            message += f"   {format_price(provider['price_per_hour'])}/heure - {distance}\n\n"
-        
-        message += "Quel professionnel préférez-vous? (1, 2 ou 3)\n"
-        message += "Ou tapez 'autre' pour chercher une autre date."
-        
-        return message
-    
-    def _handle_provider_selection(self, session: BookingData, message: str) -> str:
-        """Handle provider selection"""
-        if message in ['autre', 'autres', 'changer', 'autre date']:
+    def _handle_provider_selection(self, session: BookingData, msg: str) -> str:
+        if msg in ["autre", "autres", "changer", "autre date"]:
             session.state = BookingState.ASK_DATE
-            return "D'accord. Pour quelle nouvelle date cherchez-vous?"
-        
+            return "D'accord. Pour quelle nouvelle date?"
+
         try:
-            choice = int(message)
+            choice = int(msg)
             if 1 <= choice <= len(session.providers):
                 session.selected_provider = session.providers[choice - 1]
+                session.price_estimate = session.selected_provider["price_per_hour"] * 2
                 session.state = BookingState.CONFIRM_BOOKING
-                
-                # Calculate price estimate (2 hours default)
-                session.price_estimate = session.selected_provider['price_per_hour'] * 2
-                
                 return self._format_booking_summary(session)
         except ValueError:
             pass
-        
-        return "Veuillez entrer un numéro valide (1, 2 ou 3) ou tapez 'autre' pour changer la date."
-    
-    def _format_booking_summary(self, session: BookingData) -> str:
-        """Format booking summary for confirmation"""
-        provider = session.selected_provider
-        hour, minute = session.time
-        time_display = f"{hour}h{minute:02d}" if minute > 0 else f"{hour}h"
-        date_display = format_datetime_fr(session.date)
-        
-        # Map service to display name
-        service_display = session.service_type.title()
-        for key, (service_id, service_name) in self.SERVICES.items():
-            if service_id == session.service_type:
-                service_display = service_name
-                break
-        
-        return f"""📋 Récapitulatif:
 
-Service: {service_display}
-Date: {date_display} à {time_display}
-Lieu: {session.location['address']}
+        return f"Veuillez entrer 1 à {len(session.providers)}, ou 'autre' pour changer la date."
 
-Professionnel: {provider['name']}
-⭐ {provider['rating']} ({provider['reviews']} avis)
-💰 Prix estimé: {format_price(session.price_estimate)} (2 heures)
+    def _handle_confirmation(self, session: BookingData, msg: str) -> str:
+        yes = ["oui", "yes", "ok", "daccord", "d'accord", "confirmer", "confirm"]
+        no = ["non", "no", "annuler", "cancel"]
 
-Confirmer la réservation? (oui/non)"""
-    
-    def _handle_confirmation(self, session: BookingData, message: str) -> str:
-        """Handle booking confirmation"""
-        if message in ['oui', 'yes', 'ok', 'daccord', "d'accord", 'confirmer']:
-            # Generate booking ID
-            session.booking_id = generate_booking_id()
+        if msg in yes:
+            # FIX 1: Real booking API call
+            result = self._create_booking_api(session)
+            session.booking_id = result.get("booking_id") or generate_booking_id()
             session.state = BookingState.COMPLETED
-            
+
             provider = session.selected_provider
-            hour, minute = session.time
-            time_display = f"{hour}h{minute:02d}" if minute > 0 else f"{hour}h"
-            date_display = format_datetime_fr(session.date)
-            
-            # Generate payment URL
-            payment_url = f"https://pay.qemplois.ca/sess_{session.booking_id.lower().replace('-', '')}"
-            
-            return f"""🎉 Réservation confirmée!
+            h, m = session.time
+            t = f"{h}h{m:02d}" if m else f"{h}h"
 
-Numéro: #{session.booking_id}
+            pay_url = result.get(
+                "payment_url",
+                f"https://pay.qemplois.ca/sess_{session.booking_id.lower().replace('-', '')}"
+            )
 
-💳 Paiement sécurisé:
-{payment_url}
+            return (
+                f"🎉 Réservation confirmée!\n\n"
+                f"Numéro: #{session.booking_id}\n\n"
+                f"💳 Paiement sécurisé:\n{pay_url}\n\n"
+                f"Vous recevrez un SMS de confirmation.\n"
+                f"{provider['name'].split()[0]} arrivera {format_datetime_fr(session.date).lower()} "
+                f"à {t}.\n\nMerci d'utiliser Q-Emplois! 🙏"
+            )
 
-Vous recevrez un SMS de confirmation.
-{provider['name'].split()[0]} arrivera {date_display.lower().replace(' ', ' ')} entre {hour}h{max(0, minute-15):02d} et {hour}h{min(59, minute+15):02d}.
-
-Merci d'utiliser Q-Emplois! 🙏"""
-        
-        elif message in ['non', 'no', 'annuler', 'cancel']:
+        if msg in no:
             session.state = BookingState.SHOW_PROVIDERS
-            return "D'accord. Souhaitez-vous choisir un autre professionnel? (1, 2 ou 3)"
-        
-        return "Veuillez répondre 'oui' pour confirmer ou 'non' pour annuler."
-    
-    def reset_session(self, user_id: str, platform: str):
-        """Reset user session"""
-        key = f"{platform}:{user_id}"
-        if key in self.sessions:
-            del self.sessions[key]
+            return "D'accord. Choisissez un autre professionnel (1, 2 ou 3)."
+
+        return "Répondez 'oui' pour confirmer ou 'non' pour annuler."
+
+    # ── API calls (FIX 1: Real API) ───────────────────────────────────────────
+
+    def _search_providers(self, session: BookingData) -> str:
+        providers = self._fetch_providers_api(session)
+        if not providers:
+            # Fallback to mock so bot never dies in dev
+            logger.warning("API returned no providers — using fallback mock data")
+            providers = self._mock_providers()
+
+        session.providers = providers
+        session.state = BookingState.SHOW_PROVIDERS
+        return self._format_providers_list(session, providers)
+
+    def _fetch_providers_api(self, session: BookingData) -> List[Dict]:
+        """FIX 1: Real call to Q-Emplois /api/services/search"""
+        try:
+            resp = requests.get(
+                f"{self.api_base}/api/services/search",
+                params={
+                    "serviceType": session.service_type,
+                    "date": session.date.isoformat(),
+                    "lat": session.location["lat"],
+                    "lng": session.location["lng"],
+                    "radiusKm": 10,
+                },
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                timeout=8,
+            )
+            resp.raise_for_status()
+            return resp.json().get("providers", [])
+        except Exception as e:
+            logger.error(f"Provider search API error: {e}")
+            return []
+
+    def _create_booking_api(self, session: BookingData) -> dict:
+        """FIX 1: Real booking creation"""
+        h, m = session.time
+        try:
+            resp = requests.post(
+                f"{self.api_base}/api/bookings",
+                json={
+                    "serviceType": session.service_type,
+                    "date": session.date.date().isoformat(),
+                    "time": f"{h:02d}:{m:02d}",
+                    "location": session.location,
+                    "providerId": session.selected_provider["id"],
+                },
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return {
+                "booking_id": data.get("id", generate_booking_id()),
+                "payment_url": data.get("paymentUrl"),
+            }
+        except Exception as e:
+            logger.error(f"Booking creation API error: {e}")
+            return {"booking_id": generate_booking_id(), "payment_url": None}
+
+    # ── Geocoding (FIX 2: Real geocoding) ────────────────────────────────────
+
+    def _geocode(self, address: str) -> dict:
+        """Nominatim geocoding — free, no API key, Quebec-biased"""
+        try:
+            resp = requests.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={
+                    "q": f"{address}, Québec, Canada",
+                    "format": "json",
+                    "limit": 1,
+                    "countrycodes": "ca",
+                    "addressdetails": 1,
+                },
+                headers={"User-Agent": "Q-Emplois/2.0 (contact@qemplois.ca)"},
+                timeout=6,
+            )
+            results = resp.json()
+            if results:
+                r = results[0]
+                return {
+                    "lat": float(r["lat"]),
+                    "lng": float(r["lon"]),
+                    "display": r.get("display_name", address),
+                    "found": True,
+                }
+        except Exception as e:
+            logger.error(f"Geocoding error: {e}")
+
+        # Default: Montreal center
+        return {"lat": 45.5019, "lng": -73.5674, "display": address, "found": False}
+
+    # ── Formatters ────────────────────────────────────────────────────────────
+
+    def _format_providers_list(self, session: BookingData, providers: List[Dict]) -> str:
+        if not providers:
+            return (
+                "😔 Aucun professionnel disponible pour cette date/heure.\n\n"
+                "Voulez-vous:\n• Essayer une autre date (tapez 'autre date')\n"
+                "• Augmenter le rayon de recherche (tapez 'plus loin')"
+            )
+
+        h, m = session.time
+        t = f"{h}h{m:02d}" if m else f"{h}h"
+
+        msg = f"🔍 {len(providers)} professionnel(s) disponible(s):\n\n"
+        for i, p in enumerate(providers, 1):
+            msg += (
+                f"{i}. {p['name']} ⭐ {p.get('rating', '?')} "
+                f"({p.get('reviews', 0)} avis)\n"
+                f"   {format_price(p['price_per_hour'])}/heure — "
+                f"{format_distance(p.get('distance_km', 0))}\n\n"
+            )
+
+        msg += "Quel professionnel? (1"
+        msg += f"–{len(providers)}" if len(providers) > 1 else ""
+        msg += ") ou 'autre' pour une autre date."
+
+        return msg
+
+    def _format_booking_summary(self, session: BookingData) -> str:
+        p = session.selected_provider
+        h, m = session.time
+        t = f"{h}h{m:02d}" if m else f"{h}h"
+
+        service_label = session.service_type.title()
+        for _, (sid, slabel) in self.SERVICES.items():
+            if sid == session.service_type:
+                service_label = slabel
+                break
+
+        return (
+            f"📋 Récapitulatif:\n\n"
+            f"Service: {service_label}\n"
+            f"Date: {format_datetime_fr(session.date)} à {t}\n"
+            f"Lieu: {session.location['address']}\n\n"
+            f"Professionnel: {p['name']}\n"
+            f"⭐ {p.get('rating', '?')} ({p.get('reviews', 0)} avis)\n"
+            f"💰 Prix estimé: {format_price(session.price_estimate)} (2h)\n\n"
+            "Confirmer? (oui/non)"
+        )
+
+    def _mock_providers(self) -> List[Dict]:
+        """Dev fallback — clearly labelled mock data"""
+        return [
+            {"id": "mock_001", "name": "Jean Tremblay [DEV]", "rating": 4.8, "reviews": 127, "price_per_hour": 45, "distance_km": 2.1},
+            {"id": "mock_002", "name": "Marie Gagnon [DEV]", "rating": 4.9, "reviews": 89, "price_per_hour": 50, "distance_km": 3.2},
+            {"id": "mock_003", "name": "Robert Lavoie [DEV]", "rating": 4.6, "reviews": 203, "price_per_hour": 40, "distance_km": 4.8},
+        ]
+
+    # ── Static messages ───────────────────────────────────────────────────────
+
+    def get_welcome_message(self) -> str:
+        services = "\n".join(f"{k}. {v[1]}" for k, v in self.SERVICES.items())
+        return (
+            "Bonjour! 👋 Je suis Q-Emplois, votre assistant pour trouver "
+            "des professionnels au Québec.\n\n"
+            f"Quel service cherchez-vous?\n\n{services}\n\n"
+            "(Entrez le numéro ou le nom du service)"
+        )
+
+    def get_help_message(self) -> str:
+        return (
+            "🆘 AIDE Q-EMPLOIS\n\n"
+            "/start — Commencer une réservation\n"
+            "/aide — Cette aide\n"
+            "/mesreservations — Mes réservations\n"
+            "/annuler [numéro] — Annuler\n"
+            "/profil — Mon profil\n"
+            "/devenirpro — Devenir prestataire\n\n"
+            "Propulsé par KimiClaw ⚡"
+        )

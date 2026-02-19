@@ -1,0 +1,18 @@
+# Q-Emplois Skill Requirements — KimiClaw Edition
+# Fix 4: Updated requirements for full functionality
+
+# Core dependencies
+requests>=2.31.0
+redis>=5.0.0
+python-dateutil>=2.8.0
+
+# Geocoding (Nominatim - no API key needed)
+# Using requests directly, no additional library needed
+
+# KimiClaw SDK
+kimiclaw>=0.1.0
+
+# Dev dependencies (optional)
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+python-dotenv>=1.0.0
