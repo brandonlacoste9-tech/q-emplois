@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { SEOHead } from "../components/SEOHead";
 
 /* ─── TRANSLATIONS ─── */
 const T = {
@@ -164,8 +165,30 @@ export function LandingPage() {
 
   const whatsappUrl = import.meta.env.VITE_WHATSAPP_URL ?? "https://wa.me/";
 
+  // SEO content based on language
+  const seoContent = {
+    fr: {
+      title: "Q-emplois | Tous les jobs du Québec - Livraison, Bricolage, Tech & Plus",
+      description: "Trouvez un job ou postulez en quelques clics. Livraison, bricolage, serveur, informatique, déménagement. Plateforme québécoise pour tous types de jobs. Inscription gratuite.",
+      keywords: "emploi québec, job montréal, livraison, bricolage, déménagement, serveur, informatique, petits boulots, travail autonome, gig economy, taskrabbit québec, jobs étudiants, emploi temporaire, aide déménagement, réparation, montage meubles, coursier, chauffeur, tutorat, garde enfants, ménage, manutention, jobs québec, emplois montréal, travail flexible"
+    },
+    en: {
+      title: "Q-emplois | All Quebec Jobs - Delivery, Handyman, Tech & More",
+      description: "Find a job or hire help in minutes. Delivery, handyman, server, tech, moving. Quebec's platform for all job types. Free signup.",
+      keywords: "quebec jobs, montreal jobs, delivery, handyman, moving, server, tech, gig work, freelance, taskrabbit quebec, student jobs, temporary work, moving help, repairs, furniture assembly, courier, driver, tutoring, childcare, cleaning, labor, flexible work"
+    }
+  };
+
+  const seo = seoContent[lang];
+
   return (
     <div style={{ background: "#1F2F3F", minHeight: "100vh", color: "#D9B38C" }}>
+      <SEOHead
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        lang={lang}
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
