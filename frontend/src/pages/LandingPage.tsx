@@ -325,60 +325,92 @@ export function LandingPage() {
         a { text-decoration: none; transition: color 0.2s; }
         a.nav-link { color: #D9B38C; }
         a.nav-link:hover { color: #B87B44; }
+
+        /* ── EMPIRE SPLIT ── */
+        .empire-split {
+          background: linear-gradient(180deg, rgba(31, 47, 63, 0.95), rgba(31, 47, 63, 0.8));
+          backdrop-filter: blur(8px);
+          border-bottom: 2px dashed rgba(217, 179, 140, 0.2);
+        }
       `}</style>
 
       {/* ════════════════ NAVBAR ════════════════ */}
-      <nav
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          background: "rgba(31,47,63,0.92)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "2px dashed rgba(217,179,140,0.2)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1100,
-            margin: "0 auto",
-            padding: "0 24px",
-            height: 60,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
+      <nav style={{
+        padding: "1.5rem 2rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        maxWidth: "1200px",
+        margin: "0 auto",
+      }}>
+        <div style={{ display: "flex", gap: "2rem", alignItems: "baseline" }}>
           <Link to="/">
-            <Logo size="md" />
+            <Logo size="lg" />
           </Link>
-          <div className="body-f" style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14 }}>
-            <Link to="/contrats" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.find}</Link>
-            <Link to="/pro" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.become}</Link>
-            <Link to="/login" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.login}</Link>
-            <button
-              onClick={() => setLang(lang === "fr" ? "en" : "fr")}
-              style={{
-                padding: "4px 12px",
-                border: "1px dashed rgba(217,179,140,0.35)",
-                borderRadius: 6,
-                background: "transparent",
-                color: "#D9B38C",
-                cursor: "pointer",
-                fontSize: 12,
-                fontFamily: "monospace",
-              }}
-            >
-              {lang === "fr" ? "EN" : "FR"}
-            </button>
-            <button className="gold-btn" style={{ padding: "8px 18px", fontSize: 13 }}>
-              {t.nav.signup}
-            </button>
+          <div style={{ fontSize: "0.85rem", opacity: 0.8, fontFamily: "'Lora', Georgia, serif", color: "#B87B44", display: "flex", gap: "1rem" }}>
+            <Link to="/contrats" style={{ cursor: "pointer", borderBottom: "1px dashed transparent", transition: "all 0.2s" }} className="hover:border-[#D9B38C]">{t.nav.find}</Link>
+            <Link to="/pro" style={{ cursor: "pointer", borderBottom: "1px dashed transparent", transition: "all 0.2s" }} className="hover:border-[#D9B38C]">{t.nav.become}</Link>
           </div>
         </div>
+        <div style={{ display: "flex", gap: "1.5rem", alignItems: "center", fontSize: "0.85rem", fontFamily: "'Lora', Georgia, serif" }}>
+          <button
+            onClick={() => setLang(lang === "fr" ? "en" : "fr")}
+            style={{
+              background: "transparent",
+              border: "1px solid #D9B38C",
+              color: "#D9B38C",
+              padding: "0.1rem 0.6rem",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "0.75rem",
+              fontWeight: 700
+            }}
+          >
+            {lang === "fr" ? "EN" : "FR"}
+          </button>
+          <Link to="/login" style={{ cursor: "pointer", color: "#D9B38C" }}>{t.nav.login}</Link>
+          <button className="gold-btn" style={{ padding: "0.6rem 1.2rem", fontSize: "0.85rem" }}>
+            {t.nav.signup}
+          </button>
+        </div>
       </nav>
+
+      {/* ─── NOUVEAU: LE PORTAIL DE L'EMPIRE ─── */}
+      <div className="empire-split py-8 px-6 mb-12 relative overflow-hidden">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-stretch justify-center gap-6 relative z-10">
+
+          {/* Option Q-MÉTIER */}
+          <div className="stitch-box p-6 flex-1 bg-[#16222E]/80 backdrop-blur-sm shadow-xl flex flex-col justify-between group cursor-pointer hover:bg-[#1A2836] transition-all">
+            <div>
+              <div className="text-[#C88B54] font-serif text-sm tracking-[0.3em] mb-2">Q-MÉTIER</div>
+              <h3 className="text-2xl font-serif text-[#D9B38C] mb-2 font-bold">L'Élite des Métiers</h3>
+              <p className="text-sm opacity-80 mb-6 leading-relaxed font-sans">
+                Professionnels vérifiés (RBQ).<br />Plomberie, électricité, et contrats de prestige.
+              </p>
+            </div>
+            <a href="https://qmetier.ca" target="_blank" rel="noopener noreferrer" className="gold-btn text-center block" style={{ padding: "0.8rem", fontSize: "0.85rem" }}>
+              Entrer au Quartier Général ($$$$$$)
+            </a>
+          </div>
+
+          {/* Option Q-EMPLOIS (Current) */}
+          <div className="stitch-box p-6 flex-1 bg-[#1F2F3F] border-[#D9B38C] shadow-[0_0_20px_rgba(217,179,140,0.1)] flex flex-col justify-between">
+            <div>
+              <div className="text-[#D9B38C] font-serif text-sm tracking-[0.3em] mb-2">Q-EMPLOIS</div>
+              <h3 className="text-2xl font-serif text-white mb-2 font-bold">Le Marché Local</h3>
+              <p className="text-sm opacity-80 mb-6 leading-relaxed font-sans">
+                La plateforme où vous êtes présentement.<br />Petits travaux, livraison, de voisin à voisin.
+              </p>
+            </div>
+            <div className="text-center font-serif italic text-sm opacity-50 py-[0.8rem]">
+              Vous êtes ici ($$)
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div className="stitch-h mx-auto" style={{ maxWidth: "1200px" }}></div>
 
       {/* ════════════════ HERO ════════════════ */}
       <section className="leather" style={{ paddingTop: 120, paddingBottom: 80 }}>
