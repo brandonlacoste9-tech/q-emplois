@@ -426,22 +426,26 @@ export function LandingPage() {
               </p>
             </div>
             <a href="https://qmetier.ca" target="_blank" rel="noopener noreferrer" className="gold-btn" style={{ textAlign: "center", display: "block", padding: "12px", fontSize: "0.9rem" }}>
-              {lang === 'fr' ? "Entrer au Quartier Général ($$$$$$)" : "Entering Headquarters ($$$$$$)"}
+              {lang === 'fr' ? "Entrer au Quartier Général" : "Entering Headquarters"}
             </a>
           </div>
 
           {/* Option Q-EMPLOIS (Current) */}
-          <div className="stitch-box" style={{
+          <div className="stitch-box group" style={{
             flex: "1 1 300px",
             padding: "32px",
-            background: "#1F2F3F",
-            borderColor: "#D9B38C",
-            boxShadow: "0 0 30px rgba(217,179,140,0.08)",
+            background: "rgba(22, 34, 46, 0.8)",
+            backdropFilter: "blur(4px)",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
+            cursor: "default",
+            transition: "all 0.3s",
             minHeight: "260px"
-          }}>
+          }}
+            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(26, 40, 54, 0.95)"}
+            onMouseLeave={(e) => e.currentTarget.style.background = "rgba(22, 34, 46, 0.8)"}
+          >
             <div>
               <div style={{ color: "#D9B38C", fontFamily: "'Playfair Display', serif", fontSize: "0.85rem", letterSpacing: "0.3em", marginBottom: "8px" }}>Q-jobs</div>
               <h3 style={{ fontSize: "1.75rem", fontFamily: "'Playfair Display', serif", color: "#fff", marginBottom: "12px", fontWeight: "bold" }}>
@@ -452,8 +456,8 @@ export function LandingPage() {
                 {lang === 'fr' ? "Petits travaux, livraison, de voisin à voisin." : "Small jobs, delivery, from neighbor to neighbor."}
               </p>
             </div>
-            <div style={{ textAlign: "center", fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontSize: "0.95rem", opacity: 0.5, padding: "12px 0" }}>
-              {lang === 'fr' ? "Vous êtes ici ($$)" : "You are here ($$)"}
+            <div className="gold-btn" style={{ textAlign: "center", display: "block", padding: "12px", fontSize: "0.9rem", opacity: 0.4, filter: "grayscale(100%)", cursor: "default" }}>
+              {lang === 'fr' ? "Vous êtes ici" : "You are here"}
             </div>
           </div>
 
