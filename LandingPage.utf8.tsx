@@ -425,9 +425,9 @@ export function LandingPage() {
                 {lang === 'fr' ? "Plomberie, ├⌐lectricit├⌐, et contrats de prestige." : "Plumbing, electrical, and prestige contracts."}
               </p>
             </div>
-            <Link to="/q-business" className="gold-btn" style={{ textAlign: "center", display: "block", padding: "12px", fontSize: "0.9rem" }}>
-              {lang === 'fr' ? "Entrer au Quartier Général" : "Entering Headquarters"}
-            </Link>
+            <a href="https://qmetier.ca" target="_blank" rel="noopener noreferrer" className="gold-btn" style={{ textAlign: "center", display: "block", padding: "12px", fontSize: "0.9rem" }}>
+              {lang === 'fr' ? "Entrer au Quartier G├⌐n├⌐ral" : "Entering Headquarters"}
+            </a>
           </div>
 
           {/* Option Q-EMPLOIS (Current) */}
