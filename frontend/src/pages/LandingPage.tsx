@@ -400,31 +400,15 @@ export function LandingPage() {
         }}>
 
           {/* Option Q-MÉTIER: Carhartt Leather Aesthetic */}
-          <div className="stitch-box group" style={{
+          <div className="stitch-box stitch-box-interactive group" style={{
             flex: "1 1 300px",
             padding: "32px",
-            background: "linear-gradient(135deg, #4A2B14, #311A0B)", /* Deep rugged leather */
-            border: "1px solid #8A4A25", /* Saddle brown stitch line */
-            boxShadow: "0 8px 32px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.3)", /* Depth */
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            cursor: "pointer",
-            transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
             minHeight: "260px"
-          }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "linear-gradient(135deg, #5C3317, #3C200D)";
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow = "0 16px 48px rgba(0,0,0,0.6), inset 0 0 60px rgba(0,0,0,0.4)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "linear-gradient(135deg, #4A2B14, #311A0B)";
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.3)";
-            }}
-          >
-            <div>
+          }}>
+            <div style={{ position: "relative", zIndex: 10 }}>
               <div style={{ color: "#E0A96D", fontFamily: "'Playfair Display', serif", fontSize: "0.85rem", letterSpacing: "0.3em", marginBottom: "8px", textTransform: "uppercase", fontWeight: "bold" }}>Q-business</div>
               <h3 style={{ fontSize: "1.75rem", fontFamily: "'Playfair Display', serif", color: "#F2D4B6", marginBottom: "12px", fontWeight: "900", textShadow: "1px 1px 2px rgba(0,0,0,0.8)" }}>
                 {lang === 'fr' ? "L'Élite des Métiers" : "The Elite of Trades"}
@@ -437,7 +421,8 @@ export function LandingPage() {
             <a href="https://qmetier.ca" target="_blank" rel="noopener noreferrer" className="gold-btn" style={{
               textAlign: "center", display: "block", padding: "12px", fontSize: "0.95rem",
               background: "linear-gradient(to right, #B66D38, #8A4A25)", border: "1px solid #E0A96D",
-              color: "#FFF", fontWeight: "bold", textShadow: "1px 1px 2px rgba(0,0,0,0.5)"
+              color: "#FFF", fontWeight: "bold", textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
+              position: "relative", zIndex: 10
             }}>
               {lang === 'fr' ? "Entrer au Quartier Général" : "Entering Headquarters"}
             </a>
@@ -447,28 +432,13 @@ export function LandingPage() {
           <div className="stitch-box group" style={{
             flex: "1 1 300px",
             padding: "32px",
-            background: "linear-gradient(135deg, #4A2B14, #311A0B)", /* Deep rugged leather */
-            border: "1px solid #8A4A25", /* Saddle brown stitch line */
-            boxShadow: "0 8px 32px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.3)", /* Depth */
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
             cursor: "default",
-            transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
             minHeight: "260px"
-          }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "linear-gradient(135deg, #5C3317, #3C200D)";
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow = "0 16px 48px rgba(0,0,0,0.6), inset 0 0 60px rgba(0,0,0,0.4)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "linear-gradient(135deg, #4A2B14, #311A0B)";
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.3)";
-            }}
-          >
-            <div>
+          }}>
+            <div style={{ position: "relative", zIndex: 10 }}>
               <div style={{ color: "#E0A96D", fontFamily: "'Playfair Display', serif", fontSize: "0.85rem", letterSpacing: "0.3em", marginBottom: "8px", textTransform: "uppercase", fontWeight: "bold" }}>Q-jobs</div>
               <h3 style={{ fontSize: "1.75rem", fontFamily: "'Playfair Display', serif", color: "#F2D4B6", marginBottom: "12px", fontWeight: "900", textShadow: "1px 1px 2px rgba(0,0,0,0.8)" }}>
                 {lang === 'fr' ? "Le Marché Local" : "The Local Market"}
@@ -482,7 +452,8 @@ export function LandingPage() {
               textAlign: "center", display: "block", padding: "12px", fontSize: "0.95rem",
               background: "linear-gradient(to right, #6b5c53, #4a433f)", border: "1px solid #8e837b",
               color: "#d1c9c4", fontWeight: "bold", textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
-              opacity: 0.7, cursor: "default"
+              opacity: 0.7, cursor: "default",
+              position: "relative", zIndex: 10
             }}>
               {lang === 'fr' ? "Vous êtes ici" : "You are here"}
             </div>
