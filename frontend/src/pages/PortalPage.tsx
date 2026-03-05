@@ -5,23 +5,44 @@ export function PortalPage() {
     const [lang, setLang] = useState<'fr' | 'en'>('fr');
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#1a0f0a]" style={{ backgroundImage: "radial-gradient(circle at top, #2b1a10 0%, #1a0f0a 100%)" }}>
+        <div style={{
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#1a0f0a",
+            backgroundImage: "radial-gradient(circle at top, #2b1a10 0%, #1a0f0a 100%)",
+            padding: "40px 0"
+        }}>
 
             {/* Top right language toggle */}
-            <div className="absolute top-6 right-8">
+            <div style={{ position: "absolute", top: "24px", right: "32px", zIndex: 50 }}>
                 <button
                     onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
-                    className="text-[#E0A96D] opacity-70 hover:opacity-100 transition-opacity font-bold tracking-widest text-sm"
+                    style={{
+                        color: "#E0A96D",
+                        opacity: 0.7,
+                        fontWeight: "bold",
+                        letterSpacing: "0.1em",
+                        fontSize: "0.875rem",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        textTransform: "uppercase"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
                 >
                     {lang === 'fr' ? 'EN' : 'FR'}
                 </button>
             </div>
 
-            <div className="text-center mb-16">
-                <h1 className="serif cream-hi" style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, letterSpacing: "8px", textTransform: "uppercase" }}>
+            <div style={{ textAlign: "center", marginBottom: "64px", padding: "0 24px" }}>
+                <h1 className="serif cream-hi" style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, letterSpacing: "8px", textTransform: "uppercase", margin: "0 0 16px 0" }}>
                     L'Empire du Travail
                 </h1>
-                <p className="text-[#E0A96D] tracking-[0.3em] uppercase text-sm mt-4 font-bold opacity-80" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <p style={{ color: "#E0A96D", letterSpacing: "0.3em", textTransform: "uppercase", fontSize: "0.875rem", fontWeight: "bold", opacity: 0.8, fontFamily: "'Inter', sans-serif", margin: 0 }}>
                     {lang === 'fr' ? "Sélectionnez votre quartier général" : "Select your headquarters"}
                 </p>
             </div>
@@ -98,7 +119,7 @@ export function PortalPage() {
                 </div>
             </div>
 
-            <div className="mt-16 opacity-40 text-xs tracking-widest uppercase font-bold text-[#E0A96D]">
+            <div style={{ marginTop: "64px", opacity: 0.4, fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "bold", color: "#E0A96D" }}>
                 © 2026 MAXIMUS IMPERIAL | SOUVERAINETÉ NUMÉRIQUE
             </div>
         </div>

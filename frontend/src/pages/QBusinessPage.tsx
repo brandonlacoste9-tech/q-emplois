@@ -5,57 +5,60 @@ export function QBusinessPage() {
     const [lang, setLang] = useState<'fr' | 'en'>('fr');
 
     return (
-        <div className="min-h-screen bg-[#1a0f0a] text-[#f4ece0]" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ minHeight: "100vh", backgroundColor: "#1a0f0a", color: "#f4ece0", fontFamily: "'Inter', sans-serif" }}>
             {/* Navbar */}
-            <nav className="flex justify-between items-center p-6 border-b border-[#5a3a28] bg-[#2b1a10]">
-                <Link to="/" className="text-[#E0A96D] text-2xl font-bold tracking-widest uppercase" style={{ fontFamily: "'Cinzel', serif" }}>
+            <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "24px", borderBottom: "1px solid #5a3a28", backgroundColor: "#2b1a10" }}>
+                <Link to="/" style={{ color: "#E0A96D", fontSize: "1.5rem", fontWeight: "bold", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "'Cinzel', serif", textDecoration: "none" }}>
                     Q-MÉTIER
                 </Link>
-                <div className="flex gap-4 items-center">
-                    <button onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} className="text-[#E0A96D] text-sm font-bold opacity-80 hover:opacity-100">
+                <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+                    <button
+                        onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+                        style={{ color: "#E0A96D", fontSize: "0.875rem", fontWeight: "bold", opacity: 0.8, cursor: "pointer", background: "none", border: "none" }}
+                    >
                         {lang === 'fr' ? 'EN' : 'FR'}
                     </button>
-                    <button className="px-4 py-2 border border-[#E0A96D] text-[#E0A96D] rounded text-sm hover:bg-[#E0A96D] hover:text-[#1a0f0a] transition-all">
+                    <button style={{ padding: "8px 16px", border: "1px solid #E0A96D", color: "#E0A96D", borderRadius: "4px", fontSize: "0.875rem", background: "transparent", cursor: "pointer", transition: "all 0.3s ease" }}>
                         {lang === 'fr' ? 'Connexion' : 'Login'}
                     </button>
                 </div>
             </nav>
 
             {/* Hero Section */}
-            <div className="py-20 px-6 max-w-5xl mx-auto text-center">
-                <h1 className="text-4xl md:text-6xl font-black mb-6" style={{ fontFamily: "'Playfair Display', serif", color: "#F2D4B6" }}>
+            <div style={{ padding: "80px 24px", maxWidth: "1024px", margin: "0 auto", textAlign: "center" }}>
+                <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 900, marginBottom: "24px", fontFamily: "'Playfair Display', serif", color: "#F2D4B6" }}>
                     {lang === 'fr' ? "L'Élite des Métiers du Québec" : "The Elite Trades of Quebec"}
                 </h1>
-                <p className="text-lg md:text-xl text-[#D1B295] mb-12 max-w-3xl mx-auto leading-relaxed">
+                <p style={{ fontSize: "clamp(1.125rem, 2vw, 1.25rem)", color: "#D1B295", maxWidth: "768px", margin: "0 auto 48px auto", lineHeight: "1.6" }}>
                     {lang === 'fr'
                         ? "Accès exclusif aux meilleurs entrepreneurs vérifiés RBQ. Plomberie, électricité, et construction de prestige gérés par intelligence artificielle souveraine."
                         : "Exclusive access to the best RBQ-verified contractors. Plumbing, electrical, and prestige construction managed by sovereign AI."}
                 </p>
 
-                <div className="flex justify-center gap-6 flex-wrap">
-                    <button className="px-8 py-4 bg-gradient-to-r from-[#B66D38] to-[#8A4A25] text-white font-bold rounded shadow-lg border border-[#E0A96D] hover:scale-105 transition-transform">
+                <div style={{ display: "flex", justifyContent: "center", gap: "24px", flexWrap: "wrap" }}>
+                    <button style={{ padding: "16px 32px", background: "linear-gradient(to right, #B66D38, #8A4A25)", color: "white", fontWeight: "bold", borderRadius: "4px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.5)", border: "1px solid #E0A96D", cursor: "pointer", fontSize: "1rem" }}>
                         {lang === 'fr' ? "Soumettre un projet VIP" : "Submit VIP Project"}
                     </button>
-                    <button className="px-8 py-4 bg-transparent border-2 border-[#5a3a28] text-[#E0A96D] font-bold rounded hover:border-[#E0A96D] transition-colors">
+                    <button style={{ padding: "16px 32px", background: "transparent", border: "2px solid #5a3a28", color: "#E0A96D", fontWeight: "bold", borderRadius: "4px", cursor: "pointer", fontSize: "1rem" }}>
                         {lang === 'fr' ? "Rejoindre l'Élite (RBQ)" : "Join the Elite (RBQ)"}
                     </button>
                 </div>
             </div>
 
             {/* verification banner */}
-            <div className="bg-[#2b1a10] border-y border-[#5a3a28] py-12">
-                <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                    <div className="stitch-box p-8">
-                        <h3 className="text-[#E0A96D] font-bold text-xl mb-3" style={{ fontFamily: "'Cinzel', serif" }}>Validation RBQ</h3>
-                        <p className="text-[#D1B295] text-sm">Vérification en temps réel des licences et assurances.</p>
+            <div style={{ backgroundColor: "#2b1a10", borderTop: "1px solid #5a3a28", borderBottom: "1px solid #5a3a28", padding: "48px 0" }}>
+                <div style={{ maxWidth: "1152px", margin: "0 auto", padding: "0 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "32px", textAlign: "center" }}>
+                    <div className="stitch-box" style={{ padding: "32px" }}>
+                        <h3 style={{ color: "#E0A96D", fontWeight: "bold", fontSize: "1.25rem", marginBottom: "12px", fontFamily: "'Cinzel', serif" }}>Validation RBQ</h3>
+                        <p style={{ color: "#D1B295", fontSize: "0.875rem", margin: 0 }}>Vérification en temps réel des licences et assurances.</p>
                     </div>
-                    <div className="stitch-box p-8">
-                        <h3 className="text-[#E0A96D] font-bold text-xl mb-3" style={{ fontFamily: "'Cinzel', serif" }}>Contrats Garantis</h3>
-                        <p className="text-[#D1B295] text-sm">Paiements sécurisés par L'Atelier avec libération sur jalon.</p>
+                    <div className="stitch-box" style={{ padding: "32px" }}>
+                        <h3 style={{ color: "#E0A96D", fontWeight: "bold", fontSize: "1.25rem", marginBottom: "12px", fontFamily: "'Cinzel', serif" }}>Contrats Garantis</h3>
+                        <p style={{ color: "#D1B295", fontSize: "0.875rem", margin: 0 }}>Paiements sécurisés par L'Atelier avec libération sur jalon.</p>
                     </div>
-                    <div className="stitch-box p-8">
-                        <h3 className="text-[#E0A96D] font-bold text-xl mb-3" style={{ fontFamily: "'Cinzel', serif" }}>IA Souveraine</h3>
-                        <p className="text-[#D1B295] text-sm">Vos données et historiques de chantiers restent au Québec.</p>
+                    <div className="stitch-box" style={{ padding: "32px" }}>
+                        <h3 style={{ color: "#E0A96D", fontWeight: "bold", fontSize: "1.25rem", marginBottom: "12px", fontFamily: "'Cinzel', serif" }}>IA Souveraine</h3>
+                        <p style={{ color: "#D1B295", fontSize: "0.875rem", margin: 0 }}>Vos données et historiques de chantiers restent au Québec.</p>
                     </div>
                 </div>
             </div>
