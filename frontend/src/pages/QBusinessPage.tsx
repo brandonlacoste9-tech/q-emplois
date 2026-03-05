@@ -18,9 +18,9 @@ export function QBusinessPage() {
                     >
                         {lang === 'fr' ? 'EN' : 'FR'}
                     </button>
-                    <button style={{ padding: "8px 16px", border: "1px solid #E0A96D", color: "#E0A96D", borderRadius: "4px", fontSize: "0.875rem", background: "transparent", cursor: "pointer", transition: "all 0.3s ease" }}>
-                        {lang === 'fr' ? 'Connexion' : 'Login'}
-                    </button>
+                    <Link to="/latelier" style={{ padding: "8px 16px", border: "1px solid #E0A96D", color: "#E0A96D", borderRadius: "4px", fontSize: "0.875rem", background: "transparent", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none" }}>
+                        {lang === 'fr' ? 'Accéder à L’Atelier' : 'Access L’Atelier'}
+                    </Link>
                 </div>
             </nav>
 
