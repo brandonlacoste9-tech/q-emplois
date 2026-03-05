@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { TikTokGrid } from '../components/TikTokGrid';
 
 export function QJobsPage() {
   const [lang, setLang] = useState<'fr' | 'en'>('fr');
@@ -75,6 +76,8 @@ export function QJobsPage() {
           </div>
         </div>
       </div>
+
+      <TikTokGrid />
     </div>
   );
 }

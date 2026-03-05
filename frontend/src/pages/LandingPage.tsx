@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SEOHead } from "../components/SEOHead";
+import { TikTokGrid } from "../components/TikTokGrid";
 
 /* ΓöÇΓöÇΓöÇ TRANSLATIONS ΓöÇΓöÇΓöÇ */
 const T = {
@@ -565,6 +566,8 @@ export function LandingPage() {
       </section>
 
       <div className="stitch-h" style={{ maxWidth: 1100, margin: "0 auto" }} />
+
+      <TikTokGrid />
 
       {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ WHATSAPP / MAX ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
       <section className="leather" style={{ padding: "80px 24px" }}>
