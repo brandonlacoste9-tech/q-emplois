@@ -20,40 +20,56 @@
   }
 }
 
-/* UI/UX Pro Max Leather Skill */
+/* UI/UX Pro Max Leather Skill - Kaltrac Edition */
 .stitch-box {
   position: relative;
-  border-radius: 12px;
-  background-color: #2b1a10;
+  border-radius: 16px;
+  background-color: #3a2218;
+  /* var(--surface) */
   background-image:
-    linear-gradient(135deg, rgba(62, 39, 25, 0.8), rgba(35, 19, 10, 0.95)),
-    url('data:image/svg+xml;utf8,<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.12"/></svg>');
-  background-blend-mode: overlay;
-  border: 1px solid #1c0e06;
+    linear-gradient(#3a2218bf, #3a2218bf),
+    url('https://www.transparenttextures.com/patterns/leather.png');
+  background-size: auto, 300px;
+  background-blend-mode: normal;
+  border: 2px solid #5a3a28;
+  /* var(--border) */
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.05),
-    inset 0 0 20px rgba(0, 0, 0, 0.5),
-    0 8px 24px rgba(0, 0, 0, 0.4);
+    0 20px 40px rgba(0, 0, 0, 0.5),
+    inset 0 0 60px rgba(0, 0, 0, 0.35);
   z-index: 1;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-.stitch-box::after {
+.stitch-box::before {
   content: '';
   position: absolute;
   top: 8px;
   left: 8px;
   right: 8px;
   bottom: 8px;
-  border: 1.5px dashed rgba(180, 120, 75, 0.4);
-  /* Subtle saddle thread */
-  border-radius: 8px;
+  border: 1px dashed #8b6e4e;
+  /* var(--stitch) */
+  border-radius: 10px;
+  opacity: 0.7;
   pointer-events: none;
   z-index: 2;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8));
-  /* Thread casting shadow */
-  transition: all 0.4s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stitch-box::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  border: 1px dashed #8b6e4e;
+  border-radius: 8px;
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 2;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stitch-box-interactive {
@@ -61,17 +77,22 @@
 }
 
 .stitch-box-interactive:hover {
-  transform: translateY(-2px);
-  background-image:
-    linear-gradient(135deg, rgba(75, 48, 32, 0.85), rgba(42, 23, 12, 0.98)),
-    url('data:image/svg+xml;utf8,<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.12"/></svg>');
+  border-color: #c5a055;
+  /* var(--gold) */
+  transform: translateY(-3px);
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.08),
-    inset 0 0 20px rgba(0, 0, 0, 0.4),
-    0 12px 32px rgba(0, 0, 0, 0.6);
+    0 30px 60px rgba(0, 0, 0, 0.7),
+    0 0 25px rgba(197, 160, 85, 0.25),
+    inset 0 0 60px rgba(0, 0, 0, 0.3);
+}
+
+.stitch-box-interactive:hover::before {
+  opacity: 1;
+  border-color: #c5a055;
 }
 
 .stitch-box-interactive:hover::after {
-  border-color: rgba(224, 169, 109, 0.6);
-  /* Brighter thread on hover */
+  opacity: 0.8;
+  border-color: #c5a055;
+  border-style: solid;
 }
