@@ -45,15 +45,15 @@ export function QBusinessPage() {
             {/* verification banner */}
             <div className="bg-[#2b1a10] border-y border-[#5a3a28] py-12">
                 <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                    <div className="imperial-leather-box p-8">
+                    <div className="stitch-box p-8">
                         <h3 className="text-[#E0A96D] font-bold text-xl mb-3" style={{ fontFamily: "'Cinzel', serif" }}>Validation RBQ</h3>
                         <p className="text-[#D1B295] text-sm">Vérification en temps réel des licences et assurances.</p>
                     </div>
-                    <div className="imperial-leather-box p-8">
+                    <div className="stitch-box p-8">
                         <h3 className="text-[#E0A96D] font-bold text-xl mb-3" style={{ fontFamily: "'Cinzel', serif" }}>Contrats Garantis</h3>
                         <p className="text-[#D1B295] text-sm">Paiements sécurisés par L'Atelier avec libération sur jalon.</p>
                     </div>
-                    <div className="imperial-leather-box p-8">
+                    <div className="stitch-box p-8">
                         <h3 className="text-[#E0A96D] font-bold text-xl mb-3" style={{ fontFamily: "'Cinzel', serif" }}>IA Souveraine</h3>
                         <p className="text-[#D1B295] text-sm">Vos données et historiques de chantiers restent au Québec.</p>
                     </div>

@@ -38,7 +38,7 @@ export function PortalPage() {
                 }}>
 
                     {/* Option Q-MÉTIER: Imperial Leather Aesthetic */}
-                    <div className="imperial-leather-box imperial-leather-box-interactive group" style={{
+                    <div className="stitch-box stitch-box-interactive group" style={{
                         flex: "1 1 300px",
                         padding: "32px",
                         display: "flex",
@@ -67,7 +67,7 @@ export function PortalPage() {
                     </div>
 
                     {/* Option Q-EMPLOIS: Imperial Leather Aesthetic */}
-                    <div className="imperial-leather-box imperial-leather-box-interactive group" style={{
+                    <div className="stitch-box stitch-box-interactive group" style={{
                         flex: "1 1 300px",
                         padding: "32px",
                         display: "flex",
