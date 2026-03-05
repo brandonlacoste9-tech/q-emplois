@@ -429,7 +429,7 @@ export function LandingPage() {
           </div>
 
           {/* Option Q-EMPLOIS (Current): Carhartt Leather Aesthetic */}
-          <div className="stitch-box group" style={{
+          <div className="stitch-box stitch-box-interactive group" style={{
             flex: "1 1 300px",
             padding: "32px",
             display: "flex",
