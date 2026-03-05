@@ -399,33 +399,46 @@ export function LandingPage() {
           zIndex: 10
         }}>
 
-          {/* Option Q-MÉTIER */}
+          {/* Option Q-MÉTIER: Carhartt Leather Aesthetic */}
           <div className="stitch-box group" style={{
             flex: "1 1 300px",
             padding: "32px",
-            background: "rgba(22, 34, 46, 0.8)",
-            backdropFilter: "blur(4px)",
+            background: "linear-gradient(135deg, #4A2B14, #311A0B)", /* Deep rugged leather */
+            border: "1px solid #8A4A25", /* Saddle brown stitch line */
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.3)", /* Depth */
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
             cursor: "pointer",
-            transition: "all 0.3s",
+            transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
             minHeight: "260px"
           }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(26, 40, 54, 0.95)"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "rgba(22, 34, 46, 0.8)"}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "linear-gradient(135deg, #5C3317, #3C200D)";
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 16px 48px rgba(0,0,0,0.6), inset 0 0 60px rgba(0,0,0,0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "linear-gradient(135deg, #4A2B14, #311A0B)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.3)";
+            }}
           >
             <div>
-              <div style={{ color: "#C88B54", fontFamily: "'Playfair Display', serif", fontSize: "0.85rem", letterSpacing: "0.3em", marginBottom: "8px" }}>Q-business</div>
-              <h3 style={{ fontSize: "1.75rem", fontFamily: "'Playfair Display', serif", color: "#D9B38C", marginBottom: "12px", fontWeight: "bold" }}>
+              <div style={{ color: "#E0A96D", fontFamily: "'Playfair Display', serif", fontSize: "0.85rem", letterSpacing: "0.3em", marginBottom: "8px", textTransform: "uppercase", fontWeight: "bold" }}>Q-business</div>
+              <h3 style={{ fontSize: "1.75rem", fontFamily: "'Playfair Display', serif", color: "#F2D4B6", marginBottom: "12px", fontWeight: "900", textShadow: "1px 1px 2px rgba(0,0,0,0.8)" }}>
                 {lang === 'fr' ? "L'Élite des Métiers" : "The Elite of Trades"}
               </h3>
-              <p style={{ fontSize: "0.95rem", opacity: 0.8, marginBottom: "24px", lineHeight: "1.6", fontFamily: "'Inter', sans-serif" }}>
+              <p style={{ fontSize: "0.95rem", color: "#D1B295", opacity: 0.9, marginBottom: "24px", lineHeight: "1.6", fontFamily: "'Inter', sans-serif" }}>
                 {lang === 'fr' ? "Professionnels vérifiés (RBQ)." : "Verified Professionals (RBQ)."}<br />
                 {lang === 'fr' ? "Plomberie, électricité, et contrats de prestige." : "Plumbing, electrical, and prestige contracts."}
               </p>
             </div>
-            <a href="https://qmetier.ca" target="_blank" rel="noopener noreferrer" className="gold-btn" style={{ textAlign: "center", display: "block", padding: "12px", fontSize: "0.9rem" }}>
+            <a href="https://qmetier.ca" target="_blank" rel="noopener noreferrer" className="gold-btn" style={{
+              textAlign: "center", display: "block", padding: "12px", fontSize: "0.95rem",
+              background: "linear-gradient(to right, #B66D38, #8A4A25)", border: "1px solid #E0A96D",
+              color: "#FFF", fontWeight: "bold", textShadow: "1px 1px 2px rgba(0,0,0,0.5)"
+            }}>
               {lang === 'fr' ? "Entrer au Quartier Général" : "Entering Headquarters"}
             </a>
           </div>
