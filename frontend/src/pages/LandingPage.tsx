@@ -7,61 +7,61 @@ const T = {
   fr: {
     nav: { find: "Trouver un job", become: "Poster une offre", login: "Connexion", signup: "S'inscrire" },
     hero: {
-      h1: "Tous les jobs, au m├¬me endroit.",
-      sub: "Trouvez un job ou postulez en quelques clics. Livraison, bricolage, serveur, informatique... tout est l├á.",
+      h1: "Tous les jobs, au même endroit.",
+      sub: "Trouvez un job ou postulez en quelques clics. Livraison, bricolage, serveur, informatique... tout est là.",
       ph: "Que faut-il faire ?",
-      cta: "R├⌐server maintenant",
+      cta: "Réserver maintenant",
     },
     cats: {
       title: "Tous types de jobs",
       items: [
-        { icon: "≡ƒÜÜ", name: "Livraison & Transport", desc: "Coursier, chauffeur, d├⌐m├⌐nagement." },
-        { icon: "≡ƒì╜∩╕Å", name: "Restauration & ├ëv├⌐nements", desc: "Serveur, barman, s├⌐curit├⌐, animation." },
-        { icon: "≡ƒÆ╗", name: "Tech & Informatique", desc: "Aide PC, r├⌐paration t├⌐l├⌐phone, graphisme." },
-        { icon: "≡ƒöº", name: "Bricolage & R├⌐parations", desc: "Montage meubles, petits travaux, m├⌐nage." },
-        { icon: "≡ƒÄô", name: "├ëducation & Services", desc: "Tutorat, garde d'enfants, promenade chiens." },
-        { icon: "≡ƒÆ¬", name: "Manutention & Aide", desc: "D├⌐m├⌐nagement, portage, aide senior." },
+        { icon: "🚚", name: "Livraison & Transport", desc: "Coursier, chauffeur, déménagement." },
+        { icon: "🍽️", name: "Restauration & Événements", desc: "Serveur, barman, sécurité, animation." },
+        { icon: "💻", name: "Tech & Informatique", desc: "Aide PC, réparation téléphone, graphisme." },
+        { icon: "🔧", name: "Bricolage & Réparations", desc: "Montage meubles, petits travaux, ménage." },
+        { icon: "🎓", name: "Éducation & Services", desc: "Tutorat, garde d'enfants, promenade chiens." },
+        { icon: "💪", name: "Manutention & Aide", desc: "Déménagement, portage, aide senior." },
       ],
     },
     how: {
-      title: "Comment ├ºa marche",
-      stepLabel: "├ëtape",
+      title: "Comment ça marche",
+      stepLabel: "Étape",
       steps: [
-        { ic: "≡ƒô¥", t: "D├⌐crivez", d: "Mentionnez vos besoins pour trouver le bon pro." },
-        { ic: "≡ƒöì", t: "Trouvez", d: "On jumelle le meilleur pro pr├¿s de chez vous." },
-        { ic: "≡ƒôà", t: "R├⌐servez", d: "R├⌐servez votre cr├⌐neau en quelques clics." },
-        { ic: "≡ƒÆ░", t: "Payez", d: "Payez en ligne de fa├ºon s├⌐curis├⌐e via Stripe." },
+        { ic: "📝", t: "Décrivez", d: "Mentionnez vos besoins pour trouver le bon pro." },
+        { ic: "🔍", t: "Trouvez", d: "On jumelle le meilleur pro près de chez vous." },
+        { ic: "📅", t: "Réservez", d: "Réservez votre créneau en quelques clics." },
+        { ic: "💰", t: "Payez", d: "Payez en ligne de façon sécurisée via Stripe." },
       ],
     },
     wa: {
-      title: "Parlez ├á Max sur WhatsApp",
-      sub: "Notre IA vous trouve un job ou un employ├⌐ en moins de 5 minutes.",
-      cta: "Envoyer un message ├á Max",
+      title: "Parlez à Max sur WhatsApp",
+      sub: "Notre IA vous trouve un job ou un employé en moins de 5 minutes.",
+      cta: "Envoyer un message à Max",
       msgs: [
-        { r: "u", t: "Salut Max, je cherche un job de livreur ├á Montr├⌐al" },
-        { r: "b", t: "Envoye! ≡ƒÜÜ J'ai 5 offres pr├¿s de chez toi. Voici la meilleure :" },
-        { r: "b", t: "≡ƒôª Livreur Colis ΓÇö 22$/h ΓÇö 1.8 km\n≡ƒôà Aujourd'hui 14h-18h\n\n[Postuler]  [Voir d'autres]" },
+        { r: "u", t: "Salut Max, je cherche un job de livreur à Montréal" },
+        { r: "b", t: "Envoye! 🚚 J'ai 5 offres près de chez toi. Voici la meilleure :" },
+        { r: "b", t: "📦 Livreur Colis — 22$/h — 1.8 km\n📅 Aujourd'hui 14h-18h\n\n[Postuler]  [Voir d'autres]" },
         { r: "u", t: "Postuler" },
-        { r: "b", t: "Γ£à C'est envoy├⌐! L'employeur te contactera dans les 30 min. Bonne chance! ≡ƒì»" },
+        { r: "b", t: "✅ C'est envoyé! L'employeur te contactera dans les 30 min. Bonne chance! 🍀" },
       ],
       online: "En ligne",
     },
     pro: {
       title: "Vous cherchez du travail ?",
-      sub: "Inscrivez-vous gratuitement et recevez des offres pr├¿s de chez vous. ├ëtudiants, retrait├⌐s, travailleurs autonomes ΓÇö tous sont bienvenus.",
+      sub: "Inscrivez-vous gratuitement et recevez des offres près de chez vous. Étudiants, retraités, travailleurs autonomes — tous sont bienvenus.",
       perks: [
         "Recevez des offres directement sur WhatsApp",
-        "Paiements s├⌐curis├⌐s via Stripe ΓÇö fini le cash",
-        "Travaillez quand vous voulez, o├╣ vous voulez",
+        "Paiements sécurisés via Stripe — fini le cash",
+        "Travaillez quand vous voulez, où vous voulez",
         "Pas de licence requise pour la plupart des jobs",
       ],
-      cta: "Commencer ├á gagner",
-      sub2: "Inscription gratuite ΓÇö commencez aujourd'hui",
+      cta: "Commencer à gagner",
+      sub2: "Inscription gratuite — commencez aujourd'hui",
     },
     foot: {
-      tag: "Tous les jobs du Qu├⌐bec ΓÇö accessible ├á tous.",
-      legal: "Conforme ├á la Loi 96 (langue) et la Loi 25 (vie priv├⌐e).",
-      copy: "┬⌐ 2026 Q-emplois. Tous droits r├⌐serv├⌐s.",
+      tag: "Tous les jobs du Québec — accessible à tous.",
+      legal: "Conforme à la Loi 96 (langue) et la Loi 25 (vie privée).",
+      copy: "© 2026 Q-emplois. Tous droits réservés.",
     },
   },
   en: {
@@ -75,22 +75,22 @@ const T = {
     cats: {
       title: "All Job Types",
       items: [
-        { icon: "≡ƒÜÜ", name: "Delivery & Transport", desc: "Courier, driver, moving help." },
-        { icon: "≡ƒì╜∩╕Å", name: "Food Service & Events", desc: "Server, bartender, security, DJ." },
-        { icon: "≡ƒÆ╗", name: "Tech & IT", desc: "PC help, phone repair, graphic design." },
-        { icon: "≡ƒöº", name: "Handyman & Repairs", desc: "Furniture assembly, small jobs, cleaning." },
-        { icon: "≡ƒÄô", name: "Education & Care", desc: "Tutoring, childcare, dog walking." },
-        { icon: "≡ƒÆ¬", name: "Labor & Moving Help", desc: "Heavy lifting, moving assistance, senior care." },
+        { icon: "🚚", name: "Delivery & Transport", desc: "Courier, driver, moving help." },
+        { icon: "🍽️", name: "Food Service & Events", desc: "Server, bartender, security, DJ." },
+        { icon: "💻", name: "Tech & IT", desc: "PC help, phone repair, graphic design." },
+        { icon: "🔧", name: "Handyman & Repairs", desc: "Furniture assembly, small jobs, cleaning." },
+        { icon: "🎓", name: "Education & Care", desc: "Tutoring, childcare, dog walking." },
+        { icon: "💪", name: "Labor & Moving Help", desc: "Heavy lifting, moving assistance, senior care." },
       ],
     },
     how: {
       title: "How it works",
       stepLabel: "Step",
       steps: [
-        { ic: "≡ƒô¥", t: "Describe", d: "Tell us what you need to find the right pro." },
-        { ic: "≡ƒöì", t: "Find", d: "We match the best pro near you." },
-        { ic: "≡ƒôà", t: "Book", d: "Reserve your time slot in a few clicks." },
-        { ic: "≡ƒÆ░", t: "Pay", d: "Pay securely online via Stripe." },
+        { ic: "📝", t: "Describe", d: "Tell us what you need to find the right pro." },
+        { ic: "🔍", t: "Find", d: "We match the best pro near you." },
+        { ic: "📅", t: "Book", d: "Reserve your time slot in a few clicks." },
+        { ic: "💰", t: "Pay", d: "Pay securely online via Stripe." },
       ],
     },
     wa: {
@@ -99,29 +99,29 @@ const T = {
       cta: "Message Max",
       msgs: [
         { r: "u", t: "Hey Max, I'm looking for a delivery job in Montreal" },
-        { r: "b", t: "Let's go! ≡ƒÜÜ I've got 5 offers near you. Here's the best:" },
-        { r: "b", t: "≡ƒôª Package Delivery ΓÇö $22/h ΓÇö 1.8 km\n≡ƒôà Today 2pm-6pm\n\n[Apply]  [See others]" },
+        { r: "b", t: "Let's go! 🚚 I've got 5 offers near you. Here's the best:" },
+        { r: "b", t: "📦 Package Delivery — $22/h — 1.8 km\n📅 Today 2pm-6pm\n\n[Apply]  [See others]" },
         { r: "u", t: "Apply" },
-        { r: "b", t: "Γ£à Sent! The employer will contact you within 30 min. Good luck! ≡ƒì»" },
+        { r: "b", t: "✅ Sent! The employer will contact you within 30 min. Good luck! 🍀" },
       ],
       online: "Online",
     },
     pro: {
       title: "Looking for work?",
-      sub: "Sign up for free and get job offers near you. Students, retirees, freelancers ΓÇö everyone is welcome.",
+      sub: "Sign up for free and get job offers near you. Students, retirees, freelancers — everyone is welcome.",
       perks: [
         "Get job offers directly on WhatsApp",
-        "Secure payments via Stripe ΓÇö no more cash",
+        "Secure payments via Stripe — no more cash",
         "Work when you want, where you want",
         "No license required for most jobs",
       ],
       cta: "Start earning",
-      sub2: "Free signup ΓÇö start today",
+      sub2: "Free signup — start today",
     },
     foot: {
-      tag: "All jobs in Qu├⌐bec ΓÇö accessible to everyone.",
+      tag: "All jobs in Québec — accessible to everyone.",
       legal: "Compliant with Bill 96 (language) and Law 25 (privacy).",
-      copy: "┬⌐ 2026 Q-emplois. All rights reserved.",
+      copy: "© 2026 Q-emplois. All rights reserved.",
     },
   },
 };
@@ -132,7 +132,7 @@ const Logo = ({ size = "md" }: { size?: "lg" | "md" | "sm" }) => {
   return (
     <span className={`${sz} tracking-wide`} style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
       <span style={{ color: "#D9B38C", fontWeight: 700 }}>Q</span>
-      <span style={{ color: "#B87B44", fontSize: "0.75em", verticalAlign: "middle" }}>ΓÜ£</span>
+      <span style={{ color: "#B87B44", fontSize: "0.75em", verticalAlign: "middle" }}>⚜</span>
       <span style={{ color: "#D9B38C", fontStyle: "italic", fontWeight: 400 }}>emplois</span>
     </span>
   );
@@ -168,9 +168,9 @@ export function LandingPage() {
   // SEO content based on language
   const seoContent = {
     fr: {
-      title: "Q-emplois | Tous les jobs du Qu├⌐bec - Livraison, Bricolage, Tech & Plus",
-      description: "Trouvez un job ou postulez en quelques clics. Livraison, bricolage, serveur, informatique, d├⌐m├⌐nagement. Plateforme qu├⌐b├⌐coise pour tous types de jobs. Inscription gratuite.",
-      keywords: "emploi qu├⌐bec, job montr├⌐al, livraison, bricolage, d├⌐m├⌐nagement, serveur, informatique, petits boulots, travail autonome, gig economy, taskrabbit qu├⌐bec, jobs ├⌐tudiants, emploi temporaire, aide d├⌐m├⌐nagement, r├⌐paration, montage meubles, coursier, chauffeur, tutorat, garde enfants, m├⌐nage, manutention, jobs qu├⌐bec, emplois montr├⌐al, travail flexible"
+      title: "Q-emplois | Tous les jobs du Québec - Livraison, Bricolage, Tech & Plus",
+      description: "Trouvez un job ou postulez en quelques clics. Livraison, bricolage, serveur, informatique, déménagement. Plateforme québécoise pour tous types de jobs. Inscription gratuite.",
+      keywords: "emploi québec, job montréal, livraison, bricolage, déménagement, serveur, informatique, petits boulots, travail autonome, gig economy, taskrabbit québec, jobs étudiants, emploi temporaire, aide déménagement, réparation, montage meubles, coursier, chauffeur, tutorat, garde enfants, ménage, manutention, jobs québec, emplois montréal, travail flexible"
     },
     en: {
       title: "Q-emplois | All Quebec Jobs - Delivery, Handyman, Tech & More",
@@ -399,7 +399,7 @@ export function LandingPage() {
           zIndex: 10
         }}>
 
-          {/* Option Q-M├ëTIER */}
+          {/* Option Q-MÉTIER */}
           <div className="stitch-box group" style={{
             flex: "1 1 300px",
             padding: "32px",
@@ -418,11 +418,11 @@ export function LandingPage() {
             <div>
               <div style={{ color: "#C88B54", fontFamily: "'Playfair Display', serif", fontSize: "0.85rem", letterSpacing: "0.3em", marginBottom: "8px" }}>Q-business</div>
               <h3 style={{ fontSize: "1.75rem", fontFamily: "'Playfair Display', serif", color: "#D9B38C", marginBottom: "12px", fontWeight: "bold" }}>
-                {lang === 'fr' ? "L'├ëlite des M├⌐tiers" : "The Elite of Trades"}
+                {lang === 'fr' ? "L'Élite des Métiers" : "The Elite of Trades"}
               </h3>
               <p style={{ fontSize: "0.95rem", opacity: 0.8, marginBottom: "24px", lineHeight: "1.6", fontFamily: "'Inter', sans-serif" }}>
-                {lang === 'fr' ? "Professionnels v├⌐rifi├⌐s (RBQ)." : "Verified Professionals (RBQ)."}<br />
-                {lang === 'fr' ? "Plomberie, ├⌐lectricit├⌐, et contrats de prestige." : "Plumbing, electrical, and prestige contracts."}
+                {lang === 'fr' ? "Professionnels vérifiés (RBQ)." : "Verified Professionals (RBQ)."}<br />
+                {lang === 'fr' ? "Plomberie, électricité, et contrats de prestige." : "Plumbing, electrical, and prestige contracts."}
               </p>
             </div>
             <Link to="/q-business" className="gold-btn" style={{ textAlign: "center", display: "block", padding: "12px", fontSize: "0.9rem" }}>
@@ -450,11 +450,11 @@ export function LandingPage() {
             <div>
               <div style={{ color: "#D9B38C", fontFamily: "'Playfair Display', serif", fontSize: "0.85rem", letterSpacing: "0.3em", marginBottom: "8px" }}>Q-jobs</div>
               <h3 style={{ fontSize: "1.75rem", fontFamily: "'Playfair Display', serif", color: "#fff", marginBottom: "12px", fontWeight: "bold" }}>
-                {lang === 'fr' ? "Le March├⌐ Local" : "The Local Market"}
+                {lang === 'fr' ? "Le Marché Local" : "The Local Market"}
               </h3>
               <p style={{ fontSize: "0.95rem", opacity: 0.8, marginBottom: "24px", lineHeight: "1.6", fontFamily: "'Inter', sans-serif" }}>
-                {lang === 'fr' ? "La plateforme o├╣ vous ├¬tes pr├⌐sentement." : "The platform you are currently on."}<br />
-                {lang === 'fr' ? "Petits travaux, livraison, de voisin ├á voisin." : "Small jobs, delivery, from neighbor to neighbor."}
+                {lang === 'fr' ? "La plateforme où vous êtes présentement." : "The platform you are currently on."}<br />
+                {lang === 'fr' ? "Petits travaux, livraison, de voisin à voisin." : "Small jobs, delivery, from neighbor to neighbor."}
               </p>
             </div>
             <a href="#services" className="gold-btn" style={{ textAlign: "center", display: "block", padding: "12px", fontSize: "0.9rem" }} onClick={(e) => { e.preventDefault(); document.getElementById("services")?.scrollIntoView({ behavior: "smooth" }); }}>
@@ -615,13 +615,13 @@ export function LandingPage() {
                     fontSize: 18,
                   }}
                 >
-                  ≡ƒñû
+                  🤖
                 </div>
                 <div>
                   <div className="serif" style={{ fontSize: 14, fontWeight: 700, color: "#E8CDB0" }}>
                     Max (Ti-Guy)
                   </div>
-                  <div style={{ fontSize: 11, color: "#4ade80" }}>ΓùÅ {t.wa.online}</div>
+                  <div style={{ fontSize: 11, color: "#4ade80" }}>● {t.wa.online}</div>
                 </div>
               </div>
               <div style={{ minHeight: 220, display: "flex", flexDirection: "column", gap: 8 }}>
