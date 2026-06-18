@@ -1,116 +1,121 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/Button';
-import { Input } from '../components/Input';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/Card';
-import { HardHat, Mail, Lock, AlertCircle } from 'lucide-react';
+import { BrandLogo } from '../components/BrandLogo';
+
+type Lang = 'fr' | 'en';
+
+const T = {
+  fr: {
+    tag: "Le marché de services local du Québec",
+    title: "Connexion",
+    sub: "Connectez-vous pour accéder à votre tableau de bord.",
+    email: "Courriel",
+    emailPh: "vous@courriel.com",
+    pw: "Mot de passe",
+    forgot: "Mot de passe oublié ?",
+    submit: "Se connecter",
+    loading: "Connexion…",
+    noAccount: "Pas encore de compte ?",
+    create: "Créer un compte",
+    err: "Courriel ou mot de passe incorrect.",
+    copy: "© 2026 Q-emplois. Tous droits réservés.",
+  },
+  en: {
+    tag: "Québec's local services marketplace",
+    title: "Log in",
+    sub: "Sign in to access your dashboard.",
+    email: "Email",
+    emailPh: "you@email.com",
+    pw: "Password",
+    forgot: "Forgot password?",
+    submit: "Sign in",
+    loading: "Signing in…",
+    noAccount: "No account yet?",
+    create: "Create an account",
+    err: "Incorrect email or password.",
+    copy: "© 2026 Q-emplois. All rights reserved.",
+  },
+};
 
 export function Login() {
+  const [lang, setLang] = useState<Lang>('fr');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const t = T[lang];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
     try {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      setError('Email ou mot de passe incorrect');
+      setError(t.err);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-quebec-blue rounded-xl flex items-center justify-center">
-              <HardHat className="w-7 h-7 text-white" />
-            </div>
+    <div className="leather" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ position: 'absolute', top: 20, right: 24 }}>
+        <button
+          onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+          style={{ padding: '4px 12px', border: '1px dashed rgba(217,179,140,0.35)', borderRadius: 6, background: 'transparent', color: '#D9B38C', cursor: 'pointer', fontSize: 12, fontFamily: 'monospace' }}
+        >
+          {lang === 'fr' ? 'EN' : 'FR'}
+        </button>
+      </div>
+
+      <div style={{ width: '100%', maxWidth: 420 }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <Link to="/"><BrandLogo size="lg" /></Link>
+          <p className="body-f muted2" style={{ fontSize: 13, marginTop: 8 }}>{t.tag}</p>
+        </div>
+
+        <div className="stitch-box" style={{ padding: '32px 28px', background: 'rgba(21,35,50,0.7)' }}>
+          <h1 className="serif cream-hi" style={{ fontSize: 26, fontWeight: 700, marginBottom: 6 }}>{t.title}</h1>
+          <p className="body-f muted2" style={{ fontSize: 14, marginBottom: 24 }}>{t.sub}</p>
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {error && (
+              <div className="body-f" style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(180,60,60,0.15)', border: '1px solid rgba(220,90,90,0.4)', color: '#F0B4B4', fontSize: 13 }}>
+                {error}
+              </div>
+            )}
+
             <div>
-              <h1 className="text-2xl font-bold text-quebec-blue">Q-Emplois</h1>
-              <p className="text-sm text-gray-500">Portail des artisans</p>
+              <label className="q-label" htmlFor="email">{t.email}</label>
+              <input id="email" className="q-field" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.emailPh} required />
             </div>
+
+            <div>
+              <label className="q-label" htmlFor="password">{t.pw}</label>
+              <input id="password" className="q-field" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+            </div>
+
+            <div style={{ textAlign: 'right' }}>
+              <Link to="/forgot-password" className="nav-link body-f" style={{ fontSize: 13 }}>{t.forgot}</Link>
+            </div>
+
+            <button type="submit" className="gold-btn" disabled={isLoading} style={{ padding: '12px', fontSize: 15, width: '100%' }}>
+              {isLoading ? t.loading : t.submit}
+            </button>
+          </form>
+
+          <div className="body-f" style={{ marginTop: 22, textAlign: 'center', fontSize: 14 }}>
+            <span className="muted2">{t.noAccount}</span>{' '}
+            <Link to="/register" className="gold" style={{ fontWeight: 600 }}>{t.create}</Link>
           </div>
         </div>
 
-        <Card shadow="md">
-          <CardHeader>
-            <CardTitle>Connexion</CardTitle>
-            <p className="text-sm text-gray-500 mt-1">
-              Connecte-toi pour accéder à ton tableau de bord
-            </p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  {error}
-                </div>
-              )}
-
-              <Input
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                leftIcon={<Mail className="w-5 h-5" />}
-                placeholder="ton@email.com"
-                required
-              />
-
-              <Input
-                label="Mot de passe"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                leftIcon={<Lock className="w-5 h-5" />}
-                placeholder="••••••••"
-                required
-              />
-
-              <div className="flex items-center justify-between text-sm">
-                <Link
-                  to="/forgot-password"
-                  className="text-quebec-blue hover:underline"
-                >
-                  Mot de passe oublié?
-                </Link>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                isLoading={isLoading}
-              >
-                Se connecter
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center text-sm">
-              <span className="text-gray-500">Pas encore de compte?</span>{' '}
-              <Link to="/register" className="text-quebec-blue font-medium hover:underline">
-                Créer un compte
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-xs text-gray-400 mt-8">
-          © 2025 Q-Emplois. Tous droits réservés.
-        </p>
+        <p className="body-f muted2" style={{ textAlign: 'center', fontSize: 12, marginTop: 24 }}>{t.copy}</p>
       </div>
     </div>
   );

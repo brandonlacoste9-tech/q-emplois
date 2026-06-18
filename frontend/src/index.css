@@ -6,11 +6,13 @@
 
 @layer base {
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Lora', Georgia, serif;
   }
 
   body {
-    @apply bg-quebec-light text-quebec-dark antialiased;
+    @apply antialiased;
+    background-color: #1F2F3F;
+    color: #D9B38C;
   }
 }
 
@@ -18,81 +20,4 @@
   .text-balance {
     text-wrap: balance;
   }
-}
-
-/* UI/UX Pro Max Leather Skill - Kaltrac Edition */
-.stitch-box {
-  position: relative;
-  border-radius: 16px;
-  background-color: #3a2218;
-  /* var(--surface) */
-  background-image:
-    linear-gradient(#3a2218bf, #3a2218bf),
-    url('https://www.transparenttextures.com/patterns/leather.png');
-  background-size: auto, 300px;
-  background-blend-mode: normal;
-  border: 2px solid #5a3a28;
-  /* var(--border) */
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.5),
-    inset 0 0 60px rgba(0, 0, 0, 0.35);
-  z-index: 1;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-}
-
-.stitch-box::before {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  border: 1px dashed #8b6e4e;
-  /* var(--stitch) */
-  border-radius: 10px;
-  opacity: 0.7;
-  pointer-events: none;
-  z-index: 2;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.stitch-box::after {
-  content: '';
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  border: 1px dashed #8b6e4e;
-  border-radius: 8px;
-  opacity: 0.45;
-  pointer-events: none;
-  z-index: 2;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.stitch-box-interactive {
-  cursor: pointer;
-}
-
-.stitch-box-interactive:hover {
-  border-color: #c5a055;
-  /* var(--gold) */
-  transform: translateY(-3px);
-  box-shadow:
-    0 30px 60px rgba(0, 0, 0, 0.7),
-    0 0 25px rgba(197, 160, 85, 0.25),
-    inset 0 0 60px rgba(0, 0, 0, 0.3);
-}
-
-.stitch-box-interactive:hover::before {
-  opacity: 1;
-  border-color: #c5a055;
-}
-
-.stitch-box-interactive:hover::after {
-  opacity: 0.8;
-  border-color: #c5a055;
-  border-style: solid;
 }

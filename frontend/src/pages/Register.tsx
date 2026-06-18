@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/Button';
-import { Input } from '../components/Input';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/Card';
-import { HardHat, Mail, Lock, Phone, Check, AlertCircle } from 'lucide-react';
+import { BrandLogo } from '../components/BrandLogo';
 import { SERVICE_TYPE_LABELS, type ServiceType } from '../types';
 
 const SERVICE_TYPES: ServiceType[] = [
@@ -20,56 +17,74 @@ const SERVICE_TYPES: ServiceType[] = [
   'menage',
 ];
 
+type Lang = 'fr' | 'en';
+
+const T = {
+  fr: {
+    tag: "Offrez vos services au Québec",
+    steps: ['Informations personnelles', 'Créer un mot de passe', 'Types de services'],
+    subs: ['Parlez-nous un peu de vous', 'Choisissez un mot de passe sécurisé', 'Quels services proposez-vous ?'],
+    firstName: 'Prénom', lastName: 'Nom', email: 'Courriel', phone: 'Téléphone',
+    pw: 'Mot de passe', confirm: 'Confirmer le mot de passe', pwHint: 'Minimum 8 caractères',
+    back: 'Retour', next: 'Suivant', create: 'Créer mon compte', creating: 'Création…',
+    haveAccount: 'Déjà un compte ?', login: 'Se connecter',
+    errFill: 'Veuillez remplir tous les champs.',
+    errPwLen: 'Le mot de passe doit contenir au moins 8 caractères.',
+    errPwMatch: 'Les mots de passe ne correspondent pas.',
+    errSvc: 'Veuillez sélectionner au moins un type de service.',
+    errGeneric: "Une erreur est survenue lors de l'inscription.",
+  },
+  en: {
+    tag: "Offer your services in Québec",
+    steps: ['Personal information', 'Create a password', 'Service types'],
+    subs: ['Tell us a bit about you', 'Choose a secure password', 'What services do you offer?'],
+    firstName: 'First name', lastName: 'Last name', email: 'Email', phone: 'Phone',
+    pw: 'Password', confirm: 'Confirm password', pwHint: 'Minimum 8 characters',
+    back: 'Back', next: 'Next', create: 'Create my account', creating: 'Creating…',
+    haveAccount: 'Already have an account?', login: 'Sign in',
+    errFill: 'Please fill in all fields.',
+    errPwLen: 'Password must be at least 8 characters.',
+    errPwMatch: 'Passwords do not match.',
+    errSvc: 'Please select at least one service type.',
+    errGeneric: 'An error occurred during registration.',
+  },
+};
+
 export function Register() {
+  const [lang, setLang] = useState<Lang>('fr');
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    serviceTypes: [] as ServiceType[],
+    firstName: '', lastName: '', email: '', phone: '',
+    password: '', confirmPassword: '', serviceTypes: [] as ServiceType[],
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const t = T[lang];
 
   const toggleServiceType = (type: ServiceType) => {
     setFormData((prev) => ({
       ...prev,
       serviceTypes: prev.serviceTypes.includes(type)
-        ? prev.serviceTypes.filter((t) => t !== type)
+        ? prev.serviceTypes.filter((s) => s !== type)
         : [...prev.serviceTypes, type],
     }));
   };
 
   const validateStep1 = () => {
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-      setError('Veuillez remplir tous les champs');
-      return false;
+      setError(t.errFill); return false;
     }
     return true;
   };
-
   const validateStep2 = () => {
-    if (formData.password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères');
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
-      return false;
-    }
+    if (formData.password.length < 8) { setError(t.errPwLen); return false; }
+    if (formData.password !== formData.confirmPassword) { setError(t.errPwMatch); return false; }
     return true;
   };
-
   const validateStep3 = () => {
-    if (formData.serviceTypes.length === 0) {
-      setError('Veuillez sélectionner au moins un type de service');
-      return false;
-    }
+    if (formData.serviceTypes.length === 0) { setError(t.errSvc); return false; }
     return true;
   };
 
@@ -78,18 +93,12 @@ export function Register() {
     if (step === 1 && validateStep1()) setStep(2);
     else if (step === 2 && validateStep2()) setStep(3);
   };
-
-  const handleBack = () => {
-    setError('');
-    setStep(step - 1);
-  };
+  const handleBack = () => { setError(''); setStep(step - 1); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     if (!validateStep3()) return;
-
     setIsLoading(true);
     try {
       await register({
@@ -102,197 +111,146 @@ export function Register() {
       });
       navigate('/dashboard');
     } catch (err) {
-      setError('Une erreur est survenue lors de l\'inscription');
+      setError(t.errGeneric);
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-quebec-blue rounded-xl flex items-center justify-center">
-              <HardHat className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-quebec-blue">Q-Emplois</h1>
-              <p className="text-sm text-gray-500">Portail des artisans</p>
-            </div>
-          </div>
+    <div className="leather" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ position: 'absolute', top: 20, right: 24 }}>
+        <button
+          onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+          style={{ padding: '4px 12px', border: '1px dashed rgba(217,179,140,0.35)', borderRadius: 6, background: 'transparent', color: '#D9B38C', cursor: 'pointer', fontSize: 12, fontFamily: 'monospace' }}
+        >
+          {lang === 'fr' ? 'EN' : 'FR'}
+        </button>
+      </div>
+
+      <div style={{ width: '100%', maxWidth: 460 }}>
+        <div style={{ textAlign: 'center', marginBottom: 22 }}>
+          <Link to="/"><BrandLogo size="lg" /></Link>
+          <p className="body-f muted2" style={{ fontSize: 13, marginTop: 8 }}>{t.tag}</p>
         </div>
 
-        {/* Step Indicator */}
-        <div className="flex justify-center gap-2 mb-6">
+        {/* Step indicator */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 22 }}>
           {[1, 2, 3].map((s) => (
             <div
               key={s}
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                s === step
-                  ? 'bg-quebec-blue text-white'
-                  : s < step
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-500'
-              }`}
+              className="serif"
+              style={{
+                width: 32, height: 32, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 14, fontWeight: 700,
+                background: s <= step ? 'linear-gradient(145deg, #B87B44, #8B5E30)' : 'rgba(217,179,140,0.12)',
+                color: s <= step ? '#1F2F3F' : '#9A8468',
+                border: '2px solid rgba(217,179,140,0.3)',
+              }}
             >
-              {s < step ? <Check className="w-4 h-4" /> : s}
+              {s < step ? '✓' : s}
             </div>
           ))}
         </div>
 
-        <Card shadow="md">
-          <CardHeader>
-            <CardTitle>
-              {step === 1 && 'Informations personnelles'}
-              {step === 2 && 'Créer un mot de passe'}
-              {step === 3 && 'Types de services'}
-            </CardTitle>
-            <p className="text-sm text-gray-500 mt-1">
-              {step === 1 && 'Parle-nous un peu de toi'}
-              {step === 2 && 'Choisis un mot de passe sécurisé'}
-              {step === 3 && 'Quels services proposes-tu?'}
-            </p>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 mb-4">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                {error}
+        <div className="stitch-box" style={{ padding: '30px 28px', background: 'rgba(21,35,50,0.7)' }}>
+          <h1 className="serif cream-hi" style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{t.steps[step - 1]}</h1>
+          <p className="body-f muted2" style={{ fontSize: 14, marginBottom: 22 }}>{t.subs[step - 1]}</p>
+
+          {error && (
+            <div className="body-f" style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(180,60,60,0.15)', border: '1px solid rgba(220,90,90,0.4)', color: '#F0B4B4', fontSize: 13, marginBottom: 16 }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            {step === 1 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className="q-label">{t.firstName}</label>
+                    <input className="q-field" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} placeholder="Jean" required />
+                  </div>
+                  <div>
+                    <label className="q-label">{t.lastName}</label>
+                    <input className="q-field" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} placeholder="Tremblay" required />
+                  </div>
+                </div>
+                <div>
+                  <label className="q-label">{t.email}</label>
+                  <input className="q-field" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="jean@courriel.com" required />
+                </div>
+                <div>
+                  <label className="q-label">{t.phone}</label>
+                  <input className="q-field" type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="(514) 123-4567" required />
+                </div>
               </div>
             )}
 
-            <form onSubmit={handleSubmit}>
-              {step === 1 && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="Prénom"
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      placeholder="Jean"
-                      required
-                    />
-                    <Input
-                      label="Nom"
-                      value={formData.lastName}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      placeholder="Tremblay"
-                      required
-                    />
-                  </div>
-                  <Input
-                    label="Email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    leftIcon={<Mail className="w-5 h-5" />}
-                    placeholder="jean@email.com"
-                    required
-                  />
-                  <Input
-                    label="Téléphone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    leftIcon={<Phone className="w-5 h-5" />}
-                    placeholder="(514) 123-4567"
-                    required
-                  />
+            {step === 2 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label className="q-label">{t.pw}</label>
+                  <input className="q-field" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="••••••••" required />
                 </div>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-4">
-                  <Input
-                    label="Mot de passe"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    leftIcon={<Lock className="w-5 h-5" />}
-                    placeholder="••••••••"
-                    required
-                  />
-                  <Input
-                    label="Confirmer le mot de passe"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    leftIcon={<Lock className="w-5 h-5" />}
-                    placeholder="••••••••"
-                    required
-                  />
-                  <p className="text-xs text-gray-500">
-                    Minimum 8 caractères
-                  </p>
+                <div>
+                  <label className="q-label">{t.confirm}</label>
+                  <input className="q-field" type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} placeholder="••••••••" required />
                 </div>
-              )}
-
-              {step === 3 && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    {SERVICE_TYPES.map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => toggleServiceType(type)}
-                        className={`p-3 rounded-lg border text-sm font-medium text-left transition-colors ${
-                          formData.serviceTypes.includes(type)
-                            ? 'border-quebec-blue bg-blue-50 text-quebec-blue'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          {SERVICE_TYPE_LABELS[type]}
-                          {formData.serviceTypes.includes(type) && (
-                            <Check className="w-4 h-4" />
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-3 mt-6">
-                {step > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={handleBack}
-                  >
-                    Retour
-                  </Button>
-                )}
-                {step < 3 ? (
-                  <Button
-                    type="button"
-                    className="flex-1"
-                    onClick={handleNext}
-                  >
-                    Suivant
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    className="flex-1"
-                    isLoading={isLoading}
-                  >
-                    Créer mon compte
-                  </Button>
-                )}
+                <p className="body-f muted2" style={{ fontSize: 12 }}>{t.pwHint}</p>
               </div>
-            </form>
+            )}
 
-            <div className="mt-6 text-center text-sm">
-              <span className="text-gray-500">Déjà un compte?</span>{' '}
-              <Link to="/login" className="text-quebec-blue font-medium hover:underline">
-                Se connecter
-              </Link>
+            {step === 3 && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {SERVICE_TYPES.map((type) => {
+                  const selected = formData.serviceTypes.includes(type);
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => toggleServiceType(type)}
+                      className="body-f"
+                      style={{
+                        padding: '12px 14px', borderRadius: 8, textAlign: 'left', fontSize: 14, cursor: 'pointer',
+                        border: selected ? '1.5px solid #B87B44' : '1.5px dashed rgba(217,179,140,0.3)',
+                        background: selected ? 'rgba(184,123,68,0.18)' : 'transparent',
+                        color: selected ? '#E8CDB0' : '#C4A882',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {SERVICE_TYPE_LABELS[type]}
+                      {selected && <span style={{ color: '#B87B44' }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+              {step > 1 && (
+                <button type="button" className="ghost-btn" onClick={handleBack} style={{ flex: 1, padding: '12px', fontSize: 15 }}>
+                  {t.back}
+                </button>
+              )}
+              {step < 3 ? (
+                <button type="button" className="gold-btn" onClick={handleNext} style={{ flex: 1, padding: '12px', fontSize: 15 }}>
+                  {t.next}
+                </button>
+              ) : (
+                <button type="submit" className="gold-btn" disabled={isLoading} style={{ flex: 1, padding: '12px', fontSize: 15 }}>
+                  {isLoading ? t.creating : t.create}
+                </button>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </form>
+
+          <div className="body-f" style={{ marginTop: 22, textAlign: 'center', fontSize: 14 }}>
+            <span className="muted2">{t.haveAccount}</span>{' '}
+            <Link to="/login" className="gold" style={{ fontWeight: 600 }}>{t.login}</Link>
+          </div>
+        </div>
       </div>
     </div>
   );

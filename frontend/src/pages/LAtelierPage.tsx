@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { escrowService } from '../services/escrowService';
+import { BrandLogo } from '../components/BrandLogo';
 
 /**
  * 🏛️ L'ATELIER - PRO COMMAND CENTER
@@ -59,28 +60,27 @@ export function LAtelierPage() {
     }[lang];
 
     return (
-        <div style={{ minHeight: "100vh", backgroundColor: "#0C0A09", color: "#F8F2E8", fontFamily: "'Inter', sans-serif" }}>
-            {/* Header / Sidebar Sim */}
+        <div className="leather" style={{ minHeight: "100vh", color: "#D9B38C" }}>
+            {/* Header */}
             <nav style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                padding: "20px 40px",
-                background: "rgba(26, 15, 10, 0.95)",
-                borderBottom: "1px solid #C9A34F"
+                padding: "16px 40px",
+                background: "rgba(31,47,63,0.92)",
+                backdropFilter: "blur(12px)",
+                borderBottom: "2px dashed rgba(217,179,140,0.2)"
             }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                    <Link to="/" style={{ color: "#C9A34F", fontSize: "1.2rem", fontWeight: "bold", textDecoration: "none", fontFamily: "'Cinzel', serif" }}>
-                        Q-EMPLOIS
-                    </Link>
-                    <span style={{ color: "#8B0000", fontWeight: "900", letterSpacing: "2px" }}>L'ATELIER</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <Link to="/"><BrandLogo size="md" /></Link>
+                    <span className="serif gold" style={{ fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", fontSize: "0.85rem" }}>L'Atelier</span>
                 </div>
 
-                <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-                    <button onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} style={{ background: "none", border: "1px solid #C9A34F", color: "#C9A34F", padding: "4px 8px", cursor: "pointer", borderRadius: "4px" }}>
-                        {lang.toUpperCase()}
+                <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+                    <button onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} style={{ background: "transparent", border: "1px dashed rgba(217,179,140,0.35)", color: "#D9B38C", padding: "4px 12px", cursor: "pointer", borderRadius: "6px", fontFamily: "monospace", fontSize: 12 }}>
+                        {lang === 'fr' ? 'EN' : 'FR'}
                     </button>
-                    <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#C9A34F", display: "flex", justifyContent: "center", alignItems: "center", color: "#0C0A09", fontWeight: "bold" }}>
+                    <div className="serif" style={{ width: "38px", height: "38px", borderRadius: "50%", background: "linear-gradient(145deg, #B87B44, #8B5E30)", display: "flex", justifyContent: "center", alignItems: "center", color: "#1F2F3F", fontWeight: "bold", border: "2px solid rgba(217,179,140,0.3)" }}>
                         M
                     </div>
                 </div>
@@ -88,8 +88,8 @@ export function LAtelierPage() {
 
             <main style={{ padding: "40px" }}>
                 <header style={{ marginBottom: "40px" }}>
-                    <h1 style={{ fontSize: "2.5rem", fontFamily: "'Playfair Display', serif", marginBottom: "8px" }}>{t.title}</h1>
-                    <p style={{ color: "#C9A34F", letterSpacing: "1px" }}>{t.subtitle}</p>
+                    <h1 className="serif cream-hi" style={{ fontSize: "2.5rem", fontWeight: 900, marginBottom: "8px" }}>{t.title}</h1>
+                    <p className="body-f gold" style={{ letterSpacing: "1px" }}>{t.subtitle}</p>
                 </header>
 
                 {/* Financial Summary */}
@@ -99,16 +99,13 @@ export function LAtelierPage() {
                         { label: t.escrow, value: "$4,500.00", icon: "🔒" },
                         { label: t.taxes, value: `$${taxReserves.total.toFixed(2)}`, icon: "🏛️" }
                     ].map((card, i) => (
-                        <div key={i} style={{
-                            background: "rgba(30, 20, 15, 0.6)",
-                            padding: "32px",
-                            borderRadius: "12px",
-                            border: "1px solid rgba(201, 163, 79, 0.2)",
-                            boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+                        <div key={i} className="stitch-box" style={{
+                            background: "rgba(21,35,50,0.6)",
+                            padding: "32px"
                         }}>
                             <div style={{ fontSize: "2rem", marginBottom: "16px" }}>{card.icon}</div>
-                            <div style={{ fontSize: "0.9rem", color: "#C9A34F", marginBottom: "8px", textTransform: "uppercase" }}>{card.label}</div>
-                            <div style={{ fontSize: "1.8rem", fontWeight: "bold" }}>{card.value}</div>
+                            <div className="body-f gold" style={{ fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>{card.label}</div>
+                            <div className="serif cream-hi" style={{ fontSize: "1.8rem", fontWeight: "bold" }}>{card.value}</div>
                         </div>
                     ))}
                 </div>
@@ -116,16 +113,16 @@ export function LAtelierPage() {
                 {/* Projects Section */}
                 <section>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                        <h2 style={{ fontSize: "1.8rem", fontFamily: "'Playfair Display', serif" }}>{t.projects}</h2>
-                        <button style={{ padding: "12px 24px", background: "#C9A34F", color: "#0C0A09", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}>
+                        <h2 className="serif cream-hi" style={{ fontSize: "1.8rem", fontWeight: 700 }}>{t.projects}</h2>
+                        <button className="gold-btn" style={{ padding: "12px 24px", fontSize: 14 }}>
                             + {t.newProject}
                         </button>
                     </div>
 
-                    <div style={{ background: "rgba(30, 20, 15, 0.4)", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(201, 163, 79, 0.1)" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                    <div className="stitch-box" style={{ background: "rgba(21,35,50,0.4)", overflow: "hidden", padding: 0 }}>
+                        <table className="body-f" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                             <thead>
-                                <tr style={{ background: "rgba(201, 163, 79, 0.1)", color: "#C9A34F", fontSize: "0.85rem", textTransform: "uppercase" }}>
+                                <tr className="gold" style={{ background: "rgba(184,123,68,0.12)", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                                     <th style={{ padding: "16px" }}>Client</th>
                                     <th style={{ padding: "16px" }}>Task</th>
                                     <th style={{ padding: "16px" }}>Amount</th>
@@ -136,24 +133,24 @@ export function LAtelierPage() {
                             </thead>
                             <tbody>
                                 {activeProjects.map(p => (
-                                    <tr key={p.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                                        <td style={{ padding: "16px", fontWeight: "bold" }}>{p.client}</td>
-                                        <td style={{ padding: "16px", color: "#ddd" }}>{p.task}</td>
-                                        <td style={{ padding: "16px" }}>${p.amount.toLocaleString()}</td>
+                                    <tr key={p.id} style={{ borderBottom: "1px solid rgba(217,179,140,0.08)" }}>
+                                        <td className="cream-hi" style={{ padding: "16px", fontWeight: "bold" }}>{p.client}</td>
+                                        <td className="muted" style={{ padding: "16px" }}>{p.task}</td>
+                                        <td className="cream" style={{ padding: "16px" }}>${p.amount.toLocaleString()}</td>
                                         <td style={{ padding: "16px" }}>
                                             <span style={{
                                                 padding: "4px 10px",
                                                 borderRadius: "20px",
                                                 fontSize: "0.75rem",
-                                                background: p.status === 'Released' ? '#2BD47A' : p.status === 'Locked' ? '#B66D38' : '#444',
-                                                color: "#fff"
+                                                background: p.status === 'Released' ? '#2BD47A' : p.status === 'Locked' ? '#B87B44' : 'rgba(217,179,140,0.18)',
+                                                color: p.status === 'Pending' ? '#C4A882' : "#fff"
                                             }}>
                                                 {p.status === 'Locked' ? t.statusLocked : p.status === 'Released' ? t.statusReleased : t.statusPending}
                                             </span>
                                         </td>
                                         <td style={{ padding: "16px" }}>
-                                            <div style={{ width: "120px", height: "6px", background: "#222", borderRadius: "3px" }}>
-                                                <div style={{ width: `${p.progress}%`, height: "100%", background: "#C9A34F", borderRadius: "3px" }} />
+                                            <div style={{ width: "120px", height: "6px", background: "rgba(217,179,140,0.15)", borderRadius: "3px" }}>
+                                                <div style={{ width: `${p.progress}%`, height: "100%", background: "#B87B44", borderRadius: "3px" }} />
                                             </div>
                                         </td>
                                         <td style={{ padding: "16px" }}>
@@ -173,13 +170,13 @@ export function LAtelierPage() {
                 </section>
 
                 {/* Reporting CTA */}
-                <div style={{ marginTop: "40px", padding: "32px", background: "linear-gradient(135deg, #1a0f0a 0%, #0C0A09 100%)", borderRadius: "12px", border: "1px solid #8B0000", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div className="stitch-box" style={{ marginTop: "40px", padding: "32px", background: "rgba(21,35,50,0.6)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
                     <div>
-                        <h3 style={{ marginBottom: "8px" }}>{t.reports}</h3>
-                        <p style={{ color: "#888", fontSize: "0.9rem" }}>Générez vos fichiers JSON/XML pour la déclaration de TVQ trimestrielle.</p>
+                        <h3 className="serif cream-hi" style={{ marginBottom: "8px", fontSize: "1.2rem", fontWeight: 700 }}>{t.reports}</h3>
+                        <p className="body-f muted2" style={{ fontSize: "0.9rem" }}>{lang === 'fr' ? 'Générez vos fichiers JSON/XML pour la déclaration de TVQ trimestrielle.' : 'Generate your JSON/XML files for quarterly QST filing.'}</p>
                     </div>
-                    <button style={{ border: "1px solid #8B0000", background: "none", color: "#8B0000", padding: "12px 24px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}>
-                        Exporter
+                    <button className="ghost-btn" style={{ padding: "12px 24px", fontSize: 14 }}>
+                        {lang === 'fr' ? 'Exporter' : 'Export'}
                     </button>
                 </div>
             </main>
