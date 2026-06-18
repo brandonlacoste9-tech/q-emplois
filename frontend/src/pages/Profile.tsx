@@ -1,31 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/Card';
-import { Button } from '../components/Button';
-import { Input } from '../components/Input';
-import { Badge } from '../components/Badge';
-import { FileUpload } from '../components/FileUpload';
-import { StarRating } from '../components/StarRating';
 import { api } from '../services/api';
 import { SERVICE_TYPE_LABELS, type ServiceType, type TradesmanProfile } from '../types';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  DollarSign, 
-  Check, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  DollarSign,
+  Check,
   Edit2,
   Award,
   Save,
-  X
+  X,
+  Star,
+  Upload,
 } from 'lucide-react';
 import { formatPrice } from '../utils';
 
+const gold = '#B87B44';
+const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 20 };
+
+// Focused on regular local jobs (not prestige trades)
 const SERVICE_TYPES: ServiceType[] = [
-  'plomberie', 'electricite', 'menuiserie', 'peinture', 
-  'chauffage', 'climatisation', 'toiture', 'renovation',
-  'jardinage', 'menage', 'demenagement', 'autre'
+  'demenagement', 'menage', 'montage_meubles', 'nettoyage',
+  'jardinage', 'livraison', 'coursier', 'autre',
 ];
 
 export function Profile() {
@@ -35,6 +34,7 @@ export function Profile() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<TradesmanProfile>>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initialProfile) {
@@ -43,26 +43,13 @@ export function Profile() {
     }
   }, [initialProfile]);
 
-  const handleEdit = () => {
-    setIsEditing(true);
-    setFormData(profile || {});
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    setFormData(profile || {});
-    setSelectedFile(null);
-  };
+  const handleEdit = () => { setIsEditing(true); setFormData(profile || {}); };
+  const handleCancel = () => { setIsEditing(false); setFormData(profile || {}); setSelectedFile(null); };
 
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Upload license if selected
-      if (selectedFile) {
-        await api.uploadLicense(selectedFile);
-      }
-      
-      // Update profile
+      if (selectedFile) await api.uploadLicense(selectedFile);
       await api.updateProfile(formData);
       await refreshProfile();
       setIsEditing(false);
@@ -75,296 +62,183 @@ export function Profile() {
   };
 
   const toggleServiceType = (type: ServiceType) => {
-    const currentTypes = formData.serviceTypes || [];
+    const current = formData.serviceTypes || [];
     setFormData({
       ...formData,
-      serviceTypes: currentTypes.includes(type)
-        ? currentTypes.filter((t) => t !== type)
-        : [...currentTypes, type],
+      serviceTypes: current.includes(type) ? current.filter((t) => t !== type) : [...current, type],
     });
   };
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-quebec-blue"></div>
+      <div className="leather" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid rgba(217,179,140,0.2)', borderBottomColor: gold, animation: 'spin 0.9s linear infinite' }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
   }
 
+  const field = (label: string, value: string | number | undefined, onChange: (v: string) => void, icon: React.ReactNode, type = 'text', placeholder = '') => (
+    <div>
+      <label className="q-label">{label}</label>
+      <div style={{ position: 'relative' }}>
+        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(217,179,140,0.5)', display: 'flex' }}>{icon}</span>
+        <input
+          type={type}
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={!isEditing}
+          placeholder={placeholder}
+          className="q-field"
+          style={{ paddingLeft: 38, opacity: isEditing ? 1 : 0.75 }}
+        />
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="leather" style={{ minHeight: '100vh' }}>
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '32px 24px' }}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 24 }}>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mon profil</h1>
-            <p className="text-gray-500">Gère tes informations personnelles</p>
+            <h1 className="serif cream-hi" style={{ fontSize: 'clamp(1.6rem, 4vw, 2.2rem)', fontWeight: 900 }}>Mon profil</h1>
+            <p className="body-f muted" style={{ fontSize: 15, marginTop: 4 }}>Gère tes informations personnelles</p>
           </div>
           {!isEditing ? (
-            <Button onClick={handleEdit} leftIcon={<Edit2 className="w-4 h-4" />}>
-              Modifier
-            </Button>
+            <button onClick={handleEdit} className="gold-btn" style={{ padding: '8px 18px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <Edit2 className="w-4 h-4" /> Modifier
+            </button>
           ) : (
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleCancel} leftIcon={<X className="w-4 h-4" />}>
-                Annuler
-              </Button>
-              <Button 
-                onClick={handleSave} 
-                isLoading={isLoading}
-                leftIcon={<Save className="w-4 h-4" />}
-              >
-                Enregistrer
-              </Button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={handleCancel} className="ghost-btn" style={{ padding: '8px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <X className="w-4 h-4" /> Annuler
+              </button>
+              <button onClick={handleSave} disabled={isLoading} className="gold-btn" style={{ padding: '8px 18px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Save className="w-4 h-4" /> {isLoading ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
             </div>
           )}
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Profile Card */}
-          <div className="md:col-span-1">
-            <Card>
-              <CardContent className="p-6 text-center">
-                {/* Avatar */}
-                <div className="w-24 h-24 bg-quebec-blue rounded-full mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">
-                  {profile.firstName?.charAt(0)}{profile.lastName?.charAt(0)}
-                </div>
-                
-                <h2 className="text-xl font-bold text-gray-900">
-                  {profile.firstName} {profile.lastName}
-                </h2>
-                
-                <div className="flex justify-center mt-2">
-                  <StarRating 
-                    rating={profile.rating} 
-                    showValue 
-                    reviewCount={profile.reviewCount} 
-                  />
-                </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, alignItems: 'start' }}>
+          {/* Left column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="stitch-box" style={{ ...card, textAlign: 'center' }}>
+              <div style={{ width: 84, height: 84, borderRadius: '50%', background: gold, color: '#1F2F3F', margin: '0 auto 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, fontFamily: "'Playfair Display', serif" }}>
+                {profile.firstName?.charAt(0)}{profile.lastName?.charAt(0)}
+              </div>
+              <h2 className="serif cream-hi" style={{ fontSize: 20, fontWeight: 900 }}>{profile.firstName} {profile.lastName}</h2>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8 }}>
+                <Star className="w-4 h-4" style={{ color: gold, fill: gold }} />
+                <span className="body-f cream-hi" style={{ fontWeight: 700, fontSize: 14 }}>{(profile.rating ?? 0).toFixed(1)}</span>
+                <span className="body-f muted2" style={{ fontSize: 13 }}>({profile.reviewCount ?? 0} avis)</span>
+              </div>
+              <div style={{ marginTop: 14 }}>
+                <span className="body-f" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 999, color: '#1F2F3F', background: profile.isVerified ? '#7FB069' : '#D9A441' }}>
+                  {profile.isVerified ? <><Check className="w-3 h-3" /> Profil vérifié</> : 'Vérification en cours'}
+                </span>
+              </div>
+              <div className="divider" style={{ margin: '18px 0' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left' }}>
+                <span className="body-f muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13 }}><Mail className="w-4 h-4" style={{ color: 'rgba(217,179,140,0.5)' }} />{profile.email}</span>
+                <span className="body-f muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13 }}><Phone className="w-4 h-4" style={{ color: 'rgba(217,179,140,0.5)' }} />{profile.phone}</span>
+              </div>
+            </div>
 
-                <div className="mt-4 space-y-2">
-                  {profile.isVerified ? (
-                    <Badge variant="success" className="flex items-center gap-1 justify-center">
-                      <Check className="w-3 h-3" />
-                      Profil vérifié
-                    </Badge>
-                  ) : (
-                    <Badge variant="warning">Vérification en cours</Badge>
-                  )}
-                </div>
-
-                <div className="mt-6 pt-6 border-t border-gray-200 space-y-3 text-left">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600">{profile.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600">{profile.phone}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Stats Card */}
-            <Card className="mt-4">
-              <CardContent className="p-4 space-y-4">
-                <div>
-                  <p className="text-sm text-gray-500">Taux horaire</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatPrice(profile.hourlyRate || 0)}/h
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Rayon de service</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {profile.serviceRadius || 10} km
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="stitch-box" style={{ ...card, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <p className="body-f muted2" style={{ fontSize: 13 }}>Taux horaire</p>
+                <p className="serif cream-hi" style={{ fontSize: 26, fontWeight: 900 }}>{formatPrice(profile.hourlyRate || 0)}/h</p>
+              </div>
+              <div>
+                <p className="body-f muted2" style={{ fontSize: 13 }}>Rayon de service</p>
+                <p className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700 }}>{profile.serviceRadius || 10} km</p>
+              </div>
+            </div>
           </div>
 
-          {/* Details Form */}
-          <div className="md:col-span-2 space-y-6">
-            {/* Personal Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Informations personnelles</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <Input
-                    label="Prénom"
-                    value={isEditing ? formData.firstName || '' : profile.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    disabled={!isEditing}
-                    leftIcon={<User className="w-5 h-5" />}
-                  />
-                  <Input
-                    label="Nom"
-                    value={isEditing ? formData.lastName || '' : profile.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    disabled={!isEditing}
-                    leftIcon={<User className="w-5 h-5" />}
-                  />
-                </div>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <Input
-                    label="Email"
-                    type="email"
-                    value={isEditing ? formData.email || '' : profile.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    disabled={!isEditing}
-                    leftIcon={<Mail className="w-5 h-5" />}
-                  />
-                  <Input
-                    label="Téléphone"
-                    value={isEditing ? formData.phone || '' : profile.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    disabled={!isEditing}
-                    leftIcon={<Phone className="w-5 h-5" />}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+          {/* Right column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, gridColumn: 'span 1' }}>
+            {/* Personal info */}
+            <div className="stitch-box" style={card}>
+              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Informations personnelles</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                {field('Prénom', isEditing ? formData.firstName : profile.firstName, (v) => setFormData({ ...formData, firstName: v }), <User className="w-4 h-4" />)}
+                {field('Nom', isEditing ? formData.lastName : profile.lastName, (v) => setFormData({ ...formData, lastName: v }), <User className="w-4 h-4" />)}
+                {field('Email', isEditing ? formData.email : profile.email, (v) => setFormData({ ...formData, email: v }), <Mail className="w-4 h-4" />, 'email')}
+                {field('Téléphone', isEditing ? formData.phone : profile.phone, (v) => setFormData({ ...formData, phone: v }), <Phone className="w-4 h-4" />)}
+              </div>
+            </div>
 
             {/* Services */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Types de services</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isEditing ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    {SERVICE_TYPES.map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => toggleServiceType(type)}
-                        className={`p-3 rounded-lg border text-sm font-medium text-left transition-colors ${
-                          (formData.serviceTypes || []).includes(type)
-                            ? 'border-quebec-blue bg-blue-50 text-quebec-blue'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          {SERVICE_TYPE_LABELS[type]}
-                          {(formData.serviceTypes || []).includes(type) && (
-                            <Check className="w-4 h-4" />
-                          )}
-                        </div>
+            <div className="stitch-box" style={card}>
+              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Types de services</h3>
+              {isEditing ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+                  {SERVICE_TYPES.map((type) => {
+                    const on = (formData.serviceTypes || []).includes(type);
+                    return (
+                      <button key={type} type="button" onClick={() => toggleServiceType(type)} style={{ padding: 12, borderRadius: 8, fontSize: 14, textAlign: 'left', cursor: 'pointer', fontFamily: "'Lora', Georgia, serif", border: on ? `1px solid ${gold}` : '1px dashed rgba(217,179,140,0.3)', background: on ? 'rgba(184,123,68,0.15)' : 'transparent', color: on ? '#E8CDB0' : '#9A8468' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          {SERVICE_TYPE_LABELS[type]}{on && <Check className="w-4 h-4" />}
+                        </span>
                       </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {(profile.serviceTypes || []).map((type) => (
-                      <Badge key={type} variant="info">
-                        {SERVICE_TYPE_LABELS[type]}
-                      </Badge>
-                    ))}
-                    {(profile.serviceTypes || []).length === 0 && (
-                      <p className="text-gray-500 text-sm">Aucun service sélectionné</p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Pricing & Radius */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Tarification et rayon</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Taux horaire ($/h)
-                    </label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={isEditing ? formData.hourlyRate || '' : profile.hourlyRate || ''}
-                        onChange={(e) => setFormData({ ...formData, hourlyRate: parseFloat(e.target.value) })}
-                        disabled={!isEditing}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-10 text-gray-900 disabled:bg-gray-100"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rayon de service (km)
-                    </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={isEditing ? formData.serviceRadius || '' : profile.serviceRadius || ''}
-                        onChange={(e) => setFormData({ ...formData, serviceRadius: parseInt(e.target.value) })}
-                        disabled={!isEditing}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-10 text-gray-900 disabled:bg-gray-100"
-                      />
-                    </div>
-                    {isEditing && (
-                      <input
-                        type="range"
-                        min="1"
-                        max="50"
-                        value={formData.serviceRadius || 10}
-                        onChange={(e) => setFormData({ ...formData, serviceRadius: parseInt(e.target.value) })}
-                        className="w-full mt-2"
-                      />
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
-              </CardContent>
-            </Card>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {(profile.serviceTypes || []).map((type) => (
+                    <span key={type} className="body-f" style={{ fontSize: 13, padding: '4px 12px', borderRadius: 999, background: 'rgba(184,123,68,0.15)', color: '#E8CDB0', border: '1px solid rgba(184,123,68,0.3)' }}>
+                      {SERVICE_TYPE_LABELS[type]}
+                    </span>
+                  ))}
+                  {(profile.serviceTypes || []).length === 0 && <p className="body-f muted2" style={{ fontSize: 14 }}>Aucun service sélectionné</p>}
+                </div>
+              )}
+            </div>
 
-            {/* License Upload */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Award className="w-5 h-5" />
-                  Licence et certifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Input
-                  label="Numéro de licence (optionnel)"
-                  value={isEditing ? formData.licenseNumber || '' : profile.licenseNumber || ''}
-                  onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-                  disabled={!isEditing}
-                  placeholder="ex: RBQ-1234-5678"
-                />
-                
+            {/* Pricing & radius */}
+            <div className="stitch-box" style={card}>
+              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Tarification et rayon</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                {field('Taux horaire ($/h)', isEditing ? formData.hourlyRate : profile.hourlyRate, (v) => setFormData({ ...formData, hourlyRate: parseFloat(v) }), <DollarSign className="w-4 h-4" />, 'number')}
+                {field('Rayon de service (km)', isEditing ? formData.serviceRadius : profile.serviceRadius, (v) => setFormData({ ...formData, serviceRadius: parseInt(v) }), <MapPin className="w-4 h-4" />, 'number')}
+              </div>
+              {isEditing && (
+                <input type="range" min={1} max={50} value={formData.serviceRadius || 10} onChange={(e) => setFormData({ ...formData, serviceRadius: parseInt(e.target.value) })} style={{ width: '100%', marginTop: 12, accentColor: gold }} />
+              )}
+            </div>
+
+            {/* Certification */}
+            <div className="stitch-box" style={card}>
+              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <Award className="w-5 h-5" style={{ color: gold }} /> Pièce d'identité et certifications
+              </h3>
+              {field("Numéro de certification (optionnel)", isEditing ? formData.licenseNumber : profile.licenseNumber, (v) => setFormData({ ...formData, licenseNumber: v }), <Award className="w-4 h-4" />, 'text', 'ex: CERT-1234-5678')}
+              <div style={{ marginTop: 14 }}>
                 {isEditing ? (
-                  <FileUpload
-                    label="Document de licence"
-                    onFileSelect={setSelectedFile}
-                    value={selectedFile}
-                    helperText="Télécharge ton permis ou licence professionnelle"
-                  />
+                  <>
+                    <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={(e) => e.target.files && setSelectedFile(e.target.files[0])} />
+                    <button type="button" onClick={() => fileRef.current?.click()} className="ghost-btn" style={{ width: '100%', padding: 16, fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderStyle: 'dashed' }}>
+                      <Upload className="w-4 h-4" /> {selectedFile ? selectedFile.name : 'Télécharger une pièce justificative'}
+                    </button>
+                    <p className="body-f muted2" style={{ fontSize: 12, marginTop: 6 }}>Pièce d'identité ou certification (optionnel)</p>
+                  </>
                 ) : profile.licenseDocument ? (
-                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                    <Award className="w-5 h-5 text-green-600" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'rgba(127,176,105,0.12)', borderRadius: 8 }}>
+                    <Award className="w-5 h-5" style={{ color: '#7FB069' }} />
                     <div>
-                      <p className="text-sm font-medium text-green-800">Licence téléchargée</p>
-                      <p className="text-xs text-green-600">Document vérifié par notre équipe</p>
+                      <p className="body-f cream-hi" style={{ fontSize: 14, fontWeight: 600 }}>Document téléchargé</p>
+                      <p className="body-f muted2" style={{ fontSize: 12 }}>Vérifié par notre équipe</p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">Aucun document téléchargé</p>
+                  <p className="body-f muted2" style={{ fontSize: 14 }}>Aucun document téléchargé</p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>

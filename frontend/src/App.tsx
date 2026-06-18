@@ -11,13 +11,13 @@ import { Jobs } from './pages/Jobs'
 import { Profile } from './pages/Profile'
 import { CookieConsent } from './components/CookieConsent'
 import { ProtectedRoute } from './components/ProtectedRoute'
-import { Navbar } from './components/Navbar'
+import { AppNav } from './components/AppNav'
 import './styles/cuir-quebecois.css'
 
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <div className="leather" style={{ minHeight: '100vh' }}>
+      <AppNav />
       {children}
     </div>
   )

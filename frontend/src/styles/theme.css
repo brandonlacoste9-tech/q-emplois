@@ -212,6 +212,7 @@ a.nav-link:hover { color: #B87B44; }
 /* Hide secondary nav links on small screens */
 @media (max-width: 640px) {
   .nav-hide-sm { display: none !important; }
+  .nav-show-sm { display: block !important; }
 }
 
 /* --- EMPIRE SPLIT (portal split band) --- */
