@@ -16,8 +16,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import Redis from 'ioredis';
-import { REDIS_CLIENT } from '../common/redis/redis.module';
+import { REDIS_CLIENT, RedisClient } from '../common/redis/redis.module';
 import { PrismaService } from '../common/prisma/prisma.service';
 
 interface LinkPlatformDto {
@@ -46,7 +45,7 @@ export class AuthCallbackController {
 
   constructor(
     private readonly configService: ConfigService,
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    @Inject(REDIS_CLIENT) private readonly redis: RedisClient,
     private readonly prisma: PrismaService,
   ) {}
 

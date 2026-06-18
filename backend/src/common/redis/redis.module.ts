@@ -1,28 +1,41 @@
-import { Module, Global } from '@nestjs/common';
+import { Logger, Module, Global } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+import { MemoryRedis } from './memory-redis';
 
 export const REDIS_CLIENT = 'REDIS_CLIENT';
+export type RedisClient = Redis | MemoryRedis;
 
 @Global()
 @Module({
   providers: [
     {
       provide: REDIS_CLIENT,
-      useFactory: (configService: ConfigService) => {
-        const redis = new Redis({
-          host: configService.get('REDIS_HOST', 'localhost'),
-          port: parseInt(configService.get('REDIS_PORT', '6379')),
-          password: configService.get('REDIS_PASSWORD'),
-          db: parseInt(configService.get('REDIS_DB', '0')),
+      useFactory: (configService: ConfigService): RedisClient => {
+        const logger = new Logger('RedisModule');
+        const redisUrl = configService.get<string>('REDIS_URL')?.trim();
+
+        if (!redisUrl) {
+          logger.warn(
+            'REDIS_URL not set — using in-memory store (fine for MVP; add Upstash/Railway Redis for production)',
+          );
+          return new MemoryRedis();
+        }
+
+        const redis = new Redis(redisUrl, {
+          maxRetriesPerRequest: 3,
+          lazyConnect: true,
         });
 
-        redis.on('connect', () => {
-          console.log('🔌 Connected to Redis');
-        });
+        redis
+          .connect()
+          .then(() => logger.log('Connected to Redis'))
+          .catch((err: Error) =>
+            logger.error(`Redis connection failed: ${err.message}`),
+          );
 
         redis.on('error', (err) => {
-          console.error('❌ Redis error:', err);
+          logger.error(`Redis error: ${err.message}`);
         });
 
         return redis;
