@@ -456,35 +456,33 @@ export function LandingPage() {
       </div>
 
       {/* ======== HERO ======== */}
-      <section className="leather" style={{ paddingTop: 80, paddingBottom: 80 }}>
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
-          <div
-            style={{
-              display: "inline-block",
-              padding: "6px 16px",
-              marginBottom: 22,
-              borderRadius: 999,
-              border: "1px dashed rgba(217,179,140,0.4)",
-              background: "rgba(184,123,68,0.08)",
-              color: "#D9B38C",
-              fontSize: 12,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              fontFamily: "'Lora', Georgia, serif",
-            }}
-          >
-            ⚜ {t.hero.badge}
-          </div>
-          <h1 className="serif cream-hi" style={{ fontSize: "clamp(2.5rem, 6vw, 4.2rem)", fontWeight: 900, lineHeight: 1.1, marginBottom: 16 }}>
-            {t.hero.h1}
-          </h1>
-          <p className="body-f muted" style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)", marginBottom: 16 }}>
-            {t.hero.sub}
-          </p>
-          <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 36, letterSpacing: "0.04em" }}>
-            📍 {t.hero.city}
-          </p>
-
+      <section
+        className="leather"
+        style={{
+          position: "relative",
+          backgroundImage: "url('/hero/hero-quebec.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
+          minHeight: "clamp(420px, 70vh, 640px)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          paddingTop: 80,
+          paddingBottom: 56,
+        }}
+      >
+        {/* Bottom gradient overlay for search-bar readability */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to bottom, rgba(21,35,50,0) 35%, rgba(21,35,50,0.55) 70%, rgba(21,35,50,0.85) 100%)",
+            pointerEvents: "none",
+          }}
+        />
+        <div style={{ position: "relative", zIndex: 2, maxWidth: 800, margin: "0 auto", padding: "0 24px", textAlign: "center", width: "100%" }}>
           {/* SEARCH BAR */}
           <div
             className="stitch-box"
