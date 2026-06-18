@@ -18,6 +18,7 @@ import { CreditsModule } from './credits/credits.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ProfileModule } from './profile/profile.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ProfileModule } from './profile/profile.module';
     DashboardModule,
     NotificationsModule,
     ProfileModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
