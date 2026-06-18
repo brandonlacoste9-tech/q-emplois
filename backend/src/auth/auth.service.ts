@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, ConflictException, ServiceUnavailableException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -11,6 +11,8 @@ import { ProvidersService } from '../providers/providers.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -27,9 +29,17 @@ export class AuthService {
     }
 
     // Check if email already exists
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: dto.email.toLowerCase() },
-    });
+    let existingUser;
+    try {
+      existingUser = await this.prisma.user.findUnique({
+        where: { email: dto.email.toLowerCase() },
+      });
+    } catch (error) {
+      this.logger.error('Database unavailable during registration', error);
+      throw new ServiceUnavailableException(
+        'Service temporairement indisponible. La base de données n\'est pas connectée.',
+      );
+    }
 
     if (existingUser) {
       throw new ConflictException('Cette adresse email est déjà utilisée.');

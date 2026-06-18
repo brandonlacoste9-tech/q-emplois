@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { normalizeCanadianPhone } from '../utils/phone';
+import { getApiErrorMessage } from '../utils/apiError';
 import { BrandLogo } from '../components/BrandLogo';
 import { SERVICE_TYPE_LABELS, type ServiceType } from '../types';
 
@@ -127,7 +128,7 @@ export function Register() {
       } catch { /* profile loading */ }
       navigate('/jobs');
     } catch (err) {
-      setError(t.errGeneric);
+      setError(getApiErrorMessage(err, t.errGeneric));
       setIsLoading(false);
     }
   };

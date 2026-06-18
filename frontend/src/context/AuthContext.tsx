@@ -73,15 +73,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(async (data: RegisterData) => {
     const { user: userData, token } = await api.register(data);
     localStorage.setItem('token', token);
-    setUser(userData);
-    await loadUser();
+    setUser(userData as unknown as TradesmanProfile);
+    try {
+      await loadUser();
+    } catch {
+      // Account created; profile fetch can retry on next page
+    }
   }, []);
 
   const registerClient = useCallback(async (data: ClientRegisterData) => {
     const { user: userData, token } = await api.registerClient(data);
     localStorage.setItem('token', token);
-    setUser(userData);
-    await loadUser();
+    setUser(userData as unknown as TradesmanProfile);
+    try {
+      await loadUser();
+    } catch {
+      // Account created; profile fetch can retry on next page
+    }
   }, []);
 
   const logout = useCallback(() => {

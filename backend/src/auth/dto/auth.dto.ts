@@ -1,14 +1,25 @@
 import { IsEmail, IsString, MinLength, MaxLength, IsOptional, IsEnum, IsBoolean, IsPhoneNumber, IsArray } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { LanguagePreference } from '@prisma/client';
+
+function normalizePhone(value: unknown): string | undefined {
+  if (typeof value !== 'string' || !value.trim()) return undefined;
+  const digits = value.replace(/\D/g, '');
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  if (value.startsWith('+')) return value;
+  return value;
+}
 
 export class RegisterDto {
   @ApiProperty({ example: 'jean.dupont@email.com' })
   @IsEmail({}, { message: 'Veuillez fournir une adresse email valide.' })
   email: string;
 
-  @ApiProperty({ example: '5141234567' })
+  @ApiProperty({ example: '+15141234567' })
   @IsOptional()
+  @Transform(({ value }) => normalizePhone(value))
   @IsPhoneNumber('CA', { message: 'Veuillez fournir un numéro de téléphone valide au Canada.' })
   phone?: string;
 

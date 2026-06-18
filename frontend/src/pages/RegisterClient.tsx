@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { normalizeCanadianPhone } from '../utils/phone';
+import { getApiErrorMessage } from '../utils/apiError';
 import { BrandLogo } from '../components/BrandLogo';
 
 type Lang = 'fr' | 'en';
@@ -119,8 +120,8 @@ export function RegisterClient() {
         phone: normalizeCanadianPhone(formData.phone),
       });
       navigate('/post-job');
-    } catch {
-      setError(t.errGeneric);
+    } catch (err) {
+      setError(getApiErrorMessage(err, t.errGeneric));
       setIsLoading(false);
     }
   };
