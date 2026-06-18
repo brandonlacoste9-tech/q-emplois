@@ -172,6 +172,7 @@ export function LandingPage() {
   const [lang, setLang] = useState<"fr" | "en">("fr");
   const [q, setQ] = useState("");
   const [chatIdx, setChatIdx] = useState(0);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const t = T[lang];
 
   useEffect(() => {
@@ -383,7 +384,8 @@ export function LandingPage() {
           <Link to="/">
             <Logo size="md" />
           </Link>
-          <div className="body-f" style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14 }}>
+          {/* Desktop links */}
+          <div className="body-f nav-hide-sm" style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14 }}>
             <Link to="/contrats" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.find}</Link>
             <Link to="/pro" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.become}</Link>
             <Link to="/login" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.login}</Link>
@@ -406,12 +408,62 @@ export function LandingPage() {
               {t.nav.signup}
             </button>
           </div>
+          {/* Mobile hamburger */}
+          <button
+            aria-label="Menu"
+            className="nav-show-sm"
+            onClick={() => setMobileOpen((o) => !o)}
+            style={{
+              display: "none",
+              background: "transparent",
+              border: "1px dashed rgba(217,179,140,0.35)",
+              borderRadius: 6,
+              padding: "8px 10px",
+              cursor: "pointer",
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D9B38C" strokeWidth="2" strokeLinecap="round">
+              {mobileOpen ? <><line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" /></> : <><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></>}
+            </svg>
+          </button>
         </div>
+        {/* Mobile dropdown menu */}
+        {mobileOpen && (
+          <div
+            className="body-f nav-show-sm"
+            style={{
+              display: "none",
+              flexDirection: "column",
+              gap: 4,
+              padding: "8px 24px 18px",
+              borderTop: "1px dashed rgba(217,179,140,0.2)",
+              background: "rgba(31,47,63,0.98)",
+            }}
+          >
+            <Link to="/contrats" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.find}</Link>
+            <Link to="/pro" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.become}</Link>
+            <Link to="/login" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.login}</Link>
+            <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
+              <button
+                onClick={() => setLang(lang === "fr" ? "en" : "fr")}
+                style={{ padding: "6px 14px", border: "1px dashed rgba(217,179,140,0.35)", borderRadius: 6, background: "transparent", color: "#D9B38C", cursor: "pointer", fontSize: 12, fontFamily: "monospace" }}
+              >
+                {lang === "fr" ? "EN" : "FR"}
+              </button>
+              <button className="gold-btn" style={{ flex: 1, padding: "8px 18px", fontSize: 13 }}>
+                {t.nav.signup}
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
+
+      {/* spacer for fixed nav */}
+      <div style={{ height: 60 }} />
 
       {/* ======== HERO ======== */}
       <section
-        className="leather"
+        className="leather hero-fit"
         style={{
           position: "relative",
           backgroundImage: "url('/hero/hero-quebec.jpg')",

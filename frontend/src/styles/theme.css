@@ -212,7 +212,19 @@ a.nav-link:hover { color: #B87B44; }
 /* Hide secondary nav links on small screens */
 @media (max-width: 640px) {
   .nav-hide-sm { display: none !important; }
-  .nav-show-sm { display: block !important; }
+  /* hamburger button */
+  button.nav-show-sm { display: inline-flex !important; }
+  /* dropdown panel */
+  div.nav-show-sm { display: flex !important; }
+  /* hero shrinks and uses cover on phones so the full image is framed */
+  .hero-fit {
+    aspect-ratio: auto !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    min-height: 56vh !important;
+    background-size: cover !important;
+    background-position: center 42% !important;
+  }
 }
 
 /* --- EMPIRE SPLIT (portal split band) --- */
