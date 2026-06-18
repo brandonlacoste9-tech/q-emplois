@@ -416,13 +416,18 @@ export function LandingPage() {
           position: "relative",
           backgroundImage: "url('/hero/hero-quebec.jpg')",
           backgroundSize: "cover",
-          backgroundPosition: "center 38%",
-          minHeight: "clamp(360px, 62vh, 580px)",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center center",
+          width: "100%",
+          maxWidth: "min(100%, calc(54vh * 16 / 9))",
+          margin: "0 auto",
+          aspectRatio: "16 / 9",
+          maxHeight: "54vh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          paddingTop: 56,
-          paddingBottom: 40,
+          paddingTop: 0,
+          paddingBottom: 28,
         }}
       >
         {/* Bottom gradient overlay for search-bar readability */}
