@@ -157,6 +157,11 @@ class ApiService {
     return response.data;
   }
 
+  async startJob(id: string): Promise<Job> {
+    const response = await this.client.post(`/jobs/${id}/start`);
+    return response.data;
+  }
+
   async getCreditBalance(): Promise<{
     balance: number;
     isFoundingTasker: boolean;
@@ -168,6 +173,31 @@ class ApiService {
 
   async purchaseCreditPack(pack: 'starter' | 'standard' | 'pro'): Promise<{ checkoutUrl: string }> {
     const response = await this.client.post('/credits/purchase', { pack });
+    return response.data;
+  }
+
+  async getCreditPacks(): Promise<Record<string, { credits: number; priceCad: number; label: string }>> {
+    const response = await this.client.get('/credits/packs');
+    return response.data;
+  }
+
+  async createReview(data: { taskId: string; rating: number; comment?: string }) {
+    const response = await this.client.post('/reviews', data);
+    return response.data;
+  }
+
+  async getReviewsForUser(userId: string) {
+    const response = await this.client.get(`/reviews/user/${userId}`);
+    return response.data;
+  }
+
+  async createEscrow(data: {
+    providerId: string;
+    taskDescription: string;
+    totalAmount: number;
+    milestones: { description: string; amount: number }[];
+  }) {
+    const response = await this.client.post('/payments/escrow', data);
     return response.data;
   }
 

@@ -1,187 +1,220 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/Toast';
 import { escrowService } from '../services/escrowService';
 import { BrandLogo } from '../components/BrandLogo';
+import { Loader2 } from 'lucide-react';
 
-/**
- * 🏛️ L'ATELIER - PRO COMMAND CENTER
- * Quebec-compliant dashboard for tradesmen.
- */
+interface EscrowContract {
+  id: string;
+  taskDescription: string;
+  totalAmount: number | string;
+  status: string;
+  milestones: Array<{
+    id: string;
+    description: string;
+    amount: number | string;
+    status: string;
+  }>;
+  client?: { firstName?: string; lastName?: string };
+  provider?: { firstName?: string; lastName?: string };
+}
 
 export function LAtelierPage() {
-    const [lang, setLang] = useState<'fr' | 'en'>('fr');
-    const [activeProjects, setActiveProjects] = useState([
-        { id: '1', client: "Jean Dupont", task: "Réparation Tuyauterie", amount: 450, status: 'Locked', progress: 60 },
-        { id: '2', client: "Marie Leblanc", task: "Installation Électrique", amount: 1200, status: 'Pending', progress: 20 },
-        { id: '3', client: "Constructions Elite", task: "Consultation Structure", amount: 3500, status: 'Released', progress: 100 }
-    ]);
+  const { profile } = useAuth();
+  const { addToast } = useToast();
+  const [lang, setLang] = useState<'fr' | 'en'>('fr');
+  const [contracts, setContracts] = useState<EscrowContract[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({
+    providerId: '',
+    taskDescription: '',
+    totalAmount: '',
+    milestoneDesc: 'Jalon 1',
+    milestoneAmount: '',
+  });
 
-    const totals = activeProjects.reduce((acc, p) => acc + p.amount, 0);
-    const taxReserves = escrowService.calculateTaxReserves(totals);
+  const load = () => {
+    api.getEscrowContracts()
+      .then(setContracts)
+      .catch(() => addToast('Erreur de chargement L\'Atelier', 'error'))
+      .finally(() => setLoading(false));
+  };
 
-    const handleRelease = (id: string) => {
-        if (window.confirm(lang === 'fr' ? 'Libérer les fonds pour ce jalon ?' : 'Release funds for this milestone?')) {
-            setActiveProjects(prev => prev.map(p => p.id === id ? { ...p, status: 'Released', progress: 100 } : p));
-            escrowService.releaseMilestone(id, 'M1');
-        }
-    };
+  useEffect(() => { load(); }, [addToast]);
 
-    const t = {
-        fr: {
-            title: "L'Atelier",
-            subtitle: "Centre de Commande Professionnel",
-            revenue: "Revenus Totaux",
-            escrow: "En Séquestre (Escrow)",
-            taxes: "Réserves de Taxes (TPS/TVQ)",
-            projects: "Projets Actifs",
-            milestones: "Jalons & Paiements",
-            statusLocked: "Fonds Verrouillés",
-            statusReleased: "Libéré",
-            statusPending: "En Attente",
-            newProject: "Nouveau Contrat",
-            reports: "Rapports Revenu Québec",
-            actionRelease: "Libérer"
-        },
-        en: {
-            title: "L'Atelier",
-            subtitle: "Professional Command Center",
-            revenue: "Total Revenue",
-            escrow: "In Escrow",
-            taxes: "Tax Reserves (GST/QST)",
-            projects: "Active Projects",
-            milestones: "Milestones & Payments",
-            statusLocked: "Funds Locked",
-            statusReleased: "Released",
-            statusPending: "Pending",
-            newProject: "New Contract",
-            reports: "Revenu Québec Reports",
-            actionRelease: "Release"
-        }
-    }[lang];
+  const totals = contracts.reduce((acc, c) => acc + Number(c.totalAmount), 0);
+  const locked = contracts
+    .filter((c) => c.status === 'locked')
+    .reduce((acc, c) => acc + Number(c.totalAmount), 0);
+  const taxReserves = escrowService.calculateTaxReserves(totals);
 
-    return (
-        <div className="leather" style={{ minHeight: "100vh", color: "#D9B38C" }}>
-            {/* Header */}
-            <nav style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "16px 40px",
-                background: "rgba(31,47,63,0.92)",
-                backdropFilter: "blur(12px)",
-                borderBottom: "2px dashed rgba(217,179,140,0.2)"
-            }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                    <Link to="/"><BrandLogo size="md" /></Link>
-                    <span className="serif gold" style={{ fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", fontSize: "0.85rem" }}>L'Atelier</span>
-                </div>
+  const handleRelease = async (contractId: string, milestoneId: string) => {
+    if (!window.confirm(lang === 'fr' ? 'Libérer les fonds pour ce jalon ?' : 'Release funds for this milestone?')) return;
+    try {
+      await api.releaseEscrowMilestone(contractId, milestoneId);
+      addToast('Jalon libéré', 'success');
+      load();
+    } catch {
+      addToast('Erreur lors de la libération', 'error');
+    }
+  };
 
-                <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-                    <button onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} style={{ background: "transparent", border: "1px dashed rgba(217,179,140,0.35)", color: "#D9B38C", padding: "4px 12px", cursor: "pointer", borderRadius: "6px", fontFamily: "monospace", fontSize: 12 }}>
-                        {lang === 'fr' ? 'EN' : 'FR'}
-                    </button>
-                    <div className="serif" style={{ width: "38px", height: "38px", borderRadius: "50%", background: "linear-gradient(145deg, #B87B44, #8B5E30)", display: "flex", justifyContent: "center", alignItems: "center", color: "#1F2F3F", fontWeight: "bold", border: "2px solid rgba(217,179,140,0.3)" }}>
-                        M
-                    </div>
-                </div>
-            </nav>
+  const handleCreateEscrow = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      await api.createEscrow({
+        providerId: form.providerId,
+        taskDescription: form.taskDescription,
+        totalAmount: parseFloat(form.totalAmount),
+        milestones: [{ description: form.milestoneDesc, amount: parseFloat(form.milestoneAmount || form.totalAmount) }],
+      });
+      addToast('Contrat escrow créé', 'success');
+      setShowCreate(false);
+      load();
+    } catch {
+      addToast('Stripe non configuré ou données invalides', 'error');
+    } finally {
+      setCreating(false);
+    }
+  };
 
-            <main style={{ padding: "40px" }}>
-                <header style={{ marginBottom: "40px" }}>
-                    <h1 className="serif cream-hi" style={{ fontSize: "2.5rem", fontWeight: 900, marginBottom: "8px" }}>{t.title}</h1>
-                    <p className="body-f gold" style={{ letterSpacing: "1px" }}>{t.subtitle}</p>
-                </header>
+  const t = {
+    fr: {
+      title: "L'Atelier",
+      subtitle: 'Centre de commande — contrats escrow',
+      revenue: 'Revenus totaux',
+      escrow: 'En séquestre',
+      taxes: 'Réserves TPS/TVQ',
+      projects: 'Contrats actifs',
+      newProject: 'Nouveau contrat',
+      actionRelease: 'Libérer',
+      empty: 'Aucun contrat escrow',
+    },
+    en: {
+      title: "L'Atelier",
+      subtitle: 'Command center — escrow contracts',
+      revenue: 'Total revenue',
+      escrow: 'In escrow',
+      taxes: 'GST/QST reserves',
+      projects: 'Active contracts',
+      newProject: 'New contract',
+      actionRelease: 'Release',
+      empty: 'No escrow contracts',
+    },
+  }[lang];
 
-                {/* Financial Summary */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px", marginBottom: "40px" }}>
-                    {[
-                        { label: t.revenue, value: `$${totals.toLocaleString()}.00`, icon: "💰" },
-                        { label: t.escrow, value: "$4,500.00", icon: "🔒" },
-                        { label: t.taxes, value: `$${taxReserves.total.toFixed(2)}`, icon: "🏛️" }
-                    ].map((card, i) => (
-                        <div key={i} className="stitch-box" style={{
-                            background: "rgba(21,35,50,0.6)",
-                            padding: "32px"
-                        }}>
-                            <div style={{ fontSize: "2rem", marginBottom: "16px" }}>{card.icon}</div>
-                            <div className="body-f gold" style={{ fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>{card.label}</div>
-                            <div className="serif cream-hi" style={{ fontSize: "1.8rem", fontWeight: "bold" }}>{card.value}</div>
-                        </div>
-                    ))}
-                </div>
+  const isClient = profile?.role === 'client';
 
-                {/* Projects Section */}
-                <section>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                        <h2 className="serif cream-hi" style={{ fontSize: "1.8rem", fontWeight: 700 }}>{t.projects}</h2>
-                        <button className="gold-btn" style={{ padding: "12px 24px", fontSize: 14 }}>
-                            + {t.newProject}
-                        </button>
-                    </div>
-
-                    <div className="stitch-box" style={{ background: "rgba(21,35,50,0.4)", overflow: "hidden", padding: 0 }}>
-                        <table className="body-f" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-                            <thead>
-                                <tr className="gold" style={{ background: "rgba(184,123,68,0.12)", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                                    <th style={{ padding: "16px" }}>Client</th>
-                                    <th style={{ padding: "16px" }}>Task</th>
-                                    <th style={{ padding: "16px" }}>Amount</th>
-                                    <th style={{ padding: "16px" }}>Status</th>
-                                    <th style={{ padding: "16px" }}>Progress</th>
-                                    <th style={{ padding: "16px" }}>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {activeProjects.map(p => (
-                                    <tr key={p.id} style={{ borderBottom: "1px solid rgba(217,179,140,0.08)" }}>
-                                        <td className="cream-hi" style={{ padding: "16px", fontWeight: "bold" }}>{p.client}</td>
-                                        <td className="muted" style={{ padding: "16px" }}>{p.task}</td>
-                                        <td className="cream" style={{ padding: "16px" }}>${p.amount.toLocaleString()}</td>
-                                        <td style={{ padding: "16px" }}>
-                                            <span style={{
-                                                padding: "4px 10px",
-                                                borderRadius: "20px",
-                                                fontSize: "0.75rem",
-                                                background: p.status === 'Released' ? '#2BD47A' : p.status === 'Locked' ? '#B87B44' : 'rgba(217,179,140,0.18)',
-                                                color: p.status === 'Pending' ? '#C4A882' : "#fff"
-                                            }}>
-                                                {p.status === 'Locked' ? t.statusLocked : p.status === 'Released' ? t.statusReleased : t.statusPending}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: "16px" }}>
-                                            <div style={{ width: "120px", height: "6px", background: "rgba(217,179,140,0.15)", borderRadius: "3px" }}>
-                                                <div style={{ width: `${p.progress}%`, height: "100%", background: "#B87B44", borderRadius: "3px" }} />
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: "16px" }}>
-                                            {p.status === 'Locked' && (
-                                                <button
-                                                    onClick={() => handleRelease(p.id)}
-                                                    style={{ background: "none", border: "1px solid #2BD47A", color: "#2BD47A", padding: "4px 8px", borderRadius: "4px", fontSize: "0.75rem", cursor: "pointer" }}>
-                                                    {t.actionRelease}
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                {/* Reporting CTA */}
-                <div className="stitch-box" style={{ marginTop: "40px", padding: "32px", background: "rgba(21,35,50,0.6)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-                    <div>
-                        <h3 className="serif cream-hi" style={{ marginBottom: "8px", fontSize: "1.2rem", fontWeight: 700 }}>{t.reports}</h3>
-                        <p className="body-f muted2" style={{ fontSize: "0.9rem" }}>{lang === 'fr' ? 'Générez vos fichiers JSON/XML pour la déclaration de TVQ trimestrielle.' : 'Generate your JSON/XML files for quarterly QST filing.'}</p>
-                    </div>
-                    <button className="ghost-btn" style={{ padding: "12px 24px", fontSize: 14 }}>
-                        {lang === 'fr' ? 'Exporter' : 'Export'}
-                    </button>
-                </div>
-            </main>
+  return (
+    <div className="leather" style={{ minHeight: '100vh', color: '#D9B38C' }}>
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 40px', background: 'rgba(31,47,63,0.92)', borderBottom: '2px dashed rgba(217,179,140,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Link to="/dashboard"><BrandLogo size="md" /></Link>
+          <span className="serif gold" style={{ fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', fontSize: '0.85rem' }}>L'Atelier</span>
         </div>
-    );
+        <button onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} style={{ background: 'transparent', border: '1px dashed rgba(217,179,140,0.35)', color: '#D9B38C', padding: '4px 12px', cursor: 'pointer', borderRadius: 6, fontSize: 12 }}>
+          {lang === 'fr' ? 'EN' : 'FR'}
+        </button>
+      </nav>
+
+      <main style={{ padding: 40, maxWidth: 1200, margin: '0 auto' }}>
+        <header style={{ marginBottom: 40 }}>
+          <h1 className="serif cream-hi" style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: 8 }}>{t.title}</h1>
+          <p className="body-f gold">{t.subtitle}</p>
+        </header>
+
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
+            <Loader2 className="w-8 h-8" style={{ animation: 'spin 0.9s linear infinite' }} />
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24, marginBottom: 40 }}>
+              {[
+                { label: t.revenue, value: `$${totals.toLocaleString('fr-CA', { minimumFractionDigits: 2 })}` },
+                { label: t.escrow, value: `$${locked.toLocaleString('fr-CA', { minimumFractionDigits: 2 })}` },
+                { label: t.taxes, value: `$${taxReserves.total.toFixed(2)}` },
+              ].map((card) => (
+                <div key={card.label} className="stitch-box" style={{ background: 'rgba(21,35,50,0.6)', padding: 28 }}>
+                  <p className="body-f gold" style={{ fontSize: 13, marginBottom: 8, textTransform: 'uppercase' }}>{card.label}</p>
+                  <p className="serif cream-hi" style={{ fontSize: '1.6rem', fontWeight: 'bold' }}>{card.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 className="serif cream-hi" style={{ fontSize: '1.6rem', fontWeight: 700 }}>{t.projects}</h2>
+              {isClient && (
+                <button className="gold-btn" style={{ padding: '10px 20px' }} onClick={() => setShowCreate(!showCreate)}>
+                  + {t.newProject}
+                </button>
+              )}
+            </div>
+
+            {showCreate && isClient && (
+              <form onSubmit={handleCreateEscrow} className="stitch-box" style={{ background: 'rgba(21,35,50,0.6)', padding: 24, marginBottom: 24 }}>
+                <div style={{ display: 'grid', gap: 12 }}>
+                  <input className="q-field" placeholder="ID du travailleur (providerId)" value={form.providerId} onChange={(e) => setForm({ ...form, providerId: e.target.value })} required />
+                  <input className="q-field" placeholder="Description de la tâche" value={form.taskDescription} onChange={(e) => setForm({ ...form, taskDescription: e.target.value })} required />
+                  <input className="q-field" type="number" step="0.01" placeholder="Montant total ($)" value={form.totalAmount} onChange={(e) => setForm({ ...form, totalAmount: e.target.value })} required />
+                  <input className="q-field" placeholder="Description jalon" value={form.milestoneDesc} onChange={(e) => setForm({ ...form, milestoneDesc: e.target.value })} />
+                  <input className="q-field" type="number" step="0.01" placeholder="Montant jalon ($)" value={form.milestoneAmount} onChange={(e) => setForm({ ...form, milestoneAmount: e.target.value })} />
+                  <button type="submit" disabled={creating} className="gold-btn" style={{ padding: 12 }}>{creating ? 'Création…' : 'Créer et financer via Stripe'}</button>
+                </div>
+              </form>
+            )}
+
+            {contracts.length === 0 ? (
+              <p className="body-f muted" style={{ textAlign: 'center', padding: 32 }}>{t.empty}</p>
+            ) : (
+              <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.4)', overflow: 'auto' }}>
+                <table className="body-f" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead>
+                    <tr className="gold" style={{ background: 'rgba(184,123,68,0.12)', fontSize: '0.8rem', textTransform: 'uppercase' }}>
+                      <th style={{ padding: 16 }}>Description</th>
+                      <th style={{ padding: 16 }}>Montant</th>
+                      <th style={{ padding: 16 }}>Statut</th>
+                      <th style={{ padding: 16 }}>Jalons</th>
+                      <th style={{ padding: 16 }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contracts.map((c) => (
+                      <tr key={c.id} style={{ borderBottom: '1px solid rgba(217,179,140,0.08)' }}>
+                        <td className="cream-hi" style={{ padding: 16 }}>{c.taskDescription}</td>
+                        <td style={{ padding: 16 }}>${Number(c.totalAmount).toFixed(2)}</td>
+                        <td style={{ padding: 16 }}>{c.status}</td>
+                        <td style={{ padding: 16 }}>
+                          {c.milestones.map((m) => (
+                            <div key={m.id} style={{ fontSize: 12, marginBottom: 4 }}>
+                              {m.description}: ${Number(m.amount).toFixed(2)} ({m.status})
+                            </div>
+                          ))}
+                        </td>
+                        <td style={{ padding: 16 }}>
+                          {c.milestones.filter((m) => m.status === 'LOCKED').map((m) => (
+                            <button key={m.id} onClick={() => handleRelease(c.id, m.id)} className="ghost-btn" style={{ fontSize: 12, padding: '4px 8px', marginRight: 4 }}>
+                              {t.actionRelease}
+                            </button>
+                          ))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+    </div>
+  );
 }
 
 export default LAtelierPage;

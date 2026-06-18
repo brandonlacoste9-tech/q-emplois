@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
+import { normalizeCanadianPhone } from '../utils/phone';
 import { BrandLogo } from '../components/BrandLogo';
 import { SERVICE_TYPE_LABELS, type ServiceType } from '../types';
 
@@ -114,9 +116,15 @@ export function Register() {
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: formData.phone,
+        phone: normalizeCanadianPhone(formData.phone),
         serviceTypes: formData.serviceTypes,
       });
+      try {
+        const bal = await api.getCreditBalance();
+        if (bal.isFoundingTasker) {
+          alert(`🎉 Bienvenue! Vous avez reçu ${bal.balance} crédits founding tasker gratuits!`);
+        }
+      } catch { /* profile loading */ }
       navigate('/jobs');
     } catch (err) {
       setError(t.errGeneric);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { normalizeCanadianPhone } from '../utils/phone';
 import { BrandLogo } from '../components/BrandLogo';
 
 type Lang = 'fr' | 'en';
@@ -115,7 +116,7 @@ export function RegisterClient() {
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: formData.phone,
+        phone: normalizeCanadianPhone(formData.phone),
       });
       navigate('/post-job');
     } catch {

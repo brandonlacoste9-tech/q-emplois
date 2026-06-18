@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { BrandLogo } from '../components/BrandLogo';
 
 type Lang = 'fr' | 'en';
@@ -54,7 +55,8 @@ export function Login() {
     setIsLoading(true);
     try {
       await login(email, password);
-      navigate('/dashboard');
+      const profileData = await api.getProfile();
+      navigate(profileData.role === 'client' ? '/dashboard' : '/jobs');
     } catch (err) {
       setError(t.err);
     } finally {

@@ -13,11 +13,16 @@ export function AppNav() {
     ? [
         { label: 'Tableau de bord', path: '/dashboard' },
         { label: 'Publier une job', path: '/post-job' },
+        { label: 'Messages', path: '/messages' },
+        { label: "L'Atelier", path: '/latelier' },
         { label: 'Profil', path: '/profile' },
       ]
     : [
         { label: 'Tableau de bord', path: '/dashboard' },
         { label: 'Jobs', path: '/jobs' },
+        { label: 'Crédits', path: '/credits' },
+        { label: 'Messages', path: '/messages' },
+        { label: "L'Atelier", path: '/latelier' },
         { label: 'Profil', path: '/profile' },
       ];
 

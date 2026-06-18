@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { SERVICE_TYPE_LABELS, type ServiceType, type TradesmanProfile } from '../types';
@@ -15,6 +16,7 @@ import {
   X,
   Star,
   Upload,
+  Coins,
 } from 'lucide-react';
 import { formatPrice } from '../utils';
 
@@ -29,12 +31,20 @@ const SERVICE_TYPES: ServiceType[] = [
 
 export function Profile() {
   const { profile: initialProfile, refreshProfile } = useAuth();
+  const isClient = initialProfile?.role === 'client';
   const [profile, setProfile] = useState<TradesmanProfile | null>(initialProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<TradesmanProfile>>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isClient) {
+      api.getCreditBalance().then((b) => setCreditBalance(b.balance)).catch(() => undefined);
+    }
+  }, [isClient]);
 
   useEffect(() => {
     if (initialProfile) {
@@ -146,6 +156,20 @@ export function Profile() {
               </div>
             </div>
 
+            {!isClient && creditBalance !== null && (
+              <div className="stitch-box" style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Coins className="w-5 h-5" style={{ color: gold }} />
+                  <div>
+                    <p className="body-f muted2" style={{ fontSize: 13 }}>Crédits disponibles</p>
+                    <p className="serif cream-hi" style={{ fontSize: 22, fontWeight: 900 }}>{creditBalance}</p>
+                  </div>
+                </div>
+                <Link to="/credits" className="ghost-btn" style={{ padding: '8px 14px', fontSize: 13, textDecoration: 'none' }}>Acheter</Link>
+              </div>
+            )}
+
+            {!isClient && (
             <div className="stitch-box" style={{ ...card, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <p className="body-f muted2" style={{ fontSize: 13 }}>Taux horaire</p>
@@ -156,6 +180,7 @@ export function Profile() {
                 <p className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700 }}>{profile.serviceRadius || 10} km</p>
               </div>
             </div>
+            )}
           </div>
 
           {/* Right column */}
@@ -171,6 +196,8 @@ export function Profile() {
               </div>
             </div>
 
+            {!isClient && (
+            <>
             {/* Services */}
             <div className="stitch-box" style={card}>
               <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Types de services</h3>
@@ -239,6 +266,8 @@ export function Profile() {
                 )}
               </div>
             </div>
+            </>
+            )}
           </div>
         </div>
       </div>

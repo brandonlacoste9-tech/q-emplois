@@ -12,8 +12,11 @@ import { Dashboard } from './pages/Dashboard'
 import { Jobs } from './pages/Jobs'
 import { Profile } from './pages/Profile'
 import { PostJob } from './pages/PostJob'
+import { Credits } from './pages/Credits'
+import { Messages } from './pages/Messages'
 import { CookieConsent } from './components/CookieConsent'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { RoleRoute } from './components/RoleRoute'
 import { AppNav } from './components/AppNav'
 import './styles/cuir-quebecois.css'
 
@@ -33,7 +36,6 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/portal" element={<PortalPage />} />
         <Route path="/q-jobs" element={<QJobsPage />} />
-        <Route path="/latelier" element={<LAtelierPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterChoose />} />
         <Route path="/register/client" element={<RegisterClient />} />
@@ -51,21 +53,49 @@ function App() {
         <Route
           path="/jobs"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={['provider', 'admin']} fallback="/dashboard">
               <AppShell>
                 <Jobs />
               </AppShell>
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/credits"
+          element={
+            <RoleRoute allowedRoles={['provider', 'admin']} fallback="/dashboard">
+              <AppShell>
+                <Credits />
+              </AppShell>
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <Messages />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/latelier"
+          element={
+            <ProtectedRoute>
+              <LAtelierPage />
             </ProtectedRoute>
           }
         />
         <Route
           path="/contrats"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={['provider', 'admin']} fallback="/dashboard">
               <AppShell>
                 <Jobs />
               </AppShell>
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
         <Route path="/pro" element={<Register />} />
@@ -82,11 +112,11 @@ function App() {
         <Route
           path="/post-job"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={['client', 'admin']} fallback="/jobs">
               <AppShell>
                 <PostJob />
               </AppShell>
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
       </Routes>

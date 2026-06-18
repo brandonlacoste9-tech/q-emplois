@@ -168,6 +168,24 @@ export class JobsService {
       },
     });
 
+    const existingConversation = await this.prisma.conversation.findFirst({
+      where: { clientId: task.clientId, providerId: taskerId },
+    });
+    if (!existingConversation) {
+      await this.prisma.conversation.create({
+        data: {
+          clientId: task.clientId,
+          providerId: taskerId,
+          taskId,
+        },
+      });
+    } else if (!existingConversation.taskId) {
+      await this.prisma.conversation.update({
+        where: { id: existingConversation.id },
+        data: { taskId },
+      });
+    }
+
     await this.auditService.log({
       userId: taskerId,
       action: 'task_claimed',

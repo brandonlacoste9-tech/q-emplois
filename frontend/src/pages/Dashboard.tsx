@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Clock,
 } from 'lucide-react';
-import type { DashboardStats, Notification, Job } from '../types';
+import type { DashboardStats, Notification, Job, JobStatus } from '../types';
+import { JOB_STATUS_LABELS } from '../types';
 import { api } from '../services/api';
 import { formatPrice, formatShortDate, formatTime, formatDistance } from '../utils';
 
@@ -33,7 +34,7 @@ export function Dashboard() {
       try {
         if (isClient) {
           const jobsData = await api.getJobs();
-          setMyPostedJobs(jobsData.filter((j) => j.status === 'pending').slice(0, 5));
+          setMyPostedJobs(jobsData.slice(0, 8));
         } else {
           const [statsData, notificationsData, jobsData] = await Promise.all([
             api.getDashboardStats(),
@@ -107,7 +108,8 @@ export function Dashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {myPostedJobs.map((job) => (
-                  <div key={job.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: 12, borderRadius: 8, background: 'rgba(15,25,36,0.5)' }}>
+                  <Link key={job.id} to="/post-job" style={{ textDecoration: 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: 12, borderRadius: 8, background: 'rgba(15,25,36,0.5)' }}>
                     <div style={{ flex: 1 }}>
                       <h4 className="serif cream-hi" style={{ fontSize: 15, fontWeight: 700 }}>{job.title}</h4>
                       <p className="body-f muted2" style={{ fontSize: 13, marginTop: 4 }}>
@@ -115,9 +117,10 @@ export function Dashboard() {
                       </p>
                     </div>
                     <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: gold, padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
-                      En attente
+                      {JOB_STATUS_LABELS[job.status as JobStatus]}
                     </span>
                   </div>
+                  </Link>
                 ))}
               </div>
             )}

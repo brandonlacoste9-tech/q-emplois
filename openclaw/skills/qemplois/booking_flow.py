@@ -2,6 +2,7 @@
 Fix 1: Real API calls (no more mock providers)
 Fix 2: Real geocoding via Nominatim
 """
+import os
 import logging
 from enum import Enum
 from typing import Optional, Dict, List
@@ -72,8 +73,11 @@ class BookingFlow:
         "5": ("déménagement", "🚚 Déménagement"),
     }
 
-    def __init__(self, api_base: str = "https://api.qemplois.ca/api/v1", api_key: str = ""):
-        self.api_base = api_base
+    def __init__(self, api_base: str | None = None, api_key: str = ""):
+        self.api_base = api_base or os.environ.get(
+            "QEMPLOIS_API_URL",
+            "http://localhost:3000/api/v1",
+        )
         self.api_key = api_key
         self.sessions: Dict[str, BookingData] = {}
 

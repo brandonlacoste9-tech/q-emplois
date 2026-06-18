@@ -74,6 +74,8 @@ model User {
   providerConversations Conversation[]   @relation("ProviderConversations")
   escrowContractsAsClient EscrowContract[] @relation("EscrowClient")
   escrowContractsAsProvider EscrowContract[] @relation("EscrowProvider")
+  taskReviewsGiven        TaskReview[]     @relation("TaskReviewsGiven")
+  taskReviewsReceived     TaskReview[]     @relation("TaskReviewsReceived")
   
   // Bot integrations
   telegramId          String?            @unique
@@ -338,6 +340,7 @@ model Task {
   updatedAt         DateTime   @updatedAt
 
   creditTransactions CreditTransaction[]
+  reviews            TaskReview[]
 
   @@index([clientId])
   @@index([taskerId])
@@ -487,4 +490,25 @@ model EscrowMilestone {
 
   @@index([contractId])
   @@map("escrow_milestones")
+}
+
+// ========================
+// TASK REVIEWS (marketplace)
+// ========================
+model TaskReview {
+  id         String   @id @default(uuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User     @relation("TaskReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  revieweeId String
+  reviewee   User     @relation("TaskReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@unique([taskId, reviewerId])
+  @@index([revieweeId])
+  @@index([reviewerId])
+  @@map("task_reviews")
 }

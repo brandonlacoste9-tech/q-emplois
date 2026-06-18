@@ -70,8 +70,8 @@ export class PaymentsService {
         credits: String(credits),
         type: 'credit_pack',
       },
-      success_url: `${this.configService.get('FRONTEND_URL', 'http://localhost:5173')}/dashboard?credits=success`,
-      cancel_url: `${this.configService.get('FRONTEND_URL', 'http://localhost:5173')}/dashboard?credits=cancelled`,
+      success_url: `${this.configService.get('FRONTEND_URL', 'http://localhost:5173')}/credits?success=1`,
+      cancel_url: `${this.configService.get('FRONTEND_URL', 'http://localhost:5173')}/credits?cancelled=1`,
     });
 
     return { checkoutUrl: session.url, sessionId: session.id };
