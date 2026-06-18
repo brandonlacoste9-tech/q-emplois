@@ -496,12 +496,12 @@ export function LandingPage() {
         <div style={{ position: "relative", zIndex: 2, maxWidth: 800, margin: "0 auto", padding: "0 24px", textAlign: "center", width: "100%" }}>
           {/* SEARCH BAR */}
           <div
-            className="stitch-box"
+            className="stitch-box search-bar"
             style={{
               maxWidth: 620,
               margin: "0 auto",
               display: "flex",
-              overflow: "hidden",
+              alignItems: "center",
               background: "rgba(31,47,63,0.6)",
               padding: "6px"
             }}

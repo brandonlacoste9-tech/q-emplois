@@ -223,10 +223,14 @@ a.nav-link:hover { color: #B87B44; }
     aspect-ratio: auto !important;
     max-width: 100% !important;
     max-height: none !important;
-    min-height: 56vh !important;
+    min-height: 60vh !important;
     background-size: cover !important;
     background-position: center 42% !important;
+    padding-bottom: 20px !important;
   }
+  /* stack search bar so the button isn't clipped on phones */
+  .search-bar { flex-direction: column !important; gap: 8px; }
+  .search-bar > a { width: 100% !important; text-align: center; }
 }
 
 /* --- EMPIRE SPLIT (portal split band) --- */
