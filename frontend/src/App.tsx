@@ -9,6 +9,7 @@ import { Register } from './pages/Register'
 import { Dashboard } from './pages/Dashboard'
 import { Jobs } from './pages/Jobs'
 import { Profile } from './pages/Profile'
+import { PostJob } from './pages/PostJob'
 import { CookieConsent } from './components/CookieConsent'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppNav } from './components/AppNav'
@@ -73,6 +74,16 @@ function App() {
             <ProtectedRoute>
               <AppShell>
                 <Profile />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/post-job"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <PostJob />
               </AppShell>
             </ProtectedRoute>
           }

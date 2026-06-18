@@ -47,6 +47,9 @@ export function AppNav() {
               {user.firstName}
             </span>
           )}
+          <Link to="/post-job" className="gold-btn nav-hide-sm" style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>
+            Publier une job
+          </Link>
           <button onClick={logout} className="ghost-btn nav-hide-sm" style={{ padding: '6px 14px', fontSize: 13 }}>
             Déconnexion
           </button>
@@ -75,6 +78,9 @@ export function AppNav() {
               {item.label}
             </Link>
           ))}
+          <Link to="/post-job" onClick={() => setOpen(false)} className="gold-btn" style={{ display: 'block', marginTop: 12, padding: '8px 14px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}>
+            Publier une job
+          </Link>
           <button onClick={logout} className="ghost-btn" style={{ marginTop: 8, padding: '8px 14px', fontSize: 13, width: '100%' }}>
             Déconnexion
           </button>

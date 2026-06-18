@@ -110,6 +110,35 @@ class ApiService {
     return response.data;
   }
 
+  async createJob(data: Partial<Job>): Promise<Job> {
+    // Mocking the creation since the backend is currently down.
+    // TODO: replace with: const response = await this.client.post('/jobs', data); return response.data;
+    console.warn('[mock] createJob called — backend offline', data);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          id: Math.random().toString(36).substring(7),
+          clientId: 'mock-client-id',
+          clientName: 'Vous',
+          title: data.title || 'Nouvelle job',
+          description: data.description || '',
+          status: 'pending',
+          serviceType: data.serviceType || 'autre',
+          estimatedPrice: data.estimatedPrice || 0,
+          estimatedDuration: 60,
+          scheduledDate: data.scheduledDate || new Date().toISOString(),
+          address: data.address || {
+            street: '123 Rue Principale',
+            city: 'Montréal',
+            postalCode: 'H2X 1Y6',
+          },
+          createdAt: new Date().toISOString(),
+          ...data,
+        } as Job);
+      }, 800);
+    });
+  }
+
   async acceptJob(id: string): Promise<Job> {
     const response = await this.client.post(`/jobs/${id}/accept`);
     return response.data;
