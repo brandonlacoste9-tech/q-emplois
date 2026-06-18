@@ -1,7 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { LandingPage } from './pages/LandingPage'
-import { QBusinessPage } from './pages/QBusinessPage'
 import { QJobsPage } from './pages/QJobsPage'
 import { LAtelierPage } from './pages/LAtelierPage'
 import { PortalPage } from './pages/PortalPage'
@@ -30,7 +29,6 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/portal" element={<PortalPage />} />
-        <Route path="/q-business" element={<QBusinessPage />} />
         <Route path="/q-jobs" element={<QJobsPage />} />
         <Route path="/latelier" element={<LAtelierPage />} />
         <Route path="/login" element={<Login />} />

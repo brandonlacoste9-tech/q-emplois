@@ -421,40 +421,9 @@ export function LandingPage() {
           zIndex: 10
         }}>
 
-          {/* Option Q-MÉTIER */}
-          <div className="stitch-box group" style={{
-            flex: "1 1 300px",
-            padding: "32px",
-            background: "rgba(22, 34, 46, 0.8)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            cursor: "pointer",
-            transition: "all 0.3s",
-            minHeight: "260px"
-          }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(26, 40, 54, 0.95)"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "rgba(22, 34, 46, 0.8)"}
-          >
-            <div>
-              <div style={{ color: "#C88B54", fontFamily: "'Playfair Display', serif", fontSize: "0.85rem", letterSpacing: "0.3em", marginBottom: "8px" }}>Q-business</div>
-              <h3 style={{ fontSize: "1.75rem", fontFamily: "'Playfair Display', serif", color: "#D9B38C", marginBottom: "12px", fontWeight: "bold" }}>
-                {lang === 'fr' ? "L'Élite des Métiers" : "The Elite of Trades"}
-              </h3>
-              <p style={{ fontSize: "0.95rem", opacity: 0.8, marginBottom: "24px", lineHeight: "1.6", fontFamily: "'Inter', sans-serif" }}>
-                {lang === 'fr' ? "Professionnels vérifiés (RBQ)." : "Verified Professionals (RBQ)."}<br />
-                {lang === 'fr' ? "Plomberie, électricité, et contrats de prestige." : "Plumbing, electrical, and prestige contracts."}
-              </p>
-            </div>
-            <Link to="/q-business" className="gold-btn" style={{ textAlign: "center", display: "block", padding: "12px", fontSize: "0.9rem" }}>
-              {lang === 'fr' ? "Entrer au Quartier Général" : "Entering Headquarters"}
-            </Link>
-          </div>
-
           {/* Option Q-EMPLOIS (Current) */}
           <div className="stitch-box group" style={{
-            flex: "1 1 300px",
+            flex: "1 1 100%",
             padding: "32px",
             background: "rgba(22, 34, 46, 0.8)",
             backdropFilter: "blur(4px)",

@@ -82,8 +82,7 @@ export function PortalPage() {
         <p className="body-f gold" style={{ letterSpacing: '0.2em', textTransform: 'uppercase', fontSize: 13, marginTop: 10, fontWeight: 600 }}>{t.sub}</p>
       </div>
 
-      <div style={{ width: '100%', maxWidth: 900, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-        <Card to="/q-business" {...t.business} />
+      <div style={{ width: '100%', maxWidth: 560, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
         <Card to="/q-jobs" {...t.jobs} />
       </div>
 
