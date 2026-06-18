@@ -409,52 +409,6 @@ export function LandingPage() {
         </div>
       </nav>
 
-      {/* --- NOUVEAU: LE PORTAIL DE L'EMPIRE --- */}
-      <div className="empire-split relative overflow-hidden" style={{ paddingTop: "110px", paddingBottom: "40px", paddingLeft: "24px", paddingRight: "24px" }}>
-        <div style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-          display: "flex",
-          gap: "24px",
-          flexWrap: "wrap",
-          position: "relative",
-          zIndex: 10
-        }}>
-
-          {/* Option Q-EMPLOIS (Current) */}
-          <div className="stitch-box group" style={{
-            flex: "1 1 100%",
-            padding: "32px",
-            background: "rgba(22, 34, 46, 0.8)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            cursor: "pointer",
-            transition: "all 0.3s",
-            minHeight: "260px"
-          }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(26, 40, 54, 0.95)"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "rgba(22, 34, 46, 0.8)"}
-          >
-            <div>
-              <div style={{ color: "#D9B38C", fontFamily: "'Playfair Display', serif", fontSize: "0.85rem", letterSpacing: "0.3em", marginBottom: "8px" }}>Q-jobs</div>
-              <h3 style={{ fontSize: "1.75rem", fontFamily: "'Playfair Display', serif", color: "#fff", marginBottom: "12px", fontWeight: "bold" }}>
-                {lang === 'fr' ? "Le Marché Local" : "The Local Market"}
-              </h3>
-              <p style={{ fontSize: "0.95rem", opacity: 0.8, marginBottom: "24px", lineHeight: "1.6", fontFamily: "'Inter', sans-serif" }}>
-                {lang === 'fr' ? "La plateforme où vous êtes présentement." : "The platform you are currently on."}<br />
-                {lang === 'fr' ? "Petits travaux, livraison, de voisin à voisin." : "Small jobs, delivery, from neighbor to neighbor."}
-              </p>
-            </div>
-            <Link to="/q-jobs" className="gold-btn" style={{ textAlign: "center", display: "block", padding: "12px", fontSize: "0.9rem" }}>
-              {lang === 'fr' ? "Accéder au Marché Local" : "Access the Local Market"}
-            </Link>
-          </div>
-
-        </div>
-      </div>
-
       {/* ======== HERO ======== */}
       <section
         className="leather"
@@ -463,12 +417,12 @@ export function LandingPage() {
           backgroundImage: "url('/hero/hero-quebec.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center top",
-          minHeight: "clamp(420px, 70vh, 640px)",
+          minHeight: "clamp(420px, 78vh, 720px)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          paddingTop: 80,
-          paddingBottom: 56,
+          paddingTop: 56,
+          paddingBottom: 40,
         }}
       >
         {/* Bottom gradient overlay for search-bar readability */}
