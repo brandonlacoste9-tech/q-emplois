@@ -1,54 +1,42 @@
 /**
- * 🏛️ Q-EMPLOIS ESCROW SERVICE
- * Logic for the 'Milestone-Release' system.
+ * Q-EMPLOIS Escrow Service — L'Atelier milestone-release system
  */
 
+import { api } from './api';
+
 export interface Milestone {
-    id: string;
-    description: string;
-    amount: number;
-    status: 'PENDING' | 'LOCKED' | 'RELEASED';
-    verifiedBy: 'AI' | 'USER' | 'ADMIN';
+  id: string;
+  description: string;
+  amount: number;
+  status: 'PENDING' | 'LOCKED' | 'RELEASED';
+  verifiedBy?: 'AI' | 'USER' | 'ADMIN';
 }
 
 export interface EscrowContract {
-    id: string;
-    clientId: string;
-    proId: string;
-    totalAmount: number;
-    milestones: Milestone[];
-    createdAt: Date;
+  id: string;
+  clientId: string;
+  proId: string;
+  totalAmount: number;
+  milestones: Milestone[];
+  createdAt: Date;
 }
 
 export const escrowService = {
-    /**
-     * Locks funds into the escrow for a specific project.
-     */
-    lockFunds: (amount: number) => {
-        console.log(`[ESCROW] Locking $${amount} into secure hold via L'Atelier.`);
-        // Reality: This would trigger a Stripe PaymentIntent with capture_method: manual
-        return true;
-    },
+  async listContracts() {
+    return api.getEscrowContracts();
+  },
 
-    /**
-     * Releases funds to the pro upon milestone verification.
-     */
-    releaseMilestone: (contractId: string, milestoneId: string) => {
-        console.log(`[ESCROW] Milestone ${milestoneId} verified for contract ${contractId}. Releasing funds.`);
-        // Reality: This would capture the Stripe PaymentIntent or trigger a Payout
-        return true;
-    },
+  async releaseMilestone(contractId: string, milestoneId: string) {
+    return api.releaseEscrowMilestone(contractId, milestoneId);
+  },
 
-    /**
-     * Calculates the tax reserves for Revenu Québec compliance.
-     */
-    calculateTaxReserves: (amount: number) => {
-        const TPS = amount * 0.05;
-        const TVQ = amount * 0.09975;
-        return {
-            tps: TPS,
-            tvq: TVQ,
-            total: TPS + TVQ
-        };
-    }
+  calculateTaxReserves(totalAmount: number) {
+    const gst = totalAmount * 0.05;
+    const qst = totalAmount * 0.09975;
+    return {
+      gst: Math.round(gst * 100) / 100,
+      qst: Math.round(qst * 100) / 100,
+      total: Math.round((gst + qst) * 100) / 100,
+    };
+  },
 };

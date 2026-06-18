@@ -72,7 +72,7 @@ class BookingFlow:
         "5": ("déménagement", "🚚 Déménagement"),
     }
 
-    def __init__(self, api_base: str = "https://api.qemplois.ca", api_key: str = ""):
+    def __init__(self, api_base: str = "https://api.qemplois.ca/api/v1", api_key: str = ""):
         self.api_base = api_base
         self.api_key = api_key
         self.sessions: Dict[str, BookingData] = {}
@@ -269,13 +269,9 @@ class BookingFlow:
         """FIX 1: Real call to Q-Emplois /api/services/search"""
         try:
             resp = requests.get(
-                f"{self.api_base}/api/services/search",
+                f"{self.api_base}/providers",
                 params={
                     "serviceType": session.service_type,
-                    "date": session.date.isoformat(),
-                    "lat": session.location["lat"],
-                    "lng": session.location["lng"],
-                    "radiusKm": 10,
                 },
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 timeout=8,
@@ -291,7 +287,7 @@ class BookingFlow:
         h, m = session.time
         try:
             resp = requests.post(
-                f"{self.api_base}/api/bookings",
+                f"{self.api_base}/bookings",
                 json={
                     "serviceType": session.service_type,
                     "date": session.date.date().isoformat(),

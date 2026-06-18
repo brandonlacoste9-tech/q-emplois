@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
@@ -34,6 +34,7 @@ export function Register() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
+  const navigate = useNavigate();
 
   const toggleServiceType = (type: ServiceType) => {
     setFormData((prev) => ({
@@ -99,6 +100,7 @@ export function Register() {
         phone: formData.phone,
         serviceTypes: formData.serviceTypes,
       });
+      navigate('/dashboard');
     } catch (err) {
       setError('Une erreur est survenue lors de l\'inscription');
       setIsLoading(false);

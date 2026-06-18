@@ -65,6 +65,15 @@ model User {
   clientBookings      Booking[]          @relation("ClientBookings")
   clientReviews       Review[]           @relation("ClientReviews")
   auditLogs           AuditLog[]
+  postedTasks         Task[]             @relation("PostedTasks")
+  claimedTasks        Task[]             @relation("ClaimedTasks")
+  creditWallet        CreditWallet?
+  platformNotifications PlatformNotification[]
+  sentMessages        ChatMessage[]      @relation("SentMessages")
+  clientConversations Conversation[]     @relation("ClientConversations")
+  providerConversations Conversation[]   @relation("ProviderConversations")
+  escrowContractsAsClient EscrowContract[] @relation("EscrowClient")
+  escrowContractsAsProvider EscrowContract[] @relation("EscrowProvider")
   
   // Bot integrations
   telegramId          String?            @unique
@@ -287,4 +296,195 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ========================
+// TASK / JOB MODEL (Credit-based marketplace)
+// ========================
+enum TaskStatus {
+  open
+  claimed
+  in_progress
+  completed
+  cancelled
+  declined
+}
+
+model Task {
+  id                String     @id @default(uuid())
+  clientId          String
+  client            User       @relation("PostedTasks", fields: [clientId], references: [id], onDelete: Cascade)
+  taskerId          String?
+  tasker            User?      @relation("ClaimedTasks", fields: [taskerId], references: [id], onDelete: SetNull)
+
+  title             String
+  description       String
+  serviceType       String
+  city              String?
+  postalCode        String?
+  address           String
+  locationLat       Decimal?   @db.Decimal(10, 8)
+  locationLng       Decimal?   @db.Decimal(11, 8)
+  scheduledDate     DateTime?
+  estimatedDuration Int        @default(60)
+  estimatedPrice    Decimal    @db.Decimal(10, 2)
+  status            TaskStatus @default(open)
+  claimedAt         DateTime?
+  completedAt       DateTime?
+  cancelledAt       DateTime?
+  declineReason     String?
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  creditTransactions CreditTransaction[]
+
+  @@index([clientId])
+  @@index([taskerId])
+  @@index([status])
+  @@index([serviceType])
+  @@index([scheduledDate])
+  @@map("tasks")
+}
+
+// ========================
+// CREDITS SYSTEM
+// ========================
+enum CreditTransactionType {
+  purchase
+  claim
+  bonus
+  refund
+  admin_grant
+}
+
+model CreditWallet {
+  id                      String   @id @default(uuid())
+  userId                  String   @unique
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance                 Int      @default(0)
+  isFoundingTasker        Boolean  @default(false)
+  lifetimeDiscountPercent Int      @default(0)
+  foundingTaskerNumber    Int?
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  transactions            CreditTransaction[]
+
+  @@index([userId])
+  @@map("credit_wallets")
+}
+
+model CreditTransaction {
+  id                    String                @id @default(uuid())
+  walletId              String
+  wallet                CreditWallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amount                Int
+  type                  CreditTransactionType
+  description           String?
+  taskId                String?
+  task                  Task?                 @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  stripePaymentIntentId String?
+  createdAt             DateTime              @default(now())
+
+  @@index([walletId])
+  @@index([type])
+  @@index([taskId])
+  @@map("credit_transactions")
+}
+
+// ========================
+// PLATFORM NOTIFICATIONS
+// ========================
+model PlatformNotification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("platform_notifications")
+}
+
+// ========================
+// CHAT
+// ========================
+model Conversation {
+  id         String        @id @default(uuid())
+  clientId   String
+  client     User          @relation("ClientConversations", fields: [clientId], references: [id], onDelete: Cascade)
+  providerId String
+  provider   User          @relation("ProviderConversations", fields: [providerId], references: [id], onDelete: Cascade)
+  taskId     String?
+  messages   ChatMessage[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([clientId])
+  @@index([providerId])
+  @@map("conversations")
+}
+
+model ChatMessage {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("chat_messages")
+}
+
+// ========================
+// ESCROW (L'Atelier)
+// ========================
+enum EscrowMilestoneStatus {
+  PENDING
+  LOCKED
+  RELEASED
+}
+
+model EscrowContract {
+  id                    String            @id @default(uuid())
+  clientId              String
+  client                User              @relation("EscrowClient", fields: [clientId], references: [id], onDelete: Cascade)
+  providerId            String
+  provider              User              @relation("EscrowProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  taskDescription       String
+  totalAmount           Decimal           @db.Decimal(10, 2)
+  status                String            @default("pending")
+  stripePaymentIntentId String?
+  milestones            EscrowMilestone[]
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@index([clientId])
+  @@index([providerId])
+  @@map("escrow_contracts")
+}
+
+model EscrowMilestone {
+  id          String                @id @default(uuid())
+  contractId  String
+  contract    EscrowContract        @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  description String
+  amount      Decimal               @db.Decimal(10, 2)
+  status      EscrowMilestoneStatus @default(PENDING)
+  verifiedBy  String?
+  releasedAt  DateTime?
+  createdAt   DateTime              @default(now())
+
+  @@index([contractId])
+  @@map("escrow_milestones")
 }

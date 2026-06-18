@@ -13,6 +13,11 @@ import { CommonModule } from './common/common.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AuditModule } from './common/audit/audit.module';
+import { JobsModule } from './jobs/jobs.module';
+import { CreditsModule } from './credits/credits.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -33,6 +38,11 @@ import { AuditModule } from './common/audit/audit.module';
     ChatModule,
     WhatsAppModule,
     CommonModule,
+    JobsModule,
+    CreditsModule,
+    DashboardModule,
+    NotificationsModule,
+    ProfileModule,
   ],
 })
 export class AppModule {}

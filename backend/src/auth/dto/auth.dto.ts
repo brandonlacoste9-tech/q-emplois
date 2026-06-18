@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, MaxLength, IsOptional, IsEnum, IsBoolean, IsPhoneNumber } from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength, IsOptional, IsEnum, IsBoolean, IsPhoneNumber, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { LanguagePreference } from '@prisma/client';
 
@@ -38,6 +38,12 @@ export class RegisterDto {
   @IsString()
   @MaxLength(100)
   lastName?: string;
+
+  @ApiPropertyOptional({ description: 'Types de service (inscription tasker)' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  serviceTypes?: string[];
 }
 
 export class LoginDto {

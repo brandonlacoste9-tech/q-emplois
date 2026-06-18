@@ -1,0 +1,9 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm install && npx prisma generate && npm run build"
+
+[deploy]
+startCommand = "npx prisma migrate deploy && npm run start:prod"
+healthcheckPath = "/api/v1/services/categories"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"

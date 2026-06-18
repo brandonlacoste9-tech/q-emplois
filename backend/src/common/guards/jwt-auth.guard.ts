@@ -22,8 +22,11 @@ export class JwtAuthGuard implements CanActivate {
         secret: this.configService.get('JWT_SECRET'),
       });
       
-      // Attach user info to request
-      request.user = payload;
+      request.user = {
+        userId: payload.sub,
+        email: payload.email,
+        role: payload.role,
+      };
       
       return true;
     } catch (error) {

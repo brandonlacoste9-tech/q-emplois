@@ -69,7 +69,7 @@ export class UsersService {
       action: 'profile_update',
       resource: 'user',
       resourceId: userId,
-      details: dto,
+      details: { ...dto },
     });
 
     // Remove sensitive data

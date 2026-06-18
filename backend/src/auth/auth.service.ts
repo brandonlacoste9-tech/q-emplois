@@ -7,6 +7,7 @@ import { AuditService } from '../common/audit/audit.service';
 import { DataRetentionService } from '../common/services/data-retention.service';
 import { RegisterDto, LoginDto, AuthResponseDto } from './dto/auth.dto';
 import { UserRole, LanguagePreference } from '@prisma/client';
+import { ProvidersService } from '../providers/providers.service';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +17,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly auditService: AuditService,
     private readonly dataRetentionService: DataRetentionService,
+    private readonly providersService: ProvidersService,
   ) {}
 
   async register(dto: RegisterDto, ipAddress?: string, userAgent?: string): Promise<AuthResponseDto> {
@@ -61,6 +63,12 @@ export class AuthService {
         lastName: dto.lastName,
       },
     });
+
+    if (dto.serviceTypes?.length) {
+      await this.providersService.upsertForUser(user.id, {
+        serviceTypes: dto.serviceTypes,
+      });
+    }
 
     // Schedule data retention (7 years default)
     await this.dataRetentionService.scheduleDataRetention(user.id);

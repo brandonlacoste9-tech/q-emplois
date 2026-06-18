@@ -116,7 +116,7 @@ platforms:
 
 # API Configuration
 api:
-  base_url: https://api.qemplois.ca
+  base_url: https://api.qemplois.ca/api/v1
   timeout: 10
   retry_count: 3
   

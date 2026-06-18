@@ -11,7 +11,7 @@ import type {
   ServiceType 
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
 class ApiService {
   private client: AxiosInstance;
@@ -24,7 +24,6 @@ class ApiService {
       },
     });
 
-    // Add auth token to requests
     this.client.interceptors.request.use((config) => {
       const token = localStorage.getItem('token');
       if (token) {
@@ -33,23 +32,26 @@ class ApiService {
       return config;
     });
 
-    // Handle errors
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError) => {
         if (error.response?.status === 401) {
           localStorage.removeItem('token');
-          window.location.href = '/login';
+          if (!window.location.pathname.startsWith('/login')) {
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(error);
       }
     );
   }
 
-  // Auth
   async login(email: string, password: string): Promise<{ user: User; token: string }> {
     const response = await this.client.post('/auth/login', { email, password });
-    return response.data;
+    return {
+      user: response.data.user,
+      token: response.data.accessToken,
+    };
   }
 
   async register(data: {
@@ -60,22 +62,27 @@ class ApiService {
     phone: string;
     serviceTypes: ServiceType[];
   }): Promise<{ user: User; token: string }> {
-    const response = await this.client.post('/auth/register', data);
-    return response.data;
+    const response = await this.client.post('/auth/register', {
+      ...data,
+      consentGiven: true,
+    });
+    return {
+      user: response.data.user,
+      token: response.data.accessToken,
+    };
   }
 
   async forgotPassword(email: string): Promise<void> {
     await this.client.post('/auth/forgot-password', { email });
   }
 
-  // Profile
   async getProfile(): Promise<TradesmanProfile> {
     const response = await this.client.get('/profile');
     return response.data;
   }
 
   async updateProfile(data: Partial<TradesmanProfile>): Promise<TradesmanProfile> {
-    const response = await this.client.patch('/profile', data);
+    const response = await this.client.patch('/users/me', data);
     return response.data;
   }
 
@@ -88,7 +95,6 @@ class ApiService {
     return response.data;
   }
 
-  // Jobs
   async getJobs(filters?: {
     status?: string;
     serviceType?: string;
@@ -119,10 +125,33 @@ class ApiService {
     return response.data;
   }
 
-  // Earnings
-  async getTransactions(): Promise<Transaction[]> {
-    const response = await this.client.get('/earnings/transactions');
+  async getCreditBalance(): Promise<{
+    balance: number;
+    isFoundingTasker: boolean;
+    lifetimeDiscountPercent: number;
+  }> {
+    const response = await this.client.get('/credits/balance');
     return response.data;
+  }
+
+  async purchaseCreditPack(pack: 'starter' | 'standard' | 'pro'): Promise<{ checkoutUrl: string }> {
+    const response = await this.client.post('/credits/purchase', { pack });
+    return response.data;
+  }
+
+  async getTransactions(): Promise<Transaction[]> {
+    const response = await this.client.get('/credits/transactions');
+    return response.data.map((t: { id: string; amount: number; type: string; description?: string; createdAt: string }) => ({
+      id: t.id,
+      jobId: '',
+      amount: Math.abs(t.amount),
+      fee: 0,
+      netAmount: t.amount,
+      status: 'completed' as const,
+      type: t.type === 'purchase' ? 'payment' as const : 'payout' as const,
+      createdAt: t.createdAt,
+      description: t.description ?? t.type,
+    }));
   }
 
   async getEarningsSummary(): Promise<{
@@ -130,18 +159,19 @@ class ApiService {
     pendingPayout: number;
     thisMonth: number;
   }> {
-    const response = await this.client.get('/earnings/summary');
-    return response.data;
+    const stats = await this.getDashboardStats();
+    return {
+      totalEarned: stats.earningsThisMonth,
+      pendingPayout: 0,
+      thisMonth: stats.earningsThisMonth,
+    };
   }
 
   async exportTransactions(): Promise<Blob> {
-    const response = await this.client.get('/earnings/export', {
-      responseType: 'blob',
-    });
-    return response.data;
+    const txs = await this.getTransactions();
+    return new Blob([JSON.stringify(txs, null, 2)], { type: 'application/json' });
   }
 
-  // Messages
   async getConversations(): Promise<Conversation[]> {
     const response = await this.client.get('/conversations');
     return response.data;
@@ -163,7 +193,6 @@ class ApiService {
     await this.client.post(`/conversations/${conversationId}/read`);
   }
 
-  // Notifications
   async getNotifications(): Promise<Notification[]> {
     const response = await this.client.get('/notifications');
     return response.data;
@@ -173,13 +202,23 @@ class ApiService {
     await this.client.post(`/notifications/${id}/read`);
   }
 
-  // Dashboard
   async getDashboardStats(): Promise<DashboardStats> {
     const response = await this.client.get('/dashboard/stats');
     return response.data;
   }
 
-  // Availability
+  async getEscrowContracts() {
+    const response = await this.client.get('/payments/escrow');
+    return response.data;
+  }
+
+  async releaseEscrowMilestone(contractId: string, milestoneId: string) {
+    const response = await this.client.post(
+      `/payments/escrow/${contractId}/milestones/${milestoneId}/release`,
+    );
+    return response.data;
+  }
+
   async updateAvailability(data: {
     day: string;
     isAvailable: boolean;
