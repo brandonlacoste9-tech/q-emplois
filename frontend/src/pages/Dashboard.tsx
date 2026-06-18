@@ -21,22 +21,29 @@ const gold = '#B87B44';
 
 export function Dashboard() {
   const { profile } = useAuth();
+  const isClient = profile?.role === 'client';
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [upcomingJobs, setUpcomingJobs] = useState<Job[]>([]);
+  const [myPostedJobs, setMyPostedJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [statsData, notificationsData, jobsData] = await Promise.all([
-          api.getDashboardStats(),
-          api.getNotifications(),
-          api.getJobs({ status: 'accepted' }),
-        ]);
-        setStats(statsData);
-        setNotifications(notificationsData.slice(0, 5));
-        setUpcomingJobs(jobsData.slice(0, 3));
+        if (isClient) {
+          const jobsData = await api.getJobs();
+          setMyPostedJobs(jobsData.filter((j) => j.status === 'pending').slice(0, 5));
+        } else {
+          const [statsData, notificationsData, jobsData] = await Promise.all([
+            api.getDashboardStats(),
+            api.getNotifications(),
+            api.getJobs({ status: 'accepted' }),
+          ]);
+          setStats(statsData);
+          setNotifications(notificationsData.slice(0, 5));
+          setUpcomingJobs(jobsData.slice(0, 3));
+        }
       } catch (error) {
         console.error('Failed to load dashboard:', error);
       } finally {
@@ -44,13 +51,78 @@ export function Dashboard() {
       }
     };
     loadDashboard();
-  }, []);
+  }, [isClient]);
 
   if (isLoading) {
     return (
       <div className="leather" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: 44, height: 44, borderRadius: '50%', border: `3px solid rgba(217,179,140,0.2)`, borderBottomColor: gold, animation: 'spin 0.9s linear infinite' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
+  }
+
+  if (isClient) {
+    return (
+      <div className="leather" style={{ minHeight: '100vh' }}>
+        <div style={wrap}>
+          <div style={{ marginBottom: 28 }}>
+            <h1 className="serif cream-hi" style={{ fontSize: 'clamp(1.6rem, 4vw, 2.2rem)', fontWeight: 900 }}>
+              Bonjour, {profile?.firstName} ⚜
+            </h1>
+            <p className="body-f muted" style={{ fontSize: 15, marginTop: 4 }}>
+              Publiez une tâche et trouvez un travailleur local
+            </p>
+          </div>
+
+          <Link to="/post-job" style={{ textDecoration: 'none', display: 'block', marginBottom: 28 }}>
+            <div className="stitch-box stitch-box-interactive" style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div className="svc-icon" style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Briefcase className="w-6 h-6" style={{ color: gold }} />
+                </div>
+                <div>
+                  <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700 }}>Publier une nouvelle tâche</h3>
+                  <p className="body-f muted2" style={{ fontSize: 13 }}>
+                    Déménagement, ménage, montage — décrivez ce dont vous avez besoin
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5" style={{ color: gold }} />
+            </div>
+          </Link>
+
+          <div className="stitch-box" style={card}>
+            <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>
+              Mes tâches publiées
+            </h3>
+            {myPostedJobs.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                <Calendar className="w-12 h-12" style={{ margin: '0 auto 12px', color: 'rgba(217,179,140,0.3)' }} />
+                <p className="body-f muted" style={{ marginBottom: 16 }}>Aucune tâche publiée pour le moment</p>
+                <Link to="/post-job" className="gold-btn" style={{ padding: '8px 18px', fontSize: 14 }}>
+                  Publier ma première tâche
+                </Link>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {myPostedJobs.map((job) => (
+                  <div key={job.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: 12, borderRadius: 8, background: 'rgba(15,25,36,0.5)' }}>
+                    <div style={{ flex: 1 }}>
+                      <h4 className="serif cream-hi" style={{ fontSize: 15, fontWeight: 700 }}>{job.title}</h4>
+                      <p className="body-f muted2" style={{ fontSize: 13, marginTop: 4 }}>
+                        {job.address.city} · {formatPrice(job.estimatedPrice)}
+                      </p>
+                    </div>
+                    <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: gold, padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
+                      En attente
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   }

@@ -3,16 +3,23 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { BrandLogo } from './BrandLogo';
 
-const NAV = [
-  { label: 'Tableau de bord', path: '/dashboard' },
-  { label: 'Jobs', path: '/jobs' },
-  { label: 'Profil', path: '/profile' },
-];
-
 export function AppNav() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
-  const { logout, user } = useAuth();
+  const { logout, user, profile } = useAuth();
+  const isClient = profile?.role === 'client';
+
+  const nav = isClient
+    ? [
+        { label: 'Tableau de bord', path: '/dashboard' },
+        { label: 'Publier une job', path: '/post-job' },
+        { label: 'Profil', path: '/profile' },
+      ]
+    : [
+        { label: 'Tableau de bord', path: '/dashboard' },
+        { label: 'Jobs', path: '/jobs' },
+        { label: 'Profil', path: '/profile' },
+      ];
 
   return (
     <nav
@@ -30,9 +37,8 @@ export function AppNav() {
           <BrandLogo size="md" />
         </Link>
 
-        {/* Desktop links */}
         <div className="body-f" style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 14 }}>
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <Link
               key={item.path}
               to={item.path}
@@ -47,13 +53,14 @@ export function AppNav() {
               {user.firstName}
             </span>
           )}
-          <Link to="/post-job" className="gold-btn nav-hide-sm" style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>
-            Publier une job
-          </Link>
+          {!isClient && (
+            <Link to="/jobs" className="gold-btn nav-hide-sm" style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>
+              Parcourir les jobs
+            </Link>
+          )}
           <button onClick={logout} className="ghost-btn nav-hide-sm" style={{ padding: '6px 14px', fontSize: 13 }}>
             Déconnexion
           </button>
-          {/* Mobile toggle */}
           <button
             onClick={() => setOpen(!open)}
             className="nav-show-sm"
@@ -65,10 +72,9 @@ export function AppNav() {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {open && (
         <div className="nav-show-sm" style={{ display: 'none', borderTop: '1px dashed rgba(217,179,140,0.2)', padding: '12px 24px' }}>
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <Link
               key={item.path}
               to={item.path}
@@ -78,9 +84,6 @@ export function AppNav() {
               {item.label}
             </Link>
           ))}
-          <Link to="/post-job" onClick={() => setOpen(false)} className="gold-btn" style={{ display: 'block', marginTop: 12, padding: '8px 14px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}>
-            Publier une job
-          </Link>
           <button onClick={logout} className="ghost-btn" style={{ marginTop: 8, padding: '8px 14px', fontSize: 13, width: '100%' }}>
             Déconnexion
           </button>

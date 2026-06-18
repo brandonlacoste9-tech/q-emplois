@@ -57,8 +57,8 @@ export function QJobsPage() {
           {t.sub}
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <Link to="/contrats" className="gold-btn" style={{ padding: '14px 28px', fontSize: 15 }}>{t.findCta}</Link>
-          <Link to="/register" className="ghost-btn" style={{ padding: '14px 28px', fontSize: 15 }}>{t.postCta}</Link>
+          <Link to="/register/client" className="gold-btn" style={{ padding: '14px 28px', fontSize: 15 }}>{t.findCta}</Link>
+          <Link to="/register/tasker" className="ghost-btn" style={{ padding: '14px 28px', fontSize: 15 }}>{t.postCta}</Link>
         </div>
       </section>
 

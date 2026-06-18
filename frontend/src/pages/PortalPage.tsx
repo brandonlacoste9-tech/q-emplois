@@ -8,38 +8,38 @@ const T = {
   fr: {
     title: "Bienvenue chez Q-emplois",
     sub: "Choisissez votre espace",
-    business: {
-      kicker: "Q-business",
-      h: "L'élite des métiers",
-      d1: "Professionnels vérifiés (RBQ).",
-      d2: "Plomberie, électricité et contrats de prestige.",
-      cta: "Accéder à Q-business",
+    client: {
+      kicker: "Client",
+      h: "J'ai besoin d'aide",
+      d1: "Publiez une tâche — déménagement, ménage, montage.",
+      d2: "Un travailleur local accepte et fait le job.",
+      cta: "Publier une tâche",
     },
     jobs: {
       kicker: "Q-jobs",
-      h: "Le marché local",
+      h: "Je veux travailler",
       d1: "Déneigement, déménagement, montage, ménage.",
-      d2: "De l'aide près de chez vous, de voisin à voisin.",
-      cta: "Accéder au marché local",
+      d2: "Parcourez les jobs et gagnez de l'argent près de chez vous.",
+      cta: "Devenir travailleur",
     },
     legal: "Conforme à la Loi 96 (langue) et à la Loi 25 (vie privée).",
   },
   en: {
     title: "Welcome to Q-emplois",
-    sub: "Choose your space",
-    business: {
-      kicker: "Q-business",
-      h: "The elite trades",
-      d1: "Verified professionals (RBQ).",
-      d2: "Plumbing, electrical and prestige contracts.",
-      cta: "Go to Q-business",
+    sub: "Choose your path",
+    client: {
+      kicker: "Client",
+      h: "I need help",
+      d1: "Post a task — moving, cleaning, assembly.",
+      d2: "A local tasker accepts and gets it done.",
+      cta: "Post a task",
     },
     jobs: {
       kicker: "Q-jobs",
-      h: "The local market",
+      h: "I want to work",
       d1: "Snow removal, moving, assembly, cleaning.",
-      d2: "Trusted help near you, from neighbor to neighbor.",
-      cta: "Go to the local market",
+      d2: "Browse jobs and earn money near you.",
+      cta: "Become a tasker",
     },
     legal: "Compliant with Bill 96 (language) and Law 25 (privacy).",
   },
@@ -82,8 +82,9 @@ export function PortalPage() {
         <p className="body-f gold" style={{ letterSpacing: '0.2em', textTransform: 'uppercase', fontSize: 13, marginTop: 10, fontWeight: 600 }}>{t.sub}</p>
       </div>
 
-      <div style={{ width: '100%', maxWidth: 560, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-        <Card to="/q-jobs" {...t.jobs} />
+      <div style={{ width: '100%', maxWidth: 720, display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <Card to="/register/client" {...t.client} />
+        <Card to="/register/tasker" {...t.jobs} />
       </div>
 
       <p className="body-f muted2" style={{ marginTop: 44, fontSize: 12, textAlign: 'center' }}>{t.legal}</p>

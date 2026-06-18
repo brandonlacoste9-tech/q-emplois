@@ -5,25 +5,27 @@ import { BrandLogo } from '../components/BrandLogo';
 import { SERVICE_TYPE_LABELS, type ServiceType } from '../types';
 
 const SERVICE_TYPES: ServiceType[] = [
-  'plomberie',
-  'electricite',
-  'menuiserie',
-  'peinture',
-  'chauffage',
-  'climatisation',
-  'toiture',
-  'renovation',
-  'jardinage',
   'menage',
+  'demenagement',
+  'montage_meubles',
+  'nettoyage',
+  'jardinage',
+  'livraison',
+  'coursier',
+  'bricolage',
+  'manutention',
+  'informatique',
+  'serveur',
+  'autre',
 ];
 
 type Lang = 'fr' | 'en';
 
 const T = {
   fr: {
-    tag: "Offrez vos services au Québec",
+    tag: "Trouvez des jobs près de chez vous — comme TaskRabbit",
     steps: ['Informations personnelles', 'Créer un mot de passe', 'Types de services'],
-    subs: ['Parlez-nous un peu de vous', 'Choisissez un mot de passe sécurisé', 'Quels services proposez-vous ?'],
+    subs: ['Parlez-nous un peu de vous', 'Choisissez un mot de passe sécurisé', 'Quels services pouvez-vous offrir ?'],
     firstName: 'Prénom', lastName: 'Nom', email: 'Courriel', phone: 'Téléphone',
     pw: 'Mot de passe', confirm: 'Confirmer le mot de passe', pwHint: 'Minimum 8 caractères',
     back: 'Retour', next: 'Suivant', create: 'Créer mon compte', creating: 'Création…',
@@ -32,12 +34,14 @@ const T = {
     errPwLen: 'Le mot de passe doit contenir au moins 8 caractères.',
     errPwMatch: 'Les mots de passe ne correspondent pas.',
     errSvc: 'Veuillez sélectionner au moins un type de service.',
+    errConsent: 'Le consentement est requis (Loi 25).',
+    consent: "J'accepte la collecte de mes données personnelles conformément à la Loi 25 (Québec).",
     errGeneric: "Une erreur est survenue lors de l'inscription.",
   },
   en: {
-    tag: "Offer your services in Québec",
+    tag: "Find jobs near you — like TaskRabbit",
     steps: ['Personal information', 'Create a password', 'Service types'],
-    subs: ['Tell us a bit about you', 'Choose a secure password', 'What services do you offer?'],
+    subs: ['Tell us a bit about you', 'Choose a secure password', 'What services can you offer?'],
     firstName: 'First name', lastName: 'Last name', email: 'Email', phone: 'Phone',
     pw: 'Password', confirm: 'Confirm password', pwHint: 'Minimum 8 characters',
     back: 'Back', next: 'Next', create: 'Create my account', creating: 'Creating…',
@@ -46,6 +50,8 @@ const T = {
     errPwLen: 'Password must be at least 8 characters.',
     errPwMatch: 'Passwords do not match.',
     errSvc: 'Please select at least one service type.',
+    errConsent: 'Consent is required (Law 25).',
+    consent: 'I agree to the collection of my personal data under Québec Law 25.',
     errGeneric: 'An error occurred during registration.',
   },
 };
@@ -56,6 +62,7 @@ export function Register() {
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
     password: '', confirmPassword: '', serviceTypes: [] as ServiceType[],
+    consentGiven: false,
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -85,6 +92,7 @@ export function Register() {
   };
   const validateStep3 = () => {
     if (formData.serviceTypes.length === 0) { setError(t.errSvc); return false; }
+    if (!formData.consentGiven) { setError(t.errConsent); return false; }
     return true;
   };
 
@@ -109,7 +117,7 @@ export function Register() {
         phone: formData.phone,
         serviceTypes: formData.serviceTypes,
       });
-      navigate('/dashboard');
+      navigate('/jobs');
     } catch (err) {
       setError(t.errGeneric);
       setIsLoading(false);
@@ -202,30 +210,41 @@ export function Register() {
             )}
 
             {step === 3 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {SERVICE_TYPES.map((type) => {
-                  const selected = formData.serviceTypes.includes(type);
-                  return (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => toggleServiceType(type)}
-                      className="body-f"
-                      style={{
-                        padding: '12px 14px', borderRadius: 8, textAlign: 'left', fontSize: 14, cursor: 'pointer',
-                        border: selected ? '1.5px solid #B87B44' : '1.5px dashed rgba(217,179,140,0.3)',
-                        background: selected ? 'rgba(184,123,68,0.18)' : 'transparent',
-                        color: selected ? '#E8CDB0' : '#C4A882',
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        transition: 'all 0.2s ease',
-                      }}
-                    >
-                      {SERVICE_TYPE_LABELS[type]}
-                      {selected && <span style={{ color: '#B87B44' }}>✓</span>}
-                    </button>
-                  );
-                })}
-              </div>
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                  {SERVICE_TYPES.map((type) => {
+                    const selected = formData.serviceTypes.includes(type);
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => toggleServiceType(type)}
+                        className="body-f"
+                        style={{
+                          padding: '12px 14px', borderRadius: 8, textAlign: 'left', fontSize: 14, cursor: 'pointer',
+                          border: selected ? '1.5px solid #B87B44' : '1.5px dashed rgba(217,179,140,0.3)',
+                          background: selected ? 'rgba(184,123,68,0.18)' : 'transparent',
+                          color: selected ? '#E8CDB0' : '#C4A882',
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        {SERVICE_TYPE_LABELS[type]}
+                        {selected && <span style={{ color: '#B87B44' }}>✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                <label className="body-f" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: '#C4A882', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.consentGiven}
+                    onChange={(e) => setFormData({ ...formData, consentGiven: e.target.checked })}
+                    style={{ marginTop: 3 }}
+                  />
+                  {t.consent}
+                </label>
+              </>
             )}
 
             <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>

@@ -386,8 +386,8 @@ export function LandingPage() {
           </Link>
           {/* Desktop links */}
           <div className="body-f nav-hide-sm" style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14 }}>
-            <Link to="/contrats" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.find}</Link>
-            <Link to="/pro" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.become}</Link>
+            <Link to="/register/client" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.find}</Link>
+            <Link to="/register/tasker" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.become}</Link>
             <Link to="/login" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.login}</Link>
             <button
               onClick={() => setLang(lang === "fr" ? "en" : "fr")}
@@ -440,8 +440,8 @@ export function LandingPage() {
               background: "rgba(31,47,63,0.98)",
             }}
           >
-            <Link to="/contrats" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.find}</Link>
-            <Link to="/pro" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.become}</Link>
+            <Link to="/register/client" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.find}</Link>
+            <Link to="/register/tasker" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.become}</Link>
             <Link to="/login" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.login}</Link>
             <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
               <button
@@ -526,7 +526,7 @@ export function LandingPage() {
                 }}
               />
             </div>
-            <Link to="/contrats" className="gold-btn" style={{ padding: "12px 24px", fontSize: 15, whiteSpace: "nowrap", border: "none" }}>
+            <Link to="/register/client" className="gold-btn" style={{ padding: "12px 24px", fontSize: 15, whiteSpace: "nowrap", border: "none" }}>
               {t.hero.cta}
             </Link>
           </div>
@@ -728,7 +728,7 @@ export function LandingPage() {
               ))}
             </div>
           </div>
-          <Link to="/pro" className="gold-btn" style={{ padding: "14px 32px", fontSize: 16 }}>
+          <Link to="/register/tasker" className="gold-btn" style={{ padding: "14px 32px", fontSize: 16 }}>
             {t.pro.cta}
           </Link>
           <p className="body-f muted2" style={{ fontSize: 12, marginTop: 10 }}>
@@ -765,16 +765,16 @@ export function LandingPage() {
               </p>
             </div>
             <div className="body-f" style={{ display: "flex", gap: 20, fontSize: 13 }}>
-              <Link to="/contrats" style={{ color: "#9A8468" }}>
+              <Link to="/register/client" style={{ color: "#9A8468" }}>
                 {t.nav.find}
               </Link>
-              <Link to="/pro" style={{ color: "#9A8468" }}>
+              <Link to="/register/tasker" style={{ color: "#9A8468" }}>
                 {t.nav.become}
               </Link>
               <Link to="/login" style={{ color: "#9A8468" }}>
                 {t.nav.login}
               </Link>
-              <Link to="/pro" style={{ color: "#9A8468" }}>
+              <Link to="/register/tasker" style={{ color: "#9A8468" }}>
                 {t.nav.signup}
               </Link>
             </div>

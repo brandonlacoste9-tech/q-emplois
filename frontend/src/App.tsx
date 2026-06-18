@@ -6,6 +6,8 @@ import { LAtelierPage } from './pages/LAtelierPage'
 import { PortalPage } from './pages/PortalPage'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
+import { RegisterChoose } from './pages/RegisterChoose'
+import { RegisterClient } from './pages/RegisterClient'
 import { Dashboard } from './pages/Dashboard'
 import { Jobs } from './pages/Jobs'
 import { Profile } from './pages/Profile'
@@ -33,7 +35,9 @@ function App() {
         <Route path="/q-jobs" element={<QJobsPage />} />
         <Route path="/latelier" element={<LAtelierPage />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/register" element={<RegisterChoose />} />
+        <Route path="/register/client" element={<RegisterClient />} />
+        <Route path="/register/tasker" element={<Register />} />
         <Route
           path="/dashboard"
           element={
@@ -64,10 +68,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/pro"
-          element={<Register />}
-        />
+        <Route path="/pro" element={<Register />} />
         <Route
           path="/profile"
           element={

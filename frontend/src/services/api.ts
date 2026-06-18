@@ -72,6 +72,23 @@ class ApiService {
     };
   }
 
+  async registerClient(data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+  }): Promise<{ user: User; token: string }> {
+    const response = await this.client.post('/auth/register', {
+      ...data,
+      consentGiven: true,
+    });
+    return {
+      user: response.data.user,
+      token: response.data.accessToken,
+    };
+  }
+
   async forgotPassword(email: string): Promise<void> {
     await this.client.post('/auth/forgot-password', { email });
   }
@@ -111,32 +128,18 @@ class ApiService {
   }
 
   async createJob(data: Partial<Job>): Promise<Job> {
-    // Mocking the creation since the backend is currently down.
-    // TODO: replace with: const response = await this.client.post('/jobs', data); return response.data;
-    console.warn('[mock] createJob called — backend offline', data);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: Math.random().toString(36).substring(7),
-          clientId: 'mock-client-id',
-          clientName: 'Vous',
-          title: data.title || 'Nouvelle job',
-          description: data.description || '',
-          status: 'pending',
-          serviceType: data.serviceType || 'autre',
-          estimatedPrice: data.estimatedPrice || 0,
-          estimatedDuration: 60,
-          scheduledDate: data.scheduledDate || new Date().toISOString(),
-          address: data.address || {
-            street: '123 Rue Principale',
-            city: 'Montréal',
-            postalCode: 'H2X 1Y6',
-          },
-          createdAt: new Date().toISOString(),
-          ...data,
-        } as Job);
-      }, 800);
+    const response = await this.client.post('/jobs', {
+      title: data.title,
+      description: data.description,
+      serviceType: data.serviceType,
+      address: data.address?.street ?? '',
+      city: data.address?.city,
+      postalCode: data.address?.postalCode,
+      scheduledDate: data.scheduledDate,
+      estimatedPrice: data.estimatedPrice,
+      estimatedDuration: data.estimatedDuration ?? 60,
     });
+    return response.data;
   }
 
   async acceptJob(id: string): Promise<Job> {

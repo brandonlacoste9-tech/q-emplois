@@ -3,6 +3,7 @@
 export interface User {
   id: string;
   email: string;
+  role?: 'client' | 'provider' | 'admin';
   firstName: string;
   lastName: string;
   phone: string;
@@ -14,6 +15,7 @@ export interface User {
 }
 
 export interface TradesmanProfile extends User {
+  role?: 'client' | 'provider' | 'admin';
   serviceTypes: ServiceType[];
   hourlyRate: number;
   serviceRadius: number; // in km

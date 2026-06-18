@@ -10,9 +10,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       await this.$connect();
       this.logger.log('Connected to PostgreSQL');
     } catch (error) {
-      this.logger.warn(
-        'PostgreSQL unavailable — start with `docker compose up -d` or set DATABASE_URL',
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`PostgreSQL connection failed: ${message}`);
     }
   }
 

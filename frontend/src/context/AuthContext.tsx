@@ -9,6 +9,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  registerClient: (data: ClientRegisterData) => Promise<void>;
   logout: () => void;
   forgotPassword: (email: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -21,6 +22,14 @@ interface RegisterData {
   lastName: string;
   phone: string;
   serviceTypes: ServiceType[];
+}
+
+interface ClientRegisterData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -68,6 +77,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadUser();
   }, []);
 
+  const registerClient = useCallback(async (data: ClientRegisterData) => {
+    const { user: userData, token } = await api.registerClient(data);
+    localStorage.setItem('token', token);
+    setUser(userData);
+    await loadUser();
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     setUser(null);
@@ -89,6 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     login,
     register,
+    registerClient,
     logout,
     forgotPassword,
     refreshProfile,

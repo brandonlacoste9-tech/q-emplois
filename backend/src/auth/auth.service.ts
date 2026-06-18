@@ -49,13 +49,13 @@ export class AuthService {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(dto.password, saltRounds);
 
-    // Create user
+    // Create user — taskers (with serviceTypes) become providers; others stay clients
     const user = await this.prisma.user.create({
       data: {
         email: dto.email.toLowerCase(),
         phone: dto.phone,
         passwordHash,
-        role: UserRole.client,
+        role: dto.serviceTypes?.length ? UserRole.provider : UserRole.client,
         languagePreference: dto.languagePreference || LanguagePreference.fr,
         consentGiven: true,
         consentDate: new Date(),
