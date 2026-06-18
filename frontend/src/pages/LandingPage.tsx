@@ -1,26 +1,37 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SEOHead } from "../components/SEOHead";
 
-/* ΓöÇΓöÇΓöÇ TRANSLATIONS ΓöÇΓöÇΓöÇ */
+/* --- TRANSLATIONS --- */
 const T = {
   fr: {
-    nav: { find: "Trouver un job", become: "Poster une offre", login: "Connexion", signup: "S'inscrire" },
+    nav: { find: "Trouver de l'aide", become: "Offrir mes services", login: "Connexion", signup: "S'inscrire" },
     hero: {
-      h1: "Tous les jobs, au même endroit.",
-      sub: "Trouvez un job ou postulez en quelques clics. Livraison, bricolage, serveur, informatique... tout est là.",
-      ph: "Que faut-il faire ?",
-      cta: "Réserver maintenant",
+      badge: "Le marché de services local du Québec",
+      h1: "De l'aide près de chez vous, en quelques clics.",
+      sub: "Déneigement, déménagement, montage de meubles, ménage. Des Québécois vérifiés, un prix clair et un paiement sécurisé — avant de réserver.",
+      ph: "De quoi avez-vous besoin ? (ex. déneigement)",
+      cta: "Trouver un pro",
+      city: "Pointe-Claire · Montréal · Rive-Sud",
+    },
+    trust: {
+      title: "Conçu pour le Québec, fait pour la confiance",
+      items: [
+        { ic: "✓", t: "Travailleurs vérifiés", d: "Identité confirmée, avis réels et secteur desservi affichés." },
+        { ic: "🔒", t: "Paiement en fiducie", d: "Votre paiement est retenu en sécurité jusqu'à la fin du travail." },
+        { ic: "🧾", t: "Prix clair d'avance", d: "Total, frais et taxes affichés avant de confirmer — aucune surprise." },
+        { ic: "📄", t: "Contrat conforme", d: "Copie de votre contrat conforme à la Loi sur la protection du consommateur." },
+      ],
     },
     cats: {
-      title: "Tous types de jobs",
+      title: "Nos services les plus demandés",
       items: [
-        { icon: "🚚", name: "Livraison & Transport", desc: "Coursier, chauffeur, déménagement." },
-        { icon: "🍽️", name: "Restauration & Événements", desc: "Serveur, barman, sécurité, animation." },
-        { icon: "💻", name: "Tech & Informatique", desc: "Aide PC, réparation téléphone, graphisme." },
-        { icon: "🔧", name: "Bricolage & Réparations", desc: "Montage meubles, petits travaux, ménage." },
-        { icon: "🎓", name: "Éducation & Services", desc: "Tutorat, garde d'enfants, promenade chiens." },
-        { icon: "💪", name: "Manutention & Aide", desc: "Déménagement, portage, aide senior." },
+        { icon: "❄️", name: "Déneigement", desc: "Entrées, balcons, escaliers — avant la tempête." },
+        { icon: "📦", name: "Déménagement & transport", desc: "Aide au déménagement, portage, livraison." },
+        { icon: "🔧", name: "Montage & petits travaux", desc: "Montage de meubles, fixations, réparations." },
+        { icon: "🧹", name: "Ménage & entretien", desc: "Ménage résidentiel, après-déménagement." },
+        { icon: "🍂", name: "Entretien saisonnier", desc: "Nettoyage de cour, feuilles, débarras." },
+        { icon: "💪", name: "Aide & manutention", desc: "Coup de main, levage, aide aux aînés." },
       ],
     },
     how: {
@@ -59,28 +70,39 @@ const T = {
       sub2: "Inscription gratuite — commencez aujourd'hui",
     },
     foot: {
-      tag: "Tous les jobs du Québec — accessible à tous.",
-      legal: "Conforme à la Loi 96 (langue) et la Loi 25 (vie privée).",
+      tag: "Le marché de services local du Québec.",
+      legal: "Conforme à la Loi 96 (langue) et à la Loi 25 (vie privée).",
       copy: "© 2026 Q-emplois. Tous droits réservés.",
     },
   },
   en: {
-    nav: { find: "Find a job", become: "Post a job", login: "Log in", signup: "Sign up" },
+    nav: { find: "Find help", become: "Offer my services", login: "Log in", signup: "Sign up" },
     hero: {
-      h1: "All jobs, one place.",
-      sub: "Find a job or hire help in minutes. Delivery, handyman, server, tech... it's all here.",
-      ph: "What do you need done?",
-      cta: "Book now",
+      badge: "Québec's local services marketplace",
+      h1: "Trusted local help, just a few clicks away.",
+      sub: "Snow removal, moving, furniture assembly, cleaning. Verified Quebecers, a clear price and secure payment — before you book.",
+      ph: "What do you need? (e.g. snow removal)",
+      cta: "Find a pro",
+      city: "Pointe-Claire · Montreal · South Shore",
+    },
+    trust: {
+      title: "Built for Québec, made for trust",
+      items: [
+        { ic: "✓", t: "Verified workers", d: "Confirmed identity, real reviews and service area shown." },
+        { ic: "🔒", t: "Payment in escrow", d: "Your payment is held securely until the job is done." },
+        { ic: "🧾", t: "Clear price upfront", d: "Total, fees and taxes shown before you confirm — no surprises." },
+        { ic: "📄", t: "Compliant contract", d: "A copy of your contract, compliant with Québec consumer law." },
+      ],
     },
     cats: {
-      title: "All Job Types",
+      title: "Our most-requested services",
       items: [
-        { icon: "🚚", name: "Delivery & Transport", desc: "Courier, driver, moving help." },
-        { icon: "🍽️", name: "Food Service & Events", desc: "Server, bartender, security, DJ." },
-        { icon: "💻", name: "Tech & IT", desc: "PC help, phone repair, graphic design." },
-        { icon: "🔧", name: "Handyman & Repairs", desc: "Furniture assembly, small jobs, cleaning." },
-        { icon: "🎓", name: "Education & Care", desc: "Tutoring, childcare, dog walking." },
-        { icon: "💪", name: "Labor & Moving Help", desc: "Heavy lifting, moving assistance, senior care." },
+        { icon: "❄️", name: "Snow removal", desc: "Driveways, balconies, stairs — before the storm." },
+        { icon: "📦", name: "Moving & transport", desc: "Moving help, lifting, delivery." },
+        { icon: "🔧", name: "Assembly & small jobs", desc: "Furniture assembly, mounting, repairs." },
+        { icon: "🧹", name: "Cleaning & upkeep", desc: "Home cleaning, move-out cleaning." },
+        { icon: "🍂", name: "Seasonal upkeep", desc: "Yard cleanup, leaves, junk removal." },
+        { icon: "💪", name: "Help & lifting", desc: "A helping hand, heavy lifting, senior care." },
       ],
     },
     how: {
@@ -119,14 +141,14 @@ const T = {
       sub2: "Free signup — start today",
     },
     foot: {
-      tag: "All jobs in Québec — accessible to everyone.",
+      tag: "Québec's local services marketplace.",
       legal: "Compliant with Bill 96 (language) and Law 25 (privacy).",
       copy: "© 2026 Q-emplois. All rights reserved.",
     },
   },
 };
 
-/* ΓöÇΓöÇΓöÇ LOGO COMPONENT ΓöÇΓöÇΓöÇ */
+/* --- LOGO COMPONENT --- */
 const Logo = ({ size = "md" }: { size?: "lg" | "md" | "sm" }) => {
   const sz = { lg: "text-3xl", md: "text-xl", sm: "text-base" }[size];
   return (
@@ -138,14 +160,14 @@ const Logo = ({ size = "md" }: { size?: "lg" | "md" | "sm" }) => {
   );
 };
 
-/* ΓöÇΓöÇΓöÇ WHATSAPP ICON ΓöÇΓöÇΓöÇ */
+/* --- WHATSAPP ICON --- */
 const WaIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
   </svg>
 );
 
-/* ΓöÇΓöÇΓöÇ MAIN COMPONENT ΓöÇΓöÇΓöÇ */
+/* --- MAIN COMPONENT --- */
 export function LandingPage() {
   const [lang, setLang] = useState<"fr" | "en">("fr");
   const [q, setQ] = useState("");
@@ -168,14 +190,14 @@ export function LandingPage() {
   // SEO content based on language
   const seoContent = {
     fr: {
-      title: "Q-emplois | Tous les jobs du Québec - Livraison, Bricolage, Tech & Plus",
-      description: "Trouvez un job ou postulez en quelques clics. Livraison, bricolage, serveur, informatique, déménagement. Plateforme québécoise pour tous types de jobs. Inscription gratuite.",
-      keywords: "emploi québec, job montréal, livraison, bricolage, déménagement, serveur, informatique, petits boulots, travail autonome, gig economy, taskrabbit québec, jobs étudiants, emploi temporaire, aide déménagement, réparation, montage meubles, coursier, chauffeur, tutorat, garde enfants, ménage, manutention, jobs québec, emplois montréal, travail flexible"
+      title: "Q-emplois | Déneigement, déménagement & aide à domicile au Québec",
+      description: "Trouvez de l'aide près de chez vous : déneigement, déménagement, montage de meubles, ménage. Travailleurs vérifiés, prix clair et paiement sécurisé. Pointe-Claire, Montréal, Rive-Sud.",
+      keywords: "déneigement montréal, déneigement pointe-claire, aide déménagement québec, montage meubles, ménage résidentiel, nettoyage de cour, débarras, aide à domicile, services à domicile québec, travailleurs vérifiés, taskrabbit québec, marché de services local, manutention, aide aînés"
     },
     en: {
-      title: "Q-emplois | All Quebec Jobs - Delivery, Handyman, Tech & More",
-      description: "Find a job or hire help in minutes. Delivery, handyman, server, tech, moving. Quebec's platform for all job types. Free signup.",
-      keywords: "quebec jobs, montreal jobs, delivery, handyman, moving, server, tech, gig work, freelance, taskrabbit quebec, student jobs, temporary work, moving help, repairs, furniture assembly, courier, driver, tutoring, childcare, cleaning, labor, flexible work"
+      title: "Q-emplois | Snow removal, moving & home help in Québec",
+      description: "Find trusted local help: snow removal, moving, furniture assembly, cleaning. Verified workers, clear pricing and secure payment. Pointe-Claire, Montreal, South Shore.",
+      keywords: "snow removal montreal, snow removal pointe-claire, moving help quebec, furniture assembly, home cleaning, yard cleanup, junk removal, home services quebec, verified workers, taskrabbit quebec, local services marketplace, heavy lifting, senior help"
     }
   };
 
@@ -195,7 +217,7 @@ export function LandingPage() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { margin: 0; }
 
-        /* ΓöÇΓöÇ LEATHER TEXTURE ΓöÇΓöÇ */
+        /* --- LEATHER TEXTURE --- */
         .leather {
           background-color: #1F2F3F;
           background-image:
@@ -204,7 +226,7 @@ export function LandingPage() {
             url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
         }
 
-        /* ΓöÇΓöÇ STITCHING ΓöÇΓöÇ */
+        /* --- STITCHING --- */
         .stitch-h {
           background-image: repeating-linear-gradient(
             90deg,
@@ -220,7 +242,7 @@ export function LandingPage() {
           box-shadow: inset 0 2px 8px rgba(0,0,0,0.25);
         }
 
-        /* ΓöÇΓöÇ GOLD BUTTON ΓöÇΓöÇ */
+        /* --- GOLD BUTTON --- */
         .gold-btn {
           background: linear-gradient(180deg, #C88B54, #A06A38);
           color: #1F2F3F;
@@ -245,7 +267,7 @@ export function LandingPage() {
           transform: translateY(-1px);
         }
 
-        /* ΓöÇΓöÇ WHATSAPP BUTTON ΓöÇΓöÇ */
+        /* --- WHATSAPP BUTTON --- */
         .wa-btn {
           background: linear-gradient(180deg, #2BD47A, #1FA855);
           color: white;
@@ -263,7 +285,7 @@ export function LandingPage() {
           transform: translateY(-1px);
         }
 
-        /* ΓöÇΓöÇ SERVICE ICON CIRCLE ΓöÇΓöÇ */
+        /* --- SERVICE ICON CIRCLE --- */
         .svc-icon {
           width: 80px; height: 80px;
           border-radius: 50%;
@@ -284,7 +306,7 @@ export function LandingPage() {
             0 8px 25px rgba(184,123,68,0.3);
         }
 
-        /* ΓöÇΓöÇ STEP CIRCLE ΓöÇΓöÇ */
+        /* --- STEP CIRCLE --- */
         .step-circ {
           width: 56px; height: 56px;
           border-radius: 50%;
@@ -297,7 +319,7 @@ export function LandingPage() {
             0 3px 10px rgba(0,0,0,0.3);
         }
 
-        /* ΓöÇΓöÇ CHAT BUBBLE ANIMATION ΓöÇΓöÇ */
+        /* --- CHAT BUBBLE ANIMATION --- */
         .chat-in {
           animation: chatSlide 0.4s ease-out forwards;
           opacity: 0;
@@ -307,13 +329,13 @@ export function LandingPage() {
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* ΓöÇΓöÇ DIVIDER ΓöÇΓöÇ */
+        /* --- DIVIDER --- */
         .divider {
           height: 1px;
           background: linear-gradient(90deg, transparent, rgba(217,179,140,0.15), transparent);
         }
 
-        /* ΓöÇΓöÇ UTILITIES ΓöÇΓöÇ */
+        /* --- UTILITIES --- */
         .serif  { font-family: 'Playfair Display', Georgia, serif; }
         .body-f { font-family: 'Lora', Georgia, serif; }
         .gold   { color: #B87B44; }
@@ -326,7 +348,7 @@ export function LandingPage() {
         a.nav-link { color: #D9B38C; }
         a.nav-link:hover { color: #B87B44; }
 
-        /* ΓöÇΓöÇ EMPIRE SPLIT ΓöÇΓöÇ */
+        /* --- EMPIRE SPLIT --- */
         .empire-split {
           background: linear-gradient(180deg, rgba(31, 47, 63, 0.95), rgba(31, 47, 63, 0.8));
           backdrop-filter: blur(8px);
@@ -334,7 +356,7 @@ export function LandingPage() {
         }
       `}</style>
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ NAVBAR ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ======== NAVBAR ======== */}
       <nav
         style={{
           position: "fixed",
@@ -387,7 +409,7 @@ export function LandingPage() {
         </div>
       </nav>
 
-      {/* ΓöÇΓöÇΓöÇ NOUVEAU: LE PORTAIL DE L'EMPIRE ΓöÇΓöÇΓöÇ */}
+      {/* --- NOUVEAU: LE PORTAIL DE L'EMPIRE --- */}
       <div className="empire-split relative overflow-hidden" style={{ paddingTop: "110px", paddingBottom: "40px", paddingLeft: "24px", paddingRight: "24px" }}>
         <div style={{
           maxWidth: "900px",
@@ -464,14 +486,34 @@ export function LandingPage() {
         </div>
       </div>
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ HERO ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ======== HERO ======== */}
       <section className="leather" style={{ paddingTop: 80, paddingBottom: 80 }}>
         <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
+          <div
+            style={{
+              display: "inline-block",
+              padding: "6px 16px",
+              marginBottom: 22,
+              borderRadius: 999,
+              border: "1px dashed rgba(217,179,140,0.4)",
+              background: "rgba(184,123,68,0.08)",
+              color: "#D9B38C",
+              fontSize: 12,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              fontFamily: "'Lora', Georgia, serif",
+            }}
+          >
+            ⚜ {t.hero.badge}
+          </div>
           <h1 className="serif cream-hi" style={{ fontSize: "clamp(2.5rem, 6vw, 4.2rem)", fontWeight: 900, lineHeight: 1.1, marginBottom: 16 }}>
             {t.hero.h1}
           </h1>
-          <p className="body-f muted" style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)", marginBottom: 40 }}>
+          <p className="body-f muted" style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)", marginBottom: 16 }}>
             {t.hero.sub}
+          </p>
+          <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 36, letterSpacing: "0.04em" }}>
+            📍 {t.hero.city}
           </p>
 
           {/* SEARCH BAR */}
@@ -515,7 +557,40 @@ export function LandingPage() {
 
       <div className="stitch-h" style={{ maxWidth: 1100, margin: "0 auto" }} />
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ SERVICES ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* === TRUST / COMPLIANCE BAND === */}
+      <section className="leather" style={{ padding: "64px 24px" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <h2 className="serif cream-hi" style={{ textAlign: "center", fontSize: "clamp(1.6rem, 3.5vw, 2.2rem)", fontWeight: 700, marginBottom: 40 }}>
+            {t.trust.title}
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
+            {t.trust.items.map((item, i) => (
+              <div
+                key={i}
+                className="stitch-box"
+                style={{ padding: "24px 20px", background: "rgba(21,35,50,0.6)", display: "flex", flexDirection: "column", gap: 10 }}
+              >
+                <div
+                  style={{
+                    width: 44, height: 44, borderRadius: "50%",
+                    background: "linear-gradient(145deg, #B87B44, #8B5E30)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 20, border: "2px solid rgba(217,179,140,0.3)",
+                  }}
+                >
+                  {item.ic}
+                </div>
+                <h3 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700 }}>{item.t}</h3>
+                <p className="body-f muted2" style={{ fontSize: 13, lineHeight: 1.55 }}>{item.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="stitch-h" style={{ maxWidth: 1100, margin: "0 auto" }} />
+
+      {/* === SERVICES === */}
       <section id="services" className="leather" style={{ padding: "80px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <h2 className="serif cream-hi" style={{ textAlign: "center", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, marginBottom: 50 }}>
@@ -539,7 +614,7 @@ export function LandingPage() {
 
       <div className="stitch-h" style={{ maxWidth: 1100, margin: "0 auto" }} />
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ HOW IT WORKS ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ======== HOW IT WORKS ======== */}
       <section className="leather" style={{ padding: "80px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <h2 className="serif cream-hi" style={{ textAlign: "center", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, marginBottom: 50 }}>
@@ -566,7 +641,7 @@ export function LandingPage() {
 
       <div className="stitch-h" style={{ maxWidth: 1100, margin: "0 auto" }} />
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ WHATSAPP / MAX ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ======== WHATSAPP / MAX ======== */}
       <section className="leather" style={{ padding: "80px 24px" }}>
         <div style={{ maxWidth: 960, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr", gap: 40 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 40, alignItems: "center" }}>
@@ -654,7 +729,7 @@ export function LandingPage() {
 
       <div className="stitch-h" style={{ maxWidth: 1100, margin: "0 auto" }} />
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ PROVIDER CTA ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ======== PROVIDER CTA ======== */}
       <section id="providers" className="leather" style={{ padding: "80px 24px" }}>
         <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
           <h2 className="serif cream-hi" style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, marginBottom: 12 }}>
@@ -667,7 +742,7 @@ export function LandingPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
               {t.pro.perks.map((p, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <span style={{ color: "#B87B44", fontSize: 16, marginTop: 2 }}>ΓÜí</span>
+                  <span style={{ color: "#B87B44", fontSize: 16, marginTop: 2 }}>✓</span>
                   <span className="body-f" style={{ color: "#D9B38C", fontSize: 13, lineHeight: 1.6 }}>
                     {p}
                   </span>
@@ -684,7 +759,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ FOOTER ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+      {/* ======== FOOTER ======== */}
       <footer
         style={{
           background: "rgba(18,30,42,0.9)",
