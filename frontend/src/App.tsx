@@ -74,11 +74,11 @@ function App() {
         <Route
           path="/credits"
           element={
-            <RoleRoute allowedRoles={['provider', 'admin']} fallback="/dashboard">
+            <ProtectedRoute>
               <AppShell>
                 <Credits />
               </AppShell>
-            </RoleRoute>
+            </ProtectedRoute>
           }
         />
         <Route
@@ -123,11 +123,11 @@ function App() {
         <Route
           path="/post-job"
           element={
-            <RoleRoute allowedRoles={['client', 'admin']} fallback="/jobs">
+            <ProtectedRoute>
               <AppShell>
                 <PostJob />
               </AppShell>
-            </RoleRoute>
+            </ProtectedRoute>
           }
         />
       </Routes>

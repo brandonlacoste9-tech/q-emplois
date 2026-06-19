@@ -11,7 +11,7 @@ const gold = '#B87B44';
 type PackKey = 'starter' | 'standard' | 'pro';
 
 export function Credits() {
-  const { profile } = useAuth();
+  const { canTask } = useAuth();
   const { addToast } = useToast();
   const [searchParams] = useSearchParams();
   const [balance, setBalance] = useState({ balance: 0, isFoundingTasker: false, lifetimeDiscountPercent: 0 });
@@ -67,13 +67,13 @@ export function Credits() {
     }
   };
 
-  if (profile?.role === 'client') {
+  if (!canTask) {
     return (
       <div className="leather" style={{ minHeight: '100vh', padding: '32px 24px' }}>
         <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
-          <p className="body-f muted">Les crédits sont réservés aux travailleurs (taskers).</p>
-          <Link to="/dashboard" className="gold-btn" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', textDecoration: 'none' }}>
-            Retour au tableau de bord
+          <p className="body-f muted">Configurez votre profil travailleur pour acheter des crédits.</p>
+          <Link to="/profile?setup=tasker" className="gold-btn" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', textDecoration: 'none' }}>
+            Activer le mode travailleur
           </Link>
         </div>
       </div>

@@ -44,8 +44,8 @@ const SERVICE_TYPES: ServiceType[] = [
 ];
 
 export function Jobs() {
-  const { profile } = useAuth();
-  const isClient = profile?.role === 'client';
+  const { profile, isClientMode } = useAuth();
+  const isClient = isClientMode;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [activeTab, setActiveTab] = useState<string>(isClient ? 'all' : 'pending');
   const [isLoading, setIsLoading] = useState(true);
@@ -57,25 +57,31 @@ export function Jobs() {
   const { addToast } = useToast();
 
   useEffect(() => {
-    if (!isClient) {
+    setActiveTab(isClientMode ? 'all' : 'pending');
+  }, [isClientMode]);
+
+  useEffect(() => {
+    if (!isClientMode) {
       api.getCreditBalance()
         .then((b) => setCreditBalance(b.balance))
         .catch(() => setCreditBalance(null));
     }
-  }, [isClient]);
+  }, [isClientMode]);
 
   useEffect(() => {
     loadJobs();
-  }, [activeTab, selectedServiceType, isClient]);
+  }, [activeTab, selectedServiceType, isClientMode]);
 
   const loadJobs = async () => {
     setIsLoading(true);
     try {
-      const filters: { status?: string; serviceType?: string } = {};
+      const filters: { status?: string; serviceType?: string; perspective?: 'mine' | 'board' } = {
+        perspective: isClientMode ? 'mine' : 'board',
+      };
       if (activeTab !== 'all') filters.status = activeTab;
       if (selectedServiceType) filters.serviceType = selectedServiceType;
       const data = await api.getJobs(filters);
-      if (isClient) {
+      if (isClientMode) {
         setJobs(data);
       } else if (activeTab === 'pending') {
         setJobs(data.filter((j) => j.status === 'pending'));

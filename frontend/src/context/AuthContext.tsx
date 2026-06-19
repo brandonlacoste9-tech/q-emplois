@@ -2,11 +2,18 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { User, TradesmanProfile, ServiceType } from '../types';
 import { api } from '../services/api';
 
+export type AppMode = 'client' | 'tasker';
+const MODE_STORAGE_KEY = 'qemplois_mode';
+
 interface AuthContextType {
   user: User | null;
   profile: TradesmanProfile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  mode: AppMode;
+  isClientMode: boolean;
+  canTask: boolean;
+  setMode: (mode: AppMode) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   registerClient: (data: ClientRegisterData) => Promise<void>;
@@ -34,12 +41,34 @@ interface ClientRegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function readStoredMode(): AppMode {
+  const stored = localStorage.getItem(MODE_STORAGE_KEY);
+  return stored === 'tasker' ? 'tasker' : 'client';
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<TradesmanProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mode, setModeState] = useState<AppMode>(readStoredMode);
 
-  // Check for existing session on mount
+  const canTask =
+    (profile?.serviceTypes?.length ?? 0) > 0 || profile?.isTaskerEnabled === true;
+  const isClientMode = mode === 'client';
+
+  useEffect(() => {
+    if (!canTask && mode === 'tasker') {
+      setModeState('client');
+      localStorage.setItem(MODE_STORAGE_KEY, 'client');
+    }
+  }, [canTask, mode]);
+
+  const setMode = useCallback((next: AppMode) => {
+    if (next === 'tasker' && !canTask) return;
+    setModeState(next);
+    localStorage.setItem(MODE_STORAGE_KEY, next);
+  }, [canTask]);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -73,6 +102,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(async (data: RegisterData) => {
     const { user: userData, token } = await api.register(data);
     localStorage.setItem('token', token);
+    localStorage.setItem(MODE_STORAGE_KEY, 'tasker');
+    setModeState('tasker');
     setUser(userData as unknown as TradesmanProfile);
     try {
       await loadUser();
@@ -84,6 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const registerClient = useCallback(async (data: ClientRegisterData) => {
     const { user: userData, token } = await api.registerClient(data);
     localStorage.setItem('token', token);
+    localStorage.setItem(MODE_STORAGE_KEY, 'client');
+    setModeState('client');
     setUser(userData as unknown as TradesmanProfile);
     try {
       await loadUser();
@@ -111,6 +144,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile,
     isLoading,
     isAuthenticated: !!user,
+    mode,
+    isClientMode,
+    canTask,
+    setMode,
     login,
     register,
     registerClient,

@@ -56,7 +56,9 @@ export function Login() {
     try {
       await login(email, password);
       const profileData = await api.getProfile();
-      navigate(profileData.role === 'client' ? '/dashboard' : '/jobs');
+      const savedMode = localStorage.getItem('qemplois_mode');
+      const taskerReady = (profileData.serviceTypes?.length ?? 0) > 0 || profileData.isTaskerEnabled;
+      navigate(savedMode === 'tasker' && taskerReady ? '/jobs' : '/dashboard');
     } catch (err) {
       setError(t.err);
     } finally {

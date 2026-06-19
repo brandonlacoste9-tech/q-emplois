@@ -66,6 +66,7 @@ export class ProfileService {
           }
         : undefined,
       availability,
+      isTaskerEnabled: (provider?.serviceTypes?.length ?? 0) > 0,
     };
   }
 }

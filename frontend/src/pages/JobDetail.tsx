@@ -18,9 +18,8 @@ const gold = '#B87B44';
 export function JobDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, canTask } = useAuth();
   const { addToast } = useToast();
-  const isClient = profile?.role === 'client';
 
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +40,7 @@ export function JobDetail() {
       }
     } catch {
       addToast('Tâche introuvable', 'error');
-      navigate(isClient ? '/jobs' : '/jobs');
+      navigate('/jobs');
     } finally {
       setLoading(false);
     }
@@ -49,10 +48,10 @@ export function JobDetail() {
 
   useEffect(() => {
     load();
-    if (!isClient) {
+    if (canTask) {
       api.getCreditBalance().then((b) => setCreditBalance(b.balance)).catch(() => undefined);
     }
-  }, [id, isClient]);
+  }, [id, canTask]);
 
   const runAction = async (action: () => Promise<void>, success: string) => {
     setProcessing(true);
@@ -100,7 +99,9 @@ export function JobDetail() {
     completed: '#9A8468', cancelled: '#C46B6B', declined: '#C46B6B',
   };
 
-  const canAccept = !isClient && job.status === 'pending' && (creditBalance ?? 0) > 0;
+  const isJobOwner = job.clientId === profile?.id;
+  const showTaskerActions = canTask && !isJobOwner;
+  const canAccept = showTaskerActions && job.status === 'pending' && (creditBalance ?? 0) > 0;
 
   return (
     <div className="leather" style={{ minHeight: '100vh' }}>
@@ -139,7 +140,7 @@ export function JobDetail() {
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><DollarSign className="w-4 h-4" /><span className="cream-hi" style={{ fontWeight: 700 }}>{formatPrice(job.estimatedPrice)}</span></span>
           </div>
 
-          {!isClient && job.clientName && (
+          {showTaskerActions && job.clientName && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'rgba(15,25,36,0.5)', borderRadius: 8, marginBottom: 20 }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: gold, color: '#1F2F3F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
                 {job.clientName.charAt(0)}
@@ -156,7 +157,7 @@ export function JobDetail() {
               <MessageSquare className="w-4 h-4" /> Messages
             </Link>
 
-            {!isClient && job.status === 'pending' && (
+            {showTaskerActions && job.status === 'pending' && (
               <>
                 <button onClick={() => runAction(() => api.acceptJob(job.id).then(), 'Job accepté!')} disabled={processing || !canAccept} className="gold-btn" style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, opacity: canAccept ? 1 : 0.5 }}>
                   <Check className="w-4 h-4" /> Accepter
@@ -167,7 +168,7 @@ export function JobDetail() {
               </>
             )}
 
-            {!isClient && job.status === 'accepted' && (
+            {showTaskerActions && job.status === 'accepted' && (
               <>
                 <button onClick={() => runAction(() => api.startJob(job.id).then(), 'Job démarré!')} disabled={processing} className="gold-btn" style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <Play className="w-4 h-4" /> Démarrer
@@ -178,7 +179,7 @@ export function JobDetail() {
               </>
             )}
 
-            {!isClient && job.status === 'in_progress' && (
+            {showTaskerActions && job.status === 'in_progress' && (
               <button onClick={() => runAction(() => api.completeJob(job.id).then(), 'Job terminé!')} disabled={processing} className="gold-btn" style={{ padding: '10px 16px', fontSize: 14 }}>
                 Terminer le job
               </button>
@@ -196,7 +197,7 @@ export function JobDetail() {
               </span>
             )}
 
-            {isClient && job.status === 'pending' && job.clientId === profile?.id && (
+            {isJobOwner && job.status === 'pending' && (
               <>
                 <span className="body-f muted2" style={{ fontSize: 14 }}>En attente d'un travailleur</span>
                 <button

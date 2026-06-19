@@ -2,7 +2,6 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreditsService } from '../credits/credits.service';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
-import { UserRole } from '@prisma/client';
 
 export interface UpsertProviderDto {
   serviceTypes: string[];
@@ -57,13 +56,6 @@ export class ProvidersService {
         locationLng,
       },
     });
-
-    if (user.role === UserRole.client) {
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { role: UserRole.provider },
-      });
-    }
 
     await this.creditsService.maybeGrantFoundingTaskerBonus(userId);
 

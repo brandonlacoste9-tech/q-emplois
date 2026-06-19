@@ -143,6 +143,7 @@ class ApiService {
     serviceType?: string;
     dateFrom?: string;
     dateTo?: string;
+    perspective?: 'mine' | 'board';
   }): Promise<Job[]> {
     const response = await this.client.get('/jobs', { params: filters });
     return response.data;

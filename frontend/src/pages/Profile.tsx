@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { SERVICE_TYPE_LABELS, type ServiceType, type TradesmanProfile } from '../types';
@@ -30,9 +30,10 @@ const SERVICE_TYPES: ServiceType[] = [
 ];
 
 export function Profile() {
-  const { profile: initialProfile, refreshProfile } = useAuth();
+  const { profile: initialProfile, refreshProfile, canTask } = useAuth();
   const { addToast } = useToast();
-  const isClient = initialProfile?.role === 'client';
+  const [searchParams] = useSearchParams();
+  const showTaskerSetup = searchParams.get('setup') === 'tasker';
   const [profile, setProfile] = useState<TradesmanProfile | null>(initialProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,16 +42,20 @@ export function Profile() {
   const [reviews, setReviews] = useState<Array<{ id: string; rating: number; comment?: string; createdAt: string }>>([]);
 
   useEffect(() => {
+    if (showTaskerSetup && !canTask) setIsEditing(true);
+  }, [showTaskerSetup, canTask]);
+
+  useEffect(() => {
     if (initialProfile?.id) {
       api.getReviewsForUser(initialProfile.id).then(setReviews).catch(() => setReviews([]));
     }
   }, [initialProfile?.id]);
 
   useEffect(() => {
-    if (!isClient) {
+    if (canTask) {
       api.getCreditBalance().then((b) => setCreditBalance(b.balance)).catch(() => undefined);
     }
-  }, [isClient]);
+  }, [canTask]);
 
   useEffect(() => {
     if (initialProfile) {
@@ -71,7 +76,7 @@ export function Profile() {
         email: formData.email,
         phone: formData.phone,
       });
-      if (!isClient) {
+      if ((formData.serviceTypes || []).length > 0) {
         await api.updateProvider({
           serviceTypes: formData.serviceTypes || [],
           hourlyRate: formData.hourlyRate,
@@ -151,6 +156,13 @@ export function Profile() {
           )}
         </div>
 
+        {showTaskerSetup && !canTask && (
+          <div className="stitch-box body-f" style={{ ...card, marginBottom: 20, padding: 16, background: 'rgba(184,123,68,0.12)' }}>
+            <p className="cream-hi" style={{ fontWeight: 600, marginBottom: 6 }}>Activer le mode travailleur</p>
+            <p className="muted" style={{ fontSize: 14 }}>Choisissez vos types de services et votre ville ci-dessous pour accepter des jobs.</p>
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, alignItems: 'start' }}>
           {/* Left column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -176,7 +188,7 @@ export function Profile() {
               </div>
             </div>
 
-            {!isClient && creditBalance !== null && (
+            {canTask && creditBalance !== null && (
               <div className="stitch-box" style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Coins className="w-5 h-5" style={{ color: gold }} />
@@ -189,7 +201,7 @@ export function Profile() {
               </div>
             )}
 
-            {!isClient && (
+            {canTask && (
             <div className="stitch-box" style={{ ...card, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <p className="body-f muted2" style={{ fontSize: 13 }}>Taux horaire</p>
@@ -216,11 +228,16 @@ export function Profile() {
               </div>
             </div>
 
-            {!isClient && (
-            <>
-            {/* Services */}
             <div className="stitch-box" style={card}>
-              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Types de services</h3>
+              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Profil travailleur</h3>
+              {!canTask && (
+                <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 16 }}>
+                  Ajoutez au moins un type de service pour activer le mode « Je travaille ».
+                </p>
+              )}
+            {/* Services */}
+            <div style={{ marginBottom: 20 }}>
+              <h4 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Types de services</h4>
               {isEditing ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
                   {SERVICE_TYPES.map((type) => {
@@ -247,8 +264,8 @@ export function Profile() {
             </div>
 
             {/* Pricing & radius */}
-            <div className="stitch-box" style={card}>
-              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Tarification et zone</h3>
+            <div style={{ marginBottom: 20 }}>
+              <h4 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Tarification et zone</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
                 {field('Ville / secteur de base', isEditing ? formData.address?.street : profile.address?.street, (v) => setFormData({ ...formData, address: { ...formData.address, street: v, city: formData.address?.city ?? '', postalCode: formData.address?.postalCode ?? '' } }), <MapPin className="w-4 h-4" />, 'text', 'ex: Montréal, H2X')}
                 {field('Taux horaire ($/h)', isEditing ? formData.hourlyRate : profile.hourlyRate, (v) => setFormData({ ...formData, hourlyRate: parseFloat(v) }), <DollarSign className="w-4 h-4" />, 'number')}
@@ -260,10 +277,10 @@ export function Profile() {
             </div>
 
             {/* Certification */}
-            <div className="stitch-box" style={card}>
-              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <div>
+              <h4 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <Award className="w-5 h-5" style={{ color: gold }} /> Pièce d'identité et certifications
-              </h3>
+              </h4>
               {field("Numéro de certification (optionnel)", isEditing ? formData.licenseNumber : profile.licenseNumber, (v) => setFormData({ ...formData, licenseNumber: v }), <Award className="w-4 h-4" />, 'text', 'ex: CERT-1234-5678')}
               <div style={{ marginTop: 14 }}>
                 {isEditing ? (
@@ -281,8 +298,7 @@ export function Profile() {
                 )}
               </div>
             </div>
-            </>
-            )}
+            </div>
 
             {reviews.length > 0 && (
               <div className="stitch-box" style={card}>

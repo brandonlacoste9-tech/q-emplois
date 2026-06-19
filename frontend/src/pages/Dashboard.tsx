@@ -24,9 +24,8 @@ const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 2
 const gold = '#B87B44';
 
 export function Dashboard() {
-  const { profile } = useAuth();
+  const { profile, isClientMode } = useAuth();
   const { addToast } = useToast();
-  const isClient = profile?.role === 'client';
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [upcomingJobs, setUpcomingJobs] = useState<Job[]>([]);
@@ -38,16 +37,16 @@ export function Dashboard() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        if (isClient) {
-          const jobsData = await api.getJobs();
+        if (isClientMode) {
+          const jobsData = await api.getJobs({ perspective: 'mine' });
           setMyPostedJobs(jobsData.slice(0, 8));
         } else {
           const [statsData, notificationsData, jobsData, balance, allJobs] = await Promise.all([
             api.getDashboardStats(),
             api.getNotifications(),
-            api.getJobs({ status: 'accepted' }),
+            api.getJobs({ status: 'accepted', perspective: 'board' }),
             api.getCreditBalance(),
-            api.getJobs(),
+            api.getJobs({ perspective: 'board' }),
           ]);
           setStats(statsData);
           setNotifications(notificationsData.slice(0, 5));
@@ -62,7 +61,7 @@ export function Dashboard() {
       }
     };
     loadDashboard();
-  }, [isClient]);
+  }, [isClientMode]);
 
   const handleDeleteJob = async (jobId: string) => {
     if (!window.confirm('Supprimer cette tâche? Cette action est irréversible.')) return;
@@ -84,7 +83,7 @@ export function Dashboard() {
     );
   }
 
-  if (isClient) {
+  if (isClientMode) {
     return (
       <div className="leather" style={{ minHeight: '100vh' }}>
         <div style={wrap}>

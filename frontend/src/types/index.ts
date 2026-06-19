@@ -16,6 +16,7 @@ export interface User {
 
 export interface TradesmanProfile extends User {
   role?: 'client' | 'provider' | 'admin';
+  isTaskerEnabled?: boolean;
   serviceTypes: ServiceType[];
   hourlyRate: number;
   serviceRadius: number; // in km

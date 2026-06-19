@@ -27,8 +27,9 @@ export class JobsController {
     @CurrentUser('userId') userId: string,
     @Query('status') status?: string,
     @Query('serviceType') serviceType?: string,
+    @Query('perspective') perspective?: string,
   ) {
-    return this.jobsService.list(userId, { status, serviceType });
+    return this.jobsService.list(userId, { status, serviceType, perspective });
   }
 
   @Get(':id')

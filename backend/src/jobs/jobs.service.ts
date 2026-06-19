@@ -113,17 +113,17 @@ export class JobsService {
     return map[status];
   }
 
-  async list(userId: string, filters?: { status?: string; serviceType?: string }) {
+  async list(userId: string, filters?: { status?: string; serviceType?: string; perspective?: string }) {
     const status = this.reverseStatus(filters?.status);
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { provider: true },
     });
     const provider = user?.provider;
-    const isClient = user?.role === 'client';
+    const clientView = filters?.perspective === 'mine';
 
     const tasks = await this.prisma.task.findMany({
-      where: isClient
+      where: clientView
         ? {
             clientId: userId,
             ...(status ? { status } : {}),
@@ -146,7 +146,7 @@ export class JobsService {
 
     let results = tasks.map((t) => this.mapTask(t, provider));
 
-    if (provider) {
+    if (!clientView && provider) {
       results = results.filter((job) => {
         if (job.status !== 'pending') return true;
         if (job.clientId === userId) return true;
