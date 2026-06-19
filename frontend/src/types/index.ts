@@ -174,6 +174,7 @@ export interface Job {
   status: JobStatus;
   createdAt: string;
   distance?: number; // in km
+  contactRedacted?: boolean;
 }
 
 export type JobStatus = 

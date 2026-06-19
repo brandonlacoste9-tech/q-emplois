@@ -11,7 +11,7 @@ import {
   ArrowLeft, Briefcase, Calendar, Check, Clock, DollarSign,
   Loader2, MapPin, MessageSquare, Play, Star, Trash2,
 } from 'lucide-react';
-import { formatDate, formatDistance, formatDuration, formatPrice } from '../utils';
+import { formatDate, formatDistance, formatDuration, formatPrice, formatJobLocation } from '../utils';
 
 const gold = '#B87B44';
 
@@ -133,29 +133,40 @@ export function JobDetail() {
             {job.estimatedDuration > 0 && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Clock className="w-4 h-4" />{formatDuration(job.estimatedDuration)}</span>
             )}
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><MapPin className="w-4 h-4" />{job.address.street}, {job.address.city}</span>
-            {job.distance != null && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><MapPin className="w-4 h-4" />{formatJobLocation(job)}</span>
+            {!job.contactRedacted && job.distance != null && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><MapPin className="w-4 h-4" />{formatDistance(job.distance)}</span>
             )}
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><DollarSign className="w-4 h-4" /><span className="cream-hi" style={{ fontWeight: 700 }}>{formatPrice(job.estimatedPrice)}</span></span>
           </div>
 
-          {showTaskerActions && job.clientName && (
+          {job.contactRedacted && showTaskerActions && (
+            <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 20, fontStyle: 'italic' }}>
+              L&apos;adresse complète et les coordonnées du client seront visibles une fois la tâche acceptée.
+            </p>
+          )}
+
+          {showTaskerActions && job.clientName && !job.contactRedacted && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'rgba(15,25,36,0.5)', borderRadius: 8, marginBottom: 20 }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: gold, color: '#1F2F3F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
                 {job.clientName.charAt(0)}
               </div>
               <div>
                 <p className="body-f cream-hi" style={{ fontWeight: 600 }}>{job.clientName}</p>
+                {job.clientPhone && (
+                  <p className="body-f muted2" style={{ fontSize: 13 }}>{job.clientPhone}</p>
+                )}
                 <p className="body-f muted2" style={{ fontSize: 13 }}>Client</p>
               </div>
             </div>
           )}
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {(!job.contactRedacted || isJobOwner) && (
             <Link to={`/messages?jobId=${job.id}`} className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <MessageSquare className="w-4 h-4" /> Messages
             </Link>
+            )}
 
             {showTaskerActions && job.status === 'pending' && (
               <>

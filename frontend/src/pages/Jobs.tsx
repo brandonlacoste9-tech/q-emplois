@@ -10,7 +10,7 @@ import { SERVICE_TYPE_LABELS, JOB_STATUS_LABELS } from '../types';
 import {
   MapPin, Calendar, Clock, DollarSign, Check, X, Filter, Briefcase, Loader2, Play, Coins, Trash2,
 } from 'lucide-react';
-import { formatPrice, formatDate, formatDuration, formatDistance } from '../utils';
+import { formatPrice, formatDate, formatDuration, formatJobLocation } from '../utils';
 
 const gold = '#B87B44';
 
@@ -335,11 +335,11 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDe
             <Clock className="w-4 h-4" style={{ flexShrink: 0 }} />{formatDuration(job.estimatedDuration)}
           </span>
         )}
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><MapPin className="w-4 h-4" style={{ flexShrink: 0 }} />{job.distance ? formatDistance(job.distance) : job.address.city}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><MapPin className="w-4 h-4" style={{ flexShrink: 0 }} />{formatJobLocation(job)}</span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><DollarSign className="w-4 h-4" style={{ flexShrink: 0 }} /><span className="cream-hi" style={{ fontWeight: 700 }}>{formatPrice(job.estimatedPrice)}</span></span>
       </div>
 
-      {!isClient && (
+      {!isClient && !job.contactRedacted && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, background: 'rgba(15,25,36,0.5)', borderRadius: 8, marginBottom: 14 }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', background: gold, color: '#1F2F3F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
             {job.clientName.charAt(0)}
@@ -349,6 +349,12 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDe
             <p className="body-f muted2" style={{ fontSize: 12 }}>Client</p>
           </div>
         </div>
+      )}
+
+      {!isClient && job.contactRedacted && job.status === 'pending' && (
+        <p className="body-f muted2" style={{ fontSize: 12, marginBottom: 14, fontStyle: 'italic' }}>
+          Adresse et coordonnées révélées après acceptation.
+        </p>
       )}
 
       <p className="body-f muted" style={{ fontSize: 14, marginBottom: 16, flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>

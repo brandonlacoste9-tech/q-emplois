@@ -62,3 +62,22 @@ export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength)}...`;
 }
+
+/** Public location label for job board (hides exact address when redacted). */
+export function formatJobLocation(job: {
+  address: { street?: string; city?: string; postalCode?: string };
+  distance?: number;
+  contactRedacted?: boolean;
+}): string {
+  const city = job.address.city || 'Québec';
+  if (job.contactRedacted) {
+    const area = job.address.postalCode?.slice(0, 3);
+    const approx = job.distance != null ? formatDistance(job.distance) : null;
+    if (approx && area) return `${approx} · ${city} (${area})`;
+    if (approx) return `${approx} · ${city}`;
+    if (area) return `${city} (${area})`;
+    return city;
+  }
+  if (job.address.street) return `${job.address.street}, ${city}`;
+  return city;
+}

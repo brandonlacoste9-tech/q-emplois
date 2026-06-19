@@ -55,25 +55,38 @@ export class JobsService {
     ) / 10;
   }
 
-  private mapTask(task: any, provider?: any) {
-    const clientName = [task.client?.firstName, task.client?.lastName]
-      .filter(Boolean)
-      .join(' ') || 'Client';
+  private shouldRevealContact(task: { clientId: string; taskerId?: string | null; status: TaskStatus }, viewerUserId: string): boolean {
+    if (task.clientId === viewerUserId) return true;
+    if (task.taskerId === viewerUserId) return true;
+    return task.status !== TaskStatus.open;
+  }
+
+  private publicPostalArea(postalCode?: string | null): string {
+    return postalCode?.replace(/\s/g, '').toUpperCase().slice(0, 3) ?? '';
+  }
+
+  private mapTask(task: any, provider: any | undefined, viewerUserId: string) {
+    const revealContact = this.shouldRevealContact(task, viewerUserId);
+    const clientName = revealContact
+      ? [task.client?.firstName, task.client?.lastName].filter(Boolean).join(' ') || 'Client'
+      : 'Client';
 
     return {
       id: task.id,
       clientId: task.clientId,
       clientName,
-      clientPhone: task.client?.phone ?? undefined,
+      clientPhone: revealContact ? task.client?.phone ?? undefined : undefined,
       serviceType: task.serviceType,
       title: task.title,
       description: task.description,
       address: {
-        street: task.address,
+        street: revealContact ? task.address : '',
         city: task.city ?? '',
-        postalCode: task.postalCode ?? '',
+        postalCode: revealContact
+          ? task.postalCode ?? ''
+          : this.publicPostalArea(task.postalCode),
         coordinates:
-          task.locationLat != null && task.locationLng != null
+          revealContact && task.locationLat != null && task.locationLng != null
             ? { lat: Number(task.locationLat), lng: Number(task.locationLng) }
             : undefined,
       },
@@ -83,6 +96,7 @@ export class JobsService {
       status: this.mapStatus(task.status),
       createdAt: task.createdAt.toISOString(),
       distance: this.computeDistance(task, provider),
+      contactRedacted: !revealContact,
     };
   }
 
@@ -144,7 +158,7 @@ export class JobsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    let results = tasks.map((t) => this.mapTask(t, provider));
+    let results = tasks.map((t) => this.mapTask(t, provider, userId));
 
     if (!clientView && provider) {
       results = results.filter((job) => {
@@ -195,7 +209,7 @@ export class JobsService {
     ) {
       throw new ForbiddenException('Accès refusé.');
     }
-    return this.mapTask(task, user?.provider);
+    return this.mapTask(task, user?.provider, userId);
   }
 
   async create(clientId: string, dto: CreateTaskDto) {
@@ -236,7 +250,7 @@ export class JobsService {
       resourceId: task.id,
     });
 
-    return this.mapTask(task);
+    return this.mapTask(task, undefined, clientId);
   }
 
   async claim(taskId: string, taskerId: string) {
@@ -300,7 +314,7 @@ export class JobsService {
       { taskId },
     );
 
-    return this.mapTask(updated);
+    return this.mapTask(updated, undefined, taskerId);
   }
 
   async accept(taskId: string, taskerId: string) {
@@ -325,7 +339,7 @@ export class JobsService {
       },
     });
 
-    return this.mapTask(updated);
+    return this.mapTask(updated, undefined, taskerId);
   }
 
   async complete(taskId: string, userId: string) {
@@ -357,7 +371,7 @@ export class JobsService {
       );
     }
 
-    return this.mapTask(updated);
+    return this.mapTask(updated, undefined, userId);
   }
 
   async start(taskId: string, taskerId: string) {
@@ -373,7 +387,7 @@ export class JobsService {
       },
     });
 
-    return this.mapTask(updated);
+    return this.mapTask(updated, undefined, taskerId);
   }
 
   async remove(taskId: string, userId: string) {
