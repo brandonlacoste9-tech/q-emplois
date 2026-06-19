@@ -9,7 +9,7 @@ import type { Job, JobStatus } from '../types';
 import { JOB_STATUS_LABELS, SERVICE_TYPE_LABELS } from '../types';
 import {
   ArrowLeft, Briefcase, Calendar, Check, Clock, DollarSign,
-  Loader2, MapPin, MessageSquare, Play, Star,
+  Loader2, MapPin, MessageSquare, Play, Star, Trash2,
 } from 'lucide-react';
 import { formatDate, formatDistance, formatDuration, formatPrice } from '../utils';
 
@@ -65,6 +65,23 @@ export function JobDetail() {
         ? (err.response?.data as { message?: string })?.message
         : undefined;
       addToast(msg ?? 'Action impossible', 'error');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!job || !window.confirm('Supprimer cette tâche? Cette action est irréversible.')) return;
+    setProcessing(true);
+    try {
+      await api.deleteJob(job.id);
+      addToast('Tâche supprimée', 'success');
+      navigate('/jobs');
+    } catch (err) {
+      const msg = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string })?.message
+        : undefined;
+      addToast(msg ?? 'Impossible de supprimer la tâche', 'error');
     } finally {
       setProcessing(false);
     }
@@ -180,7 +197,17 @@ export function JobDetail() {
             )}
 
             {isClient && job.status === 'pending' && (
-              <span className="body-f muted2" style={{ fontSize: 14 }}>En attente d'un travailleur</span>
+              <>
+                <span className="body-f muted2" style={{ fontSize: 14 }}>En attente d'un travailleur</span>
+                <button
+                  onClick={handleDelete}
+                  disabled={processing}
+                  className="ghost-btn"
+                  style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.4)' }}
+                >
+                  <Trash2 className="w-4 h-4" /> Supprimer
+                </button>
+              </>
             )}
           </div>
         </div>

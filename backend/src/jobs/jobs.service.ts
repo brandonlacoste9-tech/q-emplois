@@ -368,4 +368,28 @@ export class JobsService {
 
     return this.mapTask(updated);
   }
+
+  async remove(taskId: string, userId: string) {
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) throw new NotFoundException('Tâche non trouvée.');
+    if (task.clientId !== userId) {
+      throw new ForbiddenException('Seul le client peut supprimer cette tâche.');
+    }
+    if (task.status !== TaskStatus.open) {
+      throw new BadRequestException(
+        'Seules les tâches en attente peuvent être supprimées.',
+      );
+    }
+
+    await this.prisma.task.delete({ where: { id: taskId } });
+
+    await this.auditService.log({
+      userId,
+      action: 'task_deleted',
+      resource: 'task',
+      resourceId: taskId,
+    });
+
+    return { success: true };
+  }
 }

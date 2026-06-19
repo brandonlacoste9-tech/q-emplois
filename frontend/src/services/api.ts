@@ -190,6 +190,10 @@ class ApiService {
     return response.data;
   }
 
+  async deleteJob(id: string): Promise<void> {
+    await this.client.delete(`/jobs/${id}`);
+  }
+
   async getCreditBalance(): Promise<{
     balance: number;
     isFoundingTasker: boolean;

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   Query,
@@ -62,5 +63,11 @@ export class JobsController {
   @Post(':id/start')
   start(@Param('id') id: string, @CurrentUser('userId') userId: string) {
     return this.jobsService.start(id, userId);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Supprimer une tâche (client, en attente uniquement)' })
+  remove(@Param('id') id: string, @CurrentUser('userId') userId: string) {
+    return this.jobsService.remove(id, userId);
   }
 }

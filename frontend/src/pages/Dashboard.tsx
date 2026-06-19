@@ -10,7 +10,9 @@ import {
   MapPin,
   ChevronRight,
   Clock,
+  Trash2,
 } from 'lucide-react';
+import { useToast } from '../components/Toast';
 import type { DashboardStats, Notification, Job, JobStatus } from '../types';
 import { JOB_STATUS_LABELS } from '../types';
 import { api } from '../services/api';
@@ -23,6 +25,7 @@ const gold = '#B87B44';
 
 export function Dashboard() {
   const { profile } = useAuth();
+  const { addToast } = useToast();
   const isClient = profile?.role === 'client';
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -60,6 +63,17 @@ export function Dashboard() {
     };
     loadDashboard();
   }, [isClient]);
+
+  const handleDeleteJob = async (jobId: string) => {
+    if (!window.confirm('Supprimer cette tâche? Cette action est irréversible.')) return;
+    try {
+      await api.deleteJob(jobId);
+      addToast('Tâche supprimée', 'success');
+      setMyPostedJobs((prev) => prev.filter((j) => j.id !== jobId));
+    } catch {
+      addToast('Impossible de supprimer la tâche', 'error');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -115,19 +129,27 @@ export function Dashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {myPostedJobs.map((job) => (
-                  <Link key={job.id} to={`/jobs/${job.id}`} style={{ textDecoration: 'none' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: 12, borderRadius: 8, background: 'rgba(15,25,36,0.5)' }}>
-                    <div style={{ flex: 1 }}>
+                  <div key={job.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: 12, borderRadius: 8, background: 'rgba(15,25,36,0.5)' }}>
+                    <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none', flex: 1, color: 'inherit' }}>
                       <h4 className="serif cream-hi" style={{ fontSize: 15, fontWeight: 700 }}>{job.title}</h4>
                       <p className="body-f muted2" style={{ fontSize: 13, marginTop: 4 }}>
                         {job.address.city} · {formatPrice(job.estimatedPrice)}
                       </p>
-                    </div>
+                    </Link>
                     <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: gold, padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
                       {JOB_STATUS_LABELS[job.status as JobStatus]}
                     </span>
+                    {job.status === 'pending' && (
+                      <button
+                        onClick={() => handleDeleteJob(job.id)}
+                        className="ghost-btn"
+                        title="Supprimer"
+                        style={{ padding: '6px 8px', color: '#C46B6B', borderColor: 'rgba(196,107,107,0.4)' }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                  </Link>
                 ))}
               </div>
             )}

@@ -8,7 +8,7 @@ import { ReviewModal } from '../components/ReviewModal';
 import type { Job, JobStatus, ServiceType } from '../types';
 import { SERVICE_TYPE_LABELS, JOB_STATUS_LABELS } from '../types';
 import {
-  MapPin, Calendar, Clock, DollarSign, Check, X, Filter, Briefcase, Loader2, Play, Coins,
+  MapPin, Calendar, Clock, DollarSign, Check, X, Filter, Briefcase, Loader2, Play, Coins, Trash2,
 } from 'lucide-react';
 import { formatPrice, formatDate, formatDuration, formatDistance } from '../utils';
 
@@ -147,6 +147,23 @@ export function Jobs() {
     }
   };
 
+  const handleDelete = async (jobId: string) => {
+    if (!window.confirm('Supprimer cette tâche? Cette action est irréversible.')) return;
+    setProcessingJob(jobId);
+    try {
+      await api.deleteJob(jobId);
+      addToast('Tâche supprimée', 'success');
+      loadJobs();
+    } catch (err) {
+      const msg = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string })?.message
+        : undefined;
+      addToast(msg ?? 'Impossible de supprimer la tâche', 'error');
+    } finally {
+      setProcessingJob(null);
+    }
+  };
+
   const chip = (active: boolean): React.CSSProperties => ({
     padding: '6px 14px', borderRadius: 999, fontSize: 13, cursor: 'pointer',
     fontFamily: "'Lora', Georgia, serif", transition: 'all 0.2s',
@@ -235,6 +252,7 @@ export function Jobs() {
                 onStart={handleStart}
                 onDecline={handleDecline}
                 onComplete={handleComplete}
+                onDelete={handleDelete}
                 onReview={() => setReviewJob(job)}
                 isProcessing={processingJob === job.id}
                 canAccept={!isClient && (creditBalance ?? 0) > 0}
@@ -263,12 +281,13 @@ interface JobCardProps {
   onStart: (id: string) => void;
   onDecline: (id: string) => void;
   onComplete: (id: string) => void;
+  onDelete: (id: string) => void;
   onReview: () => void;
   isProcessing: boolean;
   canAccept: boolean;
 }
 
-function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onReview, isProcessing, canAccept }: JobCardProps) {
+function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDelete, onReview, isProcessing, canAccept }: JobCardProps) {
   const statusColors: Record<JobStatus, string> = {
     pending: '#D9A441', accepted: '#7FB069', in_progress: '#6BA3C4',
     completed: '#9A8468', cancelled: '#C46B6B', declined: '#C46B6B',
@@ -357,7 +376,18 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onRe
           </button>
         )}
         {isClient && job.status === 'pending' && (
-          <span className="body-f muted2" style={{ fontSize: 13, width: '100%', textAlign: 'center' }}>En attente d'un travailleur</span>
+          <>
+            <span className="body-f muted2" style={{ fontSize: 13, flex: 1, textAlign: 'center' }}>En attente d'un travailleur</span>
+            <button
+              onClick={(e) => { e.preventDefault(); onDelete(job.id); }}
+              disabled={isProcessing}
+              className="ghost-btn"
+              title="Supprimer"
+              style={{ padding: '8px 12px', fontSize: 14, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.4)' }}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
         )}
       </div>
     </div>
