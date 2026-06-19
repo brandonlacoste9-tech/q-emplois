@@ -63,3 +63,11 @@ export class DeclineTaskDto {
   @IsString()
   reason?: string;
 }
+
+export class ApplyTaskDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  message?: string;
+}

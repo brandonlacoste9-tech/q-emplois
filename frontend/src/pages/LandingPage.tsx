@@ -9,7 +9,7 @@ const T = {
     hero: {
       badge: "Le marché de services local du Québec",
       h1: "De l'aide près de chez vous, en quelques clics.",
-      sub: "Déneigement, déménagement, montage de meubles, ménage. Des Québécois vérifiés, un prix clair et un paiement sécurisé — avant de réserver.",
+      sub: "Déneigement, déménagement, montage de meubles, ménage. Des Québécois vérifiés, un prix clair — vous choisissez votre travailleur parmi les candidats.",
       ph: "De quoi avez-vous besoin ? (ex. déneigement)",
       cta: "Trouver un pro",
       city: "Pointe-Claire · Montréal · Rive-Sud",
@@ -18,9 +18,9 @@ const T = {
       title: "Conçu pour le Québec, fait pour la confiance",
       items: [
         { ic: "✓", t: "Travailleurs vérifiés", d: "Identité confirmée, avis réels et secteur desservi affichés." },
-        { ic: "🔒", t: "Paiement en fiducie", d: "Votre paiement est retenu en sécurité jusqu'à la fin du travail." },
-        { ic: "🧾", t: "Prix clair d'avance", d: "Total, frais et taxes affichés avant de confirmer — aucune surprise." },
-        { ic: "📄", t: "Contrat conforme", d: "Copie de votre contrat conforme à la Loi sur la protection du consommateur." },
+        { ic: "🔒", t: "Vie privée par étapes", d: "Contact après votre choix; adresse exacte seulement au démarrage du travail." },
+        { ic: "🧾", t: "Prix clair d'avance", d: "Fourchettes typiques et budget affichés avant de publier — aucune surprise." },
+        { ic: "📄", t: "Garantie satisfaction", d: "Processus d'accompagnement et support dédié via notre garantie Q-Emplois." },
       ],
     },
     cats: {
@@ -39,9 +39,9 @@ const T = {
       stepLabel: "Étape",
       steps: [
         { ic: "📝", t: "Décrivez", d: "Mentionnez vos besoins pour trouver le bon pro." },
-        { ic: "🔍", t: "Trouvez", d: "On jumelle le meilleur pro près de chez vous." },
-        { ic: "📅", t: "Réservez", d: "Réservez votre créneau en quelques clics." },
-        { ic: "💰", t: "Payez", d: "Payez en ligne de façon sécurisée via Stripe." },
+        { ic: "👥", t: "Comparez", d: "Recevez des candidatures et choisissez le travailleur qui vous convient." },
+        { ic: "📅", t: "Réservez", d: "Confirmez la date et coordonnez-vous via la messagerie." },
+        { ic: "✅", t: "Terminez", d: "Le travail se fait; paiement en ligne à venir prochainement." },
       ],
     },
     wa: {
@@ -62,7 +62,7 @@ const T = {
       sub: "Inscrivez-vous gratuitement et recevez des offres près de chez vous. Étudiants, retraités, travailleurs autonomes — tous sont bienvenus.",
       perks: [
         "Recevez des offres directement sur WhatsApp",
-        "Paiements sécurisés via Stripe — fini le cash",
+        "Crédits simples pour postuler — remboursés si non retenu",
         "Travaillez quand vous voulez, où vous voulez",
         "Pas de licence requise pour la plupart des jobs",
       ],
@@ -80,7 +80,7 @@ const T = {
     hero: {
       badge: "Québec's local services marketplace",
       h1: "Trusted local help, just a few clicks away.",
-      sub: "Snow removal, moving, furniture assembly, cleaning. Verified Quebecers, a clear price and secure payment — before you book.",
+      sub: "Snow removal, moving, furniture assembly, cleaning. Verified Quebecers, clear pricing — you choose your tasker from applicants.",
       ph: "What do you need? (e.g. snow removal)",
       cta: "Find a pro",
       city: "Pointe-Claire · Montreal · South Shore",
@@ -89,9 +89,9 @@ const T = {
       title: "Built for Québec, made for trust",
       items: [
         { ic: "✓", t: "Verified workers", d: "Confirmed identity, real reviews and service area shown." },
-        { ic: "🔒", t: "Payment in escrow", d: "Your payment is held securely until the job is done." },
-        { ic: "🧾", t: "Clear price upfront", d: "Total, fees and taxes shown before you confirm — no surprises." },
-        { ic: "📄", t: "Compliant contract", d: "A copy of your contract, compliant with Québec consumer law." },
+        { ic: "🔒", t: "Staged privacy", d: "Contact after you choose; exact address only when work starts." },
+        { ic: "🧾", t: "Clear price upfront", d: "Typical ranges and budget shown before you post — no surprises." },
+        { ic: "📄", t: "Happiness pledge", d: "Support process and dedicated help via our Q-Emplois pledge." },
       ],
     },
     cats: {
@@ -110,9 +110,9 @@ const T = {
       stepLabel: "Step",
       steps: [
         { ic: "📝", t: "Describe", d: "Tell us what you need to find the right pro." },
-        { ic: "🔍", t: "Find", d: "We match the best pro near you." },
-        { ic: "📅", t: "Book", d: "Reserve your time slot in a few clicks." },
-        { ic: "💰", t: "Pay", d: "Pay securely online via Stripe." },
+        { ic: "👥", t: "Compare", d: "Review applicants and pick the tasker that fits." },
+        { ic: "📅", t: "Book", d: "Confirm the date and coordinate via messaging." },
+        { ic: "✅", t: "Complete", d: "Work gets done; online payment coming soon." },
       ],
     },
     wa: {
@@ -133,7 +133,7 @@ const T = {
       sub: "Sign up for free and get job offers near you. Students, retirees, freelancers — everyone is welcome.",
       perks: [
         "Get job offers directly on WhatsApp",
-        "Secure payments via Stripe — no more cash",
+        "Simple credits to apply — refunded if not selected",
         "Work when you want, where you want",
         "No license required for most jobs",
       ],

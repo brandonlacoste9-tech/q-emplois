@@ -12,6 +12,8 @@ const FOOT = {
     become: "Offrir mes services",
     login: "Connexion",
     signup: "S'inscrire",
+    garantie: "Garantie satisfaction",
+    support: "Support",
   },
   en: {
     tag: "Québec's local services marketplace.",
@@ -21,6 +23,8 @@ const FOOT = {
     become: "Offer my services",
     login: "Log in",
     signup: "Sign up",
+    garantie: "Happiness pledge",
+    support: "Support",
   },
 };
 
@@ -49,6 +53,8 @@ export function SiteFooter({ lang }: { lang: Lang }) {
           <Link to="/pro" className="nav-link">{t.become}</Link>
           <Link to="/login" className="nav-link">{t.login}</Link>
           <Link to="/register" className="nav-link">{t.signup}</Link>
+          <Link to="/garantie" className="nav-link">{t.garantie}</Link>
+          <a href="mailto:support@qemplois.ca" className="nav-link">{t.support}</a>
         </div>
       </div>
       <div className="stitch-h" style={{ maxWidth: 1100, margin: "28px auto 18px" }} />

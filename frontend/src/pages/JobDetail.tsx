@@ -5,11 +5,12 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { ReviewModal } from '../components/ReviewModal';
-import type { Job, JobStatus } from '../types';
+import { TaskerCard } from '../components/TaskerCard';
+import type { Job, JobStatus, TaskApplication } from '../types';
 import { JOB_STATUS_LABELS, SERVICE_TYPE_LABELS } from '../types';
 import {
   ArrowLeft, Briefcase, Calendar, Check, Clock, DollarSign,
-  Loader2, MapPin, MessageSquare, Play, Star, Trash2,
+  Loader2, MapPin, MessageSquare, Play, Star, Trash2, X,
 } from 'lucide-react';
 import { formatDate, formatDistance, formatDuration, formatPrice, formatJobLocation } from '../utils';
 
@@ -18,15 +19,17 @@ const gold = '#B87B44';
 export function JobDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { profile, canTask } = useAuth();
+  const { profile, canTask, isClientMode } = useAuth();
   const { addToast } = useToast();
 
   const [job, setJob] = useState<Job | null>(null);
+  const [applications, setApplications] = useState<TaskApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const [hasReview, setHasReview] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  const [applyMessage, setApplyMessage] = useState('');
 
   const load = async () => {
     if (!id) return;
@@ -37,6 +40,12 @@ export function JobDetail() {
       if (data.status === 'completed') {
         const reviews = await api.getReviewsForTask(id);
         setHasReview(Array.isArray(reviews) && reviews.length > 0);
+      }
+      if (data.clientId === profile?.id && data.status === 'pending') {
+        const apps = await api.getJobApplications(id);
+        setApplications(apps);
+      } else {
+        setApplications([]);
       }
     } catch {
       addToast('Tâche introuvable', 'error');
@@ -51,7 +60,7 @@ export function JobDetail() {
     if (canTask) {
       api.getCreditBalance().then((b) => setCreditBalance(b.balance)).catch(() => undefined);
     }
-  }, [id, canTask]);
+  }, [id, canTask, profile?.id]);
 
   const runAction = async (action: () => Promise<void>, success: string) => {
     setProcessing(true);
@@ -70,7 +79,7 @@ export function JobDetail() {
   };
 
   const handleDelete = async () => {
-    if (!job || !window.confirm('Supprimer cette tâche? Cette action est irréversible.')) return;
+    if (!job || !window.confirm('Supprimer cette tâche? Les candidats seront remboursés.')) return;
     setProcessing(true);
     try {
       await api.deleteJob(job.id);
@@ -81,6 +90,31 @@ export function JobDetail() {
         ? (err.response?.data as { message?: string })?.message
         : undefined;
       addToast(msg ?? 'Impossible de supprimer la tâche', 'error');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!job) return;
+    const msg = job.status === 'pending'
+      ? 'Supprimer cette tâche? Les candidats seront remboursés.'
+      : 'Annuler cette tâche? Remboursement du crédit au travailleur si plus de 24 h avant la date prévue.';
+    if (!window.confirm(msg)) return;
+    setProcessing(true);
+    try {
+      if (job.status === 'pending') {
+        await api.deleteJob(job.id);
+      } else {
+        await api.cancelJob(job.id);
+      }
+      addToast('Tâche annulée', 'success');
+      navigate('/jobs');
+    } catch (err) {
+      const errMsg = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string })?.message
+        : undefined;
+      addToast(errMsg ?? 'Impossible d\'annuler', 'error');
     } finally {
       setProcessing(false);
     }
@@ -101,7 +135,8 @@ export function JobDetail() {
 
   const isJobOwner = job.clientId === profile?.id;
   const showTaskerActions = canTask && !isJobOwner;
-  const canAccept = showTaskerActions && job.status === 'pending' && (creditBalance ?? 0) > 0;
+  const hasApplied = job.myApplicationStatus === 'pending';
+  const canApply = showTaskerActions && job.status === 'pending' && !hasApplied && (creditBalance ?? 0) > 0;
 
   return (
     <div className="leather" style={{ minHeight: '100vh' }}>
@@ -110,7 +145,7 @@ export function JobDetail() {
           <ArrowLeft className="w-4 h-4" /> Retour aux tâches
         </Link>
 
-        <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 24 }}>
+        <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 24, marginBottom: 20 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div className="svc-icon" style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -140,9 +175,15 @@ export function JobDetail() {
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><DollarSign className="w-4 h-4" /><span className="cream-hi" style={{ fontWeight: 700 }}>{formatPrice(job.estimatedPrice)}</span></span>
           </div>
 
-          {job.contactRedacted && showTaskerActions && (
+          {job.contactRedacted && showTaskerActions && !hasApplied && (
             <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 20, fontStyle: 'italic' }}>
-              Contact et adresse masqués sur le tableau. Acceptez la tâche pour contacter le client; l&apos;adresse exacte apparaît au démarrage.
+              Contact et adresse masqués. Postulez pour être considéré; le client choisira un travailleur.
+            </p>
+          )}
+
+          {hasApplied && (
+            <p className="body-f" style={{ fontSize: 13, marginBottom: 20, color: '#D9A441' }}>
+              Candidature envoyée — en attente du choix du client.
             </p>
           )}
 
@@ -174,15 +215,39 @@ export function JobDetail() {
             </Link>
             )}
 
-            {showTaskerActions && job.status === 'pending' && (
+            {canApply && (
               <>
-                <button onClick={() => runAction(() => api.acceptJob(job.id).then(), 'Job accepté!')} disabled={processing || !canAccept} className="gold-btn" style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, opacity: canAccept ? 1 : 0.5 }}>
-                  <Check className="w-4 h-4" /> Accepter
+                <textarea
+                  className="q-field"
+                  value={applyMessage}
+                  onChange={(e) => setApplyMessage(e.target.value)}
+                  placeholder="Message optionnel au client…"
+                  rows={2}
+                  style={{ width: '100%', marginBottom: 8, resize: 'vertical' }}
+                />
+                <button
+                  onClick={() => runAction(() => api.applyToJob(job.id, applyMessage || undefined).then(), 'Candidature envoyée!')}
+                  disabled={processing}
+                  className="gold-btn"
+                  style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Check className="w-4 h-4" /> Postuler (1 crédit)
                 </button>
-                {!canAccept && (
+                {(creditBalance ?? 0) <= 0 && (
                   <Link to="/credits" className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none' }}>Acheter des crédits</Link>
                 )}
               </>
+            )}
+
+            {hasApplied && (
+              <button
+                onClick={() => runAction(() => api.withdrawApplication(job.id).then(), 'Candidature retirée')}
+                disabled={processing}
+                className="ghost-btn"
+                style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)' }}
+              >
+                <X className="w-4 h-4" /> Retirer ma candidature
+              </button>
             )}
 
             {showTaskerActions && job.status === 'accepted' && (
@@ -216,7 +281,11 @@ export function JobDetail() {
 
             {isJobOwner && job.status === 'pending' && (
               <>
-                <span className="body-f muted2" style={{ fontSize: 14 }}>En attente d'un travailleur</span>
+                <span className="body-f muted2" style={{ fontSize: 14 }}>
+                  {(job.pendingApplicationCount ?? applications.length) > 0
+                    ? `${job.pendingApplicationCount ?? applications.length} candidature(s) en attente`
+                    : 'En attente de candidatures'}
+                </span>
                 <button
                   type="button"
                   onClick={handleDelete}
@@ -228,8 +297,47 @@ export function JobDetail() {
                 </button>
               </>
             )}
+
+            {isJobOwner && (job.status === 'accepted' || job.status === 'in_progress') && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={processing}
+                className="ghost-btn"
+                style={{ padding: '6px 12px', fontSize: 13, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)' }}
+              >
+                Annuler la tâche
+              </button>
+            )}
           </div>
         </div>
+
+        {isJobOwner && isClientMode && job.status === 'pending' && applications.length > 0 && (
+          <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 24 }}>
+            <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>
+              Candidatures ({applications.length})
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {applications.map((app) => (
+                <TaskerCard
+                  key={app.id}
+                  tasker={{ ...app.tasker, message: app.message }}
+                  action={
+                    <button
+                      type="button"
+                      disabled={processing}
+                      onClick={() => runAction(() => api.selectTasker(job.id, app.taskerId).then(), 'Travailleur choisi!')}
+                      className="gold-btn"
+                      style={{ padding: '8px 14px', fontSize: 13 }}
+                    >
+                      Choisir
+                    </button>
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {showReview && (

@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { SERVICE_TYPE_LABELS, type ServiceType } from '../types';
+import { SERVICE_TYPE_LABELS, type ServiceType, type PriceGuideRange } from '../types';
 import { geocodeQuebecAddress } from '../utils/geocode';
 
 // Curated subset for client posting UI — covers 90% of demand without overwhelming the user
@@ -44,7 +44,8 @@ const T = {
     errPrice: 'Veuillez entrer un budget valide.',
     errGeneric: 'Une erreur est survenue lors de la publication.',
     success: 'Job publiée avec succès !',
-    privacyNote: 'Sur le tableau des jobs, seuls la ville et le secteur sont visibles. Quand un travailleur accepte, il voit votre nom et téléphone. L\'adresse exacte n\'est partagée qu\'au démarrage du travail.',
+    privacyNote: 'Sur le tableau des jobs, seuls la ville et le secteur sont visibles. Vous choisissez le travailleur parmi les candidats. Contact débloqué à la sélection; adresse exacte au démarrage.',
+    priceGuide: 'Fourchette typique pour ce service',
   },
   en: {
     title: 'Post a Job',
@@ -63,7 +64,8 @@ const T = {
     errPrice: 'Please enter a valid budget.',
     errGeneric: 'An error occurred while posting.',
     success: 'Job posted successfully!',
-    privacyNote: 'On the job board, only city and area are shown. When a tasker accepts, they see your name and phone. The exact address is shared only when they start the job.',
+    privacyNote: 'On the job board, only city and area are shown. You choose the tasker from applicants. Contact unlocks on selection; exact address when they start.',
+    priceGuide: 'Typical range for this service',
   },
 };
 
@@ -83,8 +85,17 @@ export function PostJob() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [posted, setPosted] = useState(false);
+  const [priceGuide, setPriceGuide] = useState<PriceGuideRange | null>(null);
   const navigate = useNavigate();
   const t = T[lang];
+
+  useEffect(() => {
+    if (step === 3 && formData.serviceType) {
+      api.getPriceGuides(formData.city || undefined)
+        .then((guides) => setPriceGuide(guides[formData.serviceType] ?? guides.autre ?? null))
+        .catch(() => setPriceGuide(null));
+    }
+  }, [step, formData.serviceType, formData.city]);
 
   const validateStep1 = () => {
     if (!formData.serviceType) { setError(t.errSvc); return false; }
@@ -275,6 +286,12 @@ export function PostJob() {
 
             {step === 3 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {priceGuide && (
+                  <p className="body-f muted" style={{ fontSize: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(184,123,68,0.1)', border: '1px dashed rgba(217,179,140,0.25)' }}>
+                    {t.priceGuide}: <strong className="cream-hi">{priceGuide.min}–{priceGuide.max} $</strong>
+                    {priceGuide.unit === 'hour' ? '/h' : ''}
+                  </p>
+                )}
                 <div>
                   <label className="q-label">{t.price}</label>
                   <input className="q-field" type="number" value={formData.estimatedPrice} onChange={(e) => setFormData({ ...formData, estimatedPrice: e.target.value })} placeholder="150" required min="1" />

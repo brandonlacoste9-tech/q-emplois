@@ -92,11 +92,16 @@ export class CreditsService {
     });
   }
 
-  async spendCredit(userId: string, taskId: string, description: string) {
+  async spendCredit(
+    userId: string,
+    taskId: string,
+    description: string,
+    type: CreditTransactionType = CreditTransactionType.claim,
+  ) {
     const wallet = await this.ensureWallet(userId);
     if (wallet.balance < 1) {
       throw new BadRequestException(
-        'Crédits insuffisants. Achetez un pack pour réclamer des tâches.',
+        'Crédits insuffisants. Achetez un pack pour postuler à des tâches.',
       );
     }
 
@@ -109,7 +114,26 @@ export class CreditsService {
         data: {
           walletId: wallet.id,
           amount: -1,
-          type: CreditTransactionType.claim,
+          type,
+          description,
+          taskId,
+        },
+      }),
+    ]);
+  }
+
+  async refundCredit(userId: string, taskId: string, description: string) {
+    const wallet = await this.ensureWallet(userId);
+    await this.prisma.$transaction([
+      this.prisma.creditWallet.update({
+        where: { id: wallet.id },
+        data: { balance: { increment: 1 } },
+      }),
+      this.prisma.creditTransaction.create({
+        data: {
+          walletId: wallet.id,
+          amount: 1,
+          type: CreditTransactionType.refund,
           description,
           taskId,
         },

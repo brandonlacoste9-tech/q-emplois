@@ -8,6 +8,7 @@ export interface UpsertProviderDto {
   hourlyRate?: number;
   serviceRadiusKm?: number;
   licenseNumber?: string;
+  licenseDocumentUrl?: string;
   locationAddress?: string;
   locationLat?: number;
   locationLng?: number;
@@ -42,6 +43,7 @@ export class ProvidersService {
         hourlyRate: dto.hourlyRate,
         serviceRadiusKm: dto.serviceRadiusKm ?? 25,
         licenseNumber: dto.licenseNumber,
+        licenseDocumentUrl: dto.licenseDocumentUrl,
         locationAddress: dto.locationAddress,
         locationLat,
         locationLng,
@@ -51,6 +53,7 @@ export class ProvidersService {
         hourlyRate: dto.hourlyRate,
         serviceRadiusKm: dto.serviceRadiusKm,
         licenseNumber: dto.licenseNumber,
+        licenseDocumentUrl: dto.licenseDocumentUrl,
         locationAddress: dto.locationAddress,
         locationLat,
         locationLng,
@@ -94,5 +97,35 @@ export class ProvidersService {
       },
       take: 20,
     });
+  }
+
+  async getPublicProfile(userId: string) {
+    const provider = await this.prisma.provider.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+    if (!provider) throw new NotFoundException('Profil prestataire non trouvé.');
+
+    return {
+      id: provider.user.id,
+      firstName: provider.user.firstName,
+      lastName: provider.user.lastName,
+      serviceTypes: provider.serviceTypes,
+      rating: provider.rating,
+      reviewCount: provider.reviewCount,
+      isVerified: provider.isVerified,
+      hourlyRate: provider.hourlyRate ? Number(provider.hourlyRate) : undefined,
+      city: provider.locationAddress,
+      memberSince: provider.user.createdAt.toISOString(),
+    };
   }
 }

@@ -8,7 +8,8 @@ import type {
   Message, 
   Notification,
   DashboardStats,
-  ServiceType 
+  ServiceType,
+  PriceGuideRange,
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
@@ -93,6 +94,10 @@ class ApiService {
     await this.client.post('/auth/forgot-password', { email });
   }
 
+  async resetPassword(token: string, password: string): Promise<void> {
+    await this.client.post('/auth/reset-password', { token, password });
+  }
+
   async getProfile(): Promise<TradesmanProfile> {
     const response = await this.client.get('/profile');
     return response.data;
@@ -108,6 +113,7 @@ class ApiService {
     hourlyRate?: number;
     serviceRadiusKm?: number;
     licenseNumber?: string;
+    licenseDocumentUrl?: string;
     locationAddress?: string;
     locationLat?: number;
     locationLng?: number;
@@ -173,6 +179,40 @@ class ApiService {
 
   async acceptJob(id: string): Promise<Job> {
     const response = await this.client.post(`/jobs/${id}/accept`);
+    return response.data;
+  }
+
+  async applyToJob(id: string, message?: string): Promise<Job> {
+    const response = await this.client.post(`/jobs/${id}/apply`, { message });
+    return response.data;
+  }
+
+  async getJobApplications(jobId: string) {
+    const response = await this.client.get(`/jobs/${jobId}/applications`);
+    return response.data;
+  }
+
+  async selectTasker(jobId: string, taskerId: string): Promise<Job> {
+    const response = await this.client.post(`/jobs/${jobId}/select/${taskerId}`);
+    return response.data;
+  }
+
+  async withdrawApplication(jobId: string): Promise<void> {
+    await this.client.post(`/jobs/${jobId}/applications/withdraw`);
+  }
+
+  async cancelJob(id: string): Promise<Job> {
+    const response = await this.client.post(`/jobs/${id}/cancel`);
+    return response.data;
+  }
+
+  async getPriceGuides(city?: string): Promise<Record<string, PriceGuideRange>> {
+    const response = await this.client.get('/jobs/guides/prices', { params: city ? { city } : {} });
+    return response.data;
+  }
+
+  async getPublicTaskerProfile(userId: string) {
+    const response = await this.client.get(`/providers/${userId}/public`);
     return response.data;
   }
 

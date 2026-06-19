@@ -10,6 +10,8 @@ import {
   RefreshTokenDto,
   LinkTelegramDto,
   LinkWhatsappDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
   AuthResponseDto,
 } from './dto/auth.dto';
 
@@ -68,6 +70,20 @@ export class AuthController {
   async logout(@CurrentUser('userId') userId: string): Promise<{ message: string }> {
     await this.authService.logout(userId);
     return { message: 'Déconnexion réussie' };
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Demander une réinitialisation de mot de passe' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Réinitialiser le mot de passe' })
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+    return this.authService.resetPassword(dto);
   }
 
   @Post('telegram/link')

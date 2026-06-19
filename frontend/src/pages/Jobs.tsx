@@ -5,10 +5,10 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { ReviewModal } from '../components/ReviewModal';
-import type { Job, JobStatus, ServiceType } from '../types';
+import type { Job, JobStatus, ServiceType, PriceGuideRange } from '../types';
 import { SERVICE_TYPE_LABELS, JOB_STATUS_LABELS } from '../types';
 import {
-  MapPin, Calendar, Clock, DollarSign, Check, X, Filter, Briefcase, Loader2, Play, Coins, Trash2,
+  MapPin, Calendar, Clock, DollarSign, Check, Filter, Briefcase, Loader2, Play, Coins, Trash2,
 } from 'lucide-react';
 import { formatPrice, formatDate, formatDuration, formatJobLocation } from '../utils';
 
@@ -54,7 +54,12 @@ export function Jobs() {
   const [processingJob, setProcessingJob] = useState<string | null>(null);
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const [reviewJob, setReviewJob] = useState<Job | null>(null);
+  const [priceGuides, setPriceGuides] = useState<Record<string, PriceGuideRange>>({});
   const { addToast } = useToast();
+
+  useEffect(() => {
+    api.getPriceGuides().then(setPriceGuides).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     setActiveTab(isClientMode ? 'all' : 'pending');
@@ -102,8 +107,8 @@ export function Jobs() {
     }
     setProcessingJob(jobId);
     try {
-      await api.acceptJob(jobId);
-      addToast('Job accepté avec succès!', 'success');
+      await api.applyToJob(jobId);
+      addToast('Candidature envoyée!', 'success');
       const bal = await api.getCreditBalance();
       setCreditBalance(bal.balance);
       loadJobs();
@@ -114,7 +119,7 @@ export function Jobs() {
       if (msg?.includes('Crédits insuffisants')) {
         addToast('Crédits insuffisants', 'error');
       } else {
-        addToast("Erreur lors de l'acceptation", 'error');
+        addToast("Erreur lors de la candidature", 'error');
       }
     } finally {
       setProcessingJob(null);
@@ -270,7 +275,8 @@ export function Jobs() {
                 onDelete={handleDelete}
                 onReview={() => setReviewJob(job)}
                 isProcessing={processingJob === job.id}
-                canAccept={!isClient && (creditBalance ?? 0) > 0}
+                canApply={!isClient && (creditBalance ?? 0) > 0 && job.myApplicationStatus !== 'pending'}
+                priceGuide={priceGuides[job.serviceType] ?? priceGuides.autre}
                 canDelete={isClient && job.status === 'pending' && job.clientId === profile?.id}
               />
             ))}
@@ -300,11 +306,12 @@ interface JobCardProps {
   onDelete: (id: string) => void;
   onReview: () => void;
   isProcessing: boolean;
-  canAccept: boolean;
+  canApply: boolean;
   canDelete: boolean;
+  priceGuide?: PriceGuideRange;
 }
 
-function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDelete, onReview, isProcessing, canAccept, canDelete }: JobCardProps) {
+function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onReview, isProcessing, canApply, canDelete, priceGuide }: JobCardProps) {
   const statusColors: Record<JobStatus, string> = {
     pending: '#D9A441', accepted: '#7FB069', in_progress: '#6BA3C4',
     completed: '#9A8468', cancelled: '#C46B6B', declined: '#C46B6B',
@@ -353,7 +360,13 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDe
 
       {!isClient && job.contactRedacted && job.status === 'pending' && (
         <p className="body-f muted2" style={{ fontSize: 12, marginBottom: 14, fontStyle: 'italic' }}>
-          Contact et adresse révélés après acceptation; adresse exacte au démarrage.
+          Postulez pour être considéré; le client choisira un travailleur.
+        </p>
+      )}
+
+      {job.myApplicationStatus === 'pending' && (
+        <p className="body-f" style={{ fontSize: 12, marginBottom: 14, color: '#D9A441' }}>
+          Candidature envoyée
         </p>
       )}
 
@@ -366,22 +379,24 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDe
       <p className="body-f muted" style={{ fontSize: 14, marginBottom: 16, flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
         {job.description}
       </p>
+      {!isClient && job.status === 'pending' && priceGuide && (
+        <p className="body-f muted2" style={{ fontSize: 12, marginBottom: 12 }}>
+          Fourchette typique: {priceGuide.min}–{priceGuide.max} ${priceGuide.unit === 'hour' ? '/h' : ''}
+        </p>
+      )}
       </Link>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 'auto', flexWrap: 'wrap' }}>
-        {!isClient && job.status === 'pending' && (
+        {!isClient && job.status === 'pending' && job.myApplicationStatus !== 'pending' && (
           <>
-            <button onClick={() => onAccept(job.id)} disabled={isProcessing || !canAccept} className="gold-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: canAccept ? 1 : 0.5 }}>
-              <Check className="w-4 h-4" /> Accepter
+            <button onClick={() => onAccept(job.id)} disabled={isProcessing || !canApply} className="gold-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: canApply ? 1 : 0.5 }}>
+              <Check className="w-4 h-4" /> Postuler
             </button>
-            {!canAccept && (
+            {!canApply && (
               <Link to="/credits" className="ghost-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}>
                 Acheter crédits
               </Link>
             )}
-            <button onClick={() => onDecline(job.id)} disabled={isProcessing} className="ghost-btn" style={{ flex: 1, minWidth: 100, padding: '8px', fontSize: 14 }}>
-              <X className="w-4 h-4" /> Refuser
-            </button>
           </>
         )}
         {!isClient && job.status === 'accepted' && (
@@ -406,7 +421,11 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDe
         )}
         {canDelete && (
           <>
-            <span className="body-f muted2" style={{ fontSize: 12, flex: 1, textAlign: 'center' }}>En attente d'un travailleur</span>
+            <span className="body-f muted2" style={{ fontSize: 12, flex: 1, textAlign: 'center' }}>
+              {(job.pendingApplicationCount ?? 0) > 0
+                ? `${job.pendingApplicationCount} candidature(s) en attente`
+                : 'En attente de candidatures'}
+            </span>
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(job.id); }}
@@ -421,7 +440,11 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDe
           </>
         )}
         {isClient && job.status === 'pending' && !canDelete && (
-          <span className="body-f muted2" style={{ fontSize: 12, width: '100%', textAlign: 'center' }}>En attente d'un travailleur</span>
+          <span className="body-f muted2" style={{ fontSize: 12, width: '100%', textAlign: 'center' }}>
+            {(job.pendingApplicationCount ?? 0) > 0
+              ? `${job.pendingApplicationCount} candidature(s) en attente`
+              : 'En attente de candidatures'}
+          </span>
         )}
       </div>
     </div>

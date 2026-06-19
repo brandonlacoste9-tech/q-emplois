@@ -8,24 +8,24 @@ type Lang = 'fr' | 'en';
 const T = {
   fr: {
     h1: "Le marché de services local",
-    sub: "De l'aide près de chez vous : déneigement, déménagement, montage de meubles et entraide de voisin à voisin. Des Québécois vérifiés, un prix clair et un paiement sécurisé — avant de réserver.",
+    sub: "De l'aide près de chez vous : déneigement, déménagement, montage de meubles et entraide de voisin à voisin. Travailleurs vérifiés, prix clairs et vie privée renforcée.",
     findCta: "Trouver un pro",
     postCta: "Offrir mes services",
     cards: [
-      { t: "Travailleurs vérifiés", d: "Identité confirmée, avis réels et secteur desservi affichés avant de réserver." },
-      { t: "Paiement en fiducie", d: "Votre paiement est retenu en sécurité (Stripe) jusqu'à la fin du travail." },
-      { t: "Prix clair d'avance", d: "Total, frais et taxes affichés avant de confirmer — aucune surprise." },
+      { t: "Travailleurs vérifiés", d: "Identité confirmée, avis réels et badge vérifié sur les candidatures." },
+      { t: "Vous choisissez", d: "Plusieurs travailleurs postulent; vous sélectionnez celui qui vous convient." },
+      { t: "Prix clair d'avance", d: "Fourchettes typiques et budget affichés avant de publier." },
     ],
   },
   en: {
     h1: "The local services marketplace",
-    sub: "Trusted help near you: snow removal, moving, furniture assembly and neighbor-to-neighbor help. Verified Quebecers, a clear price and secure payment — before you book.",
+    sub: "Trusted help near you: snow removal, moving, furniture assembly and neighbor-to-neighbor help. Verified taskers, clear pricing and stronger privacy.",
     findCta: "Find a pro",
     postCta: "Offer my services",
     cards: [
-      { t: "Verified workers", d: "Confirmed identity, real reviews and service area shown before you book." },
-      { t: "Payment in escrow", d: "Your payment is held securely (Stripe) until the job is done." },
-      { t: "Clear price upfront", d: "Total, fees and taxes shown before you confirm — no surprises." },
+      { t: "Verified workers", d: "Confirmed identity, real reviews and verified badge on applicants." },
+      { t: "You choose", d: "Multiple taskers apply; you pick the one that fits." },
+      { t: "Clear price upfront", d: "Typical ranges and budget shown before you post." },
     ],
   },
 };

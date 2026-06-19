@@ -86,6 +86,24 @@ export class LinkWhatsappDto {
   whatsappId: string;
 }
 
+export class ForgotPasswordDto {
+  @ApiProperty({ example: 'jean.dupont@email.com' })
+  @IsEmail({}, { message: 'Veuillez fournir une adresse email valide.' })
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty()
+  @IsString()
+  token: string;
+
+  @ApiProperty({ minLength: 8 })
+  @IsString()
+  @MinLength(8, { message: 'Le mot de passe doit contenir au moins 8 caractères.' })
+  @MaxLength(100)
+  password: string;
+}
+
 export class AuthResponseDto {
   @ApiProperty()
   accessToken: string;

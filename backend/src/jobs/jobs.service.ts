@@ -10,8 +10,9 @@ import { CreditsService } from '../credits/credits.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { publicPostalSector, sanitizePublicDescription } from '../common/utils/privacy';
-import { CreateTaskDto, DeclineTaskDto } from './dto/job.dto';
-import { TaskStatus } from '@prisma/client';
+import { CreateTaskDto, DeclineTaskDto, ApplyTaskDto } from './dto/job.dto';
+import { TaskStatus, TaskApplicationStatus, CreditTransactionType } from '@prisma/client';
+import { getPriceGuide, getAllPriceGuides } from '../common/constants/price-guides';
 
 @Injectable()
 export class JobsService {
@@ -90,6 +91,14 @@ export class JobsService {
       ? [task.client?.firstName, task.client?.lastName].filter(Boolean).join(' ') || 'Client'
       : 'Client';
 
+    const applications = task.applications ?? [];
+    const pendingApplicationCount = applications.filter(
+      (a: { status: string }) => a.status === TaskApplicationStatus.pending,
+    ).length;
+    const myApplication = applications.find(
+      (a: { taskerId: string }) => a.taskerId === viewerUserId,
+    );
+
     return {
       id: task.id,
       clientId: task.clientId,
@@ -119,6 +128,8 @@ export class JobsService {
       distance: this.computeDistance(task, provider),
       contactRedacted: !revealContact,
       addressRedacted: !revealAddress,
+      pendingApplicationCount,
+      myApplicationStatus: myApplication?.status ?? null,
     };
   }
 
@@ -176,6 +187,9 @@ export class JobsService {
           },
       include: {
         client: { select: { firstName: true, lastName: true, phone: true } },
+        applications: {
+          select: { id: true, status: true, taskerId: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -221,6 +235,9 @@ export class JobsService {
       where: { id },
       include: {
         client: { select: { firstName: true, lastName: true, phone: true } },
+        applications: {
+          select: { id: true, status: true, taskerId: true },
+        },
       },
     });
     if (!task) throw new NotFoundException('Tâche non trouvée.');
@@ -262,6 +279,9 @@ export class JobsService {
       },
       include: {
         client: { select: { firstName: true, lastName: true, phone: true } },
+        applications: {
+          select: { id: true, status: true, taskerId: true },
+        },
       },
     });
 
@@ -275,7 +295,7 @@ export class JobsService {
     return this.mapTask(task, undefined, clientId);
   }
 
-  async claim(taskId: string, taskerId: string) {
+  async claim(taskId: string, taskerId: string, skipCreditSpend = false) {
     const task = await this.prisma.task.findUnique({ where: { id: taskId } });
     if (!task) throw new NotFoundException('Tâche non trouvée.');
     if (task.status !== TaskStatus.open) {
@@ -285,7 +305,14 @@ export class JobsService {
       throw new BadRequestException('Vous ne pouvez pas réclamer votre propre tâche.');
     }
 
-    await this.creditsService.spendCredit(taskerId, taskId, 'Réclamation de tâche');
+    if (!skipCreditSpend) {
+      await this.creditsService.spendCredit(
+        taskerId,
+        taskId,
+        'Réclamation de tâche',
+        CreditTransactionType.claim,
+      );
+    }
 
     const updated = await this.prisma.task.update({
       where: { id: taskId },
@@ -296,6 +323,9 @@ export class JobsService {
       },
       include: {
         client: { select: { firstName: true, lastName: true, phone: true } },
+        applications: {
+          select: { id: true, status: true, taskerId: true },
+        },
       },
     });
 
@@ -331,8 +361,8 @@ export class JobsService {
     await this.notificationsService.create(
       task.clientId,
       'job_accepted',
-      'Tâche acceptée',
-      `${tasker?.firstName ?? 'Un travailleur'} a accepté « ${task.title} ». Votre nom et téléphone lui sont visibles; l'adresse exacte s'affichera au démarrage du travail.`,
+      'Travailleur choisi',
+      `${tasker?.firstName ?? 'Un travailleur'} a été choisi pour « ${task.title} ». Votre nom et téléphone lui sont visibles; l'adresse exacte s'affichera au démarrage du travail.`,
       { taskId },
     );
 
@@ -340,15 +370,276 @@ export class JobsService {
       taskerId,
       'job_accepted',
       'Contact débloqué',
-      `Vous avez accepté « ${task.title} ». Vous pouvez contacter le client; l'adresse exacte sera visible lorsque vous démarrez le job.`,
+      `Vous avez été choisi pour « ${task.title} ». Vous pouvez contacter le client; l'adresse exacte sera visible lorsque vous démarrez le job.`,
       { taskId },
     );
 
     return this.mapTask(updated, undefined, taskerId);
   }
 
+  async apply(taskId: string, taskerId: string, dto: ApplyTaskDto) {
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) throw new NotFoundException('Tâche non trouvée.');
+    if (task.status !== TaskStatus.open) {
+      throw new BadRequestException('Cette tâche n\'accepte plus de candidatures.');
+    }
+    if (task.clientId === taskerId) {
+      throw new BadRequestException('Vous ne pouvez pas postuler à votre propre tâche.');
+    }
+
+    const existing = await this.prisma.taskApplication.findUnique({
+      where: { taskId_taskerId: { taskId, taskerId } },
+    });
+    if (existing?.status === TaskApplicationStatus.pending) {
+      throw new BadRequestException('Vous avez déjà postulé à cette tâche.');
+    }
+    if (existing?.status === TaskApplicationStatus.selected) {
+      throw new BadRequestException('Vous avez déjà été choisi pour cette tâche.');
+    }
+
+    await this.creditsService.spendCredit(
+      taskerId,
+      taskId,
+      'Candidature à une tâche',
+      CreditTransactionType.apply,
+    );
+
+    if (existing) {
+      await this.prisma.taskApplication.update({
+        where: { id: existing.id },
+        data: { status: TaskApplicationStatus.pending, message: dto.message },
+      });
+    } else {
+      await this.prisma.taskApplication.create({
+        data: {
+          taskId,
+          taskerId,
+          message: dto.message,
+          status: TaskApplicationStatus.pending,
+        },
+      });
+    }
+
+    const tasker = await this.prisma.user.findUnique({
+      where: { id: taskerId },
+      select: { firstName: true, lastName: true },
+    });
+
+    await this.notificationsService.create(
+      task.clientId,
+      'job_application',
+      'Nouvelle candidature',
+      `${tasker?.firstName ?? 'Un travailleur'} a postulé pour « ${task.title} ».`,
+      { taskId, taskerId },
+    );
+
+    await this.auditService.log({
+      userId: taskerId,
+      action: 'task_applied',
+      resource: 'task',
+      resourceId: taskId,
+    });
+
+    return this.getById(taskId, taskerId);
+  }
+
+  async listApplications(taskId: string, clientId: string) {
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) throw new NotFoundException('Tâche non trouvée.');
+    if (task.clientId !== clientId) {
+      throw new ForbiddenException('Seul le client peut voir les candidatures.');
+    }
+
+    const applications = await this.prisma.taskApplication.findMany({
+      where: { taskId, status: TaskApplicationStatus.pending },
+      include: {
+        tasker: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            provider: {
+              select: {
+                serviceTypes: true,
+                rating: true,
+                reviewCount: true,
+                isVerified: true,
+                hourlyRate: true,
+                locationAddress: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return applications.map((app) => ({
+      id: app.id,
+      taskerId: app.taskerId,
+      message: app.message,
+      status: app.status,
+      createdAt: app.createdAt.toISOString(),
+      tasker: {
+        id: app.tasker.id,
+        firstName: app.tasker.firstName,
+        lastName: app.tasker.lastName,
+        serviceTypes: app.tasker.provider?.serviceTypes ?? [],
+        rating: app.tasker.provider?.rating ?? 0,
+        reviewCount: app.tasker.provider?.reviewCount ?? 0,
+        isVerified: app.tasker.provider?.isVerified ?? false,
+        hourlyRate: app.tasker.provider?.hourlyRate
+          ? Number(app.tasker.provider.hourlyRate)
+          : undefined,
+        city: app.tasker.provider?.locationAddress,
+      },
+    }));
+  }
+
+  async selectTasker(taskId: string, clientId: string, taskerId: string) {
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) throw new NotFoundException('Tâche non trouvée.');
+    if (task.clientId !== clientId) {
+      throw new ForbiddenException('Seul le client peut choisir un travailleur.');
+    }
+    if (task.status !== TaskStatus.open) {
+      throw new BadRequestException('Cette tâche n\'accepte plus de candidatures.');
+    }
+
+    const application = await this.prisma.taskApplication.findUnique({
+      where: { taskId_taskerId: { taskId, taskerId } },
+    });
+    if (!application || application.status !== TaskApplicationStatus.pending) {
+      throw new BadRequestException('Candidature non trouvée ou déjà traitée.');
+    }
+
+    const otherPending = await this.prisma.taskApplication.findMany({
+      where: {
+        taskId,
+        status: TaskApplicationStatus.pending,
+        taskerId: { not: taskerId },
+      },
+    });
+
+    for (const other of otherPending) {
+      await this.prisma.taskApplication.update({
+        where: { id: other.id },
+        data: { status: TaskApplicationStatus.rejected },
+      });
+      await this.creditsService.refundCredit(
+        other.taskerId,
+        taskId,
+        'Candidature non retenue — remboursement',
+      );
+      await this.notificationsService.create(
+        other.taskerId,
+        'job_application_rejected',
+        'Candidature non retenue',
+        `Le client a choisi un autre travailleur pour « ${task.title} ». Votre crédit a été remboursé.`,
+        { taskId },
+      );
+    }
+
+    await this.prisma.taskApplication.update({
+      where: { id: application.id },
+      data: { status: TaskApplicationStatus.selected },
+    });
+
+    return this.claim(taskId, taskerId, true);
+  }
+
+  async withdrawApplication(taskId: string, taskerId: string) {
+    const application = await this.prisma.taskApplication.findUnique({
+      where: { taskId_taskerId: { taskId, taskerId } },
+      include: { task: true },
+    });
+    if (!application) throw new NotFoundException('Candidature non trouvée.');
+    if (application.status !== TaskApplicationStatus.pending) {
+      throw new BadRequestException('Cette candidature ne peut plus être retirée.');
+    }
+
+    await this.prisma.taskApplication.update({
+      where: { id: application.id },
+      data: { status: TaskApplicationStatus.withdrawn },
+    });
+
+    await this.creditsService.refundCredit(
+      taskerId,
+      taskId,
+      'Candidature retirée — remboursement',
+    );
+
+    return { success: true };
+  }
+
+  private hoursUntilScheduled(scheduledDate?: Date | null): number | null {
+    if (!scheduledDate) return null;
+    return (scheduledDate.getTime() - Date.now()) / (1000 * 60 * 60);
+  }
+
+  async cancel(taskId: string, clientId: string) {
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) throw new NotFoundException('Tâche non trouvée.');
+    if (task.clientId !== clientId) {
+      throw new ForbiddenException('Seul le client peut annuler cette tâche.');
+    }
+
+    if (task.status === TaskStatus.open) {
+      return this.remove(taskId, clientId);
+    }
+
+    if (task.status !== TaskStatus.claimed && task.status !== TaskStatus.in_progress) {
+      throw new BadRequestException('Cette tâche ne peut pas être annulée.');
+    }
+
+    const hoursLeft = this.hoursUntilScheduled(task.scheduledDate);
+    const refundCredit = hoursLeft === null || hoursLeft >= 24;
+
+    if (task.taskerId && refundCredit) {
+      await this.creditsService.refundCredit(
+        task.taskerId,
+        taskId,
+        'Annulation client (24h+) — remboursement',
+      );
+    }
+
+    const updated = await this.prisma.task.update({
+      where: { id: taskId },
+      data: {
+        status: TaskStatus.cancelled,
+        cancelledAt: new Date(),
+      },
+      include: {
+        client: { select: { firstName: true, lastName: true, phone: true } },
+        applications: { select: { id: true, status: true, taskerId: true } },
+      },
+    });
+
+    if (task.taskerId) {
+      await this.notificationsService.create(
+        task.taskerId,
+        'job_cancelled',
+        'Tâche annulée',
+        refundCredit
+          ? `« ${task.title} » a été annulée par le client. Votre crédit a été remboursé.`
+          : `« ${task.title} » a été annulée par le client (moins de 24 h). Aucun remboursement de crédit.`,
+        { taskId },
+      );
+    }
+
+    await this.auditService.log({
+      userId: clientId,
+      action: 'task_cancelled',
+      resource: 'task',
+      resourceId: taskId,
+      details: { refundCredit },
+    });
+
+    return this.mapTask(updated, undefined, clientId);
+  }
+
   async accept(taskId: string, taskerId: string) {
-    return this.claim(taskId, taskerId);
+    return this.apply(taskId, taskerId, {});
   }
 
   async decline(taskId: string, taskerId: string, dto: DeclineTaskDto) {
@@ -366,6 +657,9 @@ export class JobsService {
       },
       include: {
         client: { select: { firstName: true, lastName: true, phone: true } },
+        applications: {
+          select: { id: true, status: true, taskerId: true },
+        },
       },
     });
 
@@ -387,6 +681,9 @@ export class JobsService {
       },
       include: {
         client: { select: { firstName: true, lastName: true, phone: true } },
+        applications: {
+          select: { id: true, status: true, taskerId: true },
+        },
       },
     });
 
@@ -414,6 +711,9 @@ export class JobsService {
       data: { status: TaskStatus.in_progress },
       include: {
         client: { select: { firstName: true, lastName: true, phone: true } },
+        applications: {
+          select: { id: true, status: true, taskerId: true },
+        },
       },
     });
 
@@ -448,6 +748,25 @@ export class JobsService {
       );
     }
 
+    const pendingApplications = await this.prisma.taskApplication.findMany({
+      where: { taskId, status: TaskApplicationStatus.pending },
+    });
+
+    for (const app of pendingApplications) {
+      await this.creditsService.refundCredit(
+        app.taskerId,
+        taskId,
+        'Tâche supprimée — remboursement candidature',
+      );
+      await this.notificationsService.create(
+        app.taskerId,
+        'job_deleted',
+        'Tâche retirée',
+        `« ${task.title} » a été supprimée par le client. Votre crédit a été remboursé.`,
+        { taskId },
+      );
+    }
+
     await this.prisma.task.delete({ where: { id: taskId } });
 
     await this.auditService.log({
@@ -458,5 +777,13 @@ export class JobsService {
     });
 
     return { success: true };
+  }
+
+  getPriceGuides(city?: string) {
+    return getAllPriceGuides(city);
+  }
+
+  getPriceGuideForService(serviceType: string, city?: string) {
+    return getPriceGuide(serviceType, city);
   }
 }

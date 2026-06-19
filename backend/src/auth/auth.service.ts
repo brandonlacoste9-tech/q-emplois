@@ -2,10 +2,11 @@ import { Injectable, UnauthorizedException, BadRequestException, ConflictExcepti
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AuditService } from '../common/audit/audit.service';
 import { DataRetentionService } from '../common/services/data-retention.service';
-import { RegisterDto, LoginDto, AuthResponseDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto, AuthResponseDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 import { UserRole, LanguagePreference } from '@prisma/client';
 import { ProvidersService } from '../providers/providers.service';
 
@@ -167,6 +168,68 @@ export class AuthService {
       action: 'logout',
       resource: 'user',
     });
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email.toLowerCase() },
+    });
+
+    if (!user || user.deletedAt) {
+      return { message: 'Si ce courriel existe, un lien de réinitialisation a été envoyé.' };
+    }
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await this.prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
+    await this.prisma.passwordResetToken.create({
+      data: { userId: user.id, tokenHash, expiresAt },
+    });
+
+    const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+    this.logger.log(`Password reset for ${user.email}: ${resetUrl}`);
+
+    await this.auditService.log({
+      userId: user.id,
+      action: 'password_reset_requested',
+      resource: 'user',
+    });
+
+    return { message: 'Si ce courriel existe, un lien de réinitialisation a été envoyé.' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+    const tokenHash = crypto.createHash('sha256').update(dto.token).digest('hex');
+    const record = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+
+    if (!record || record.expiresAt < new Date() || record.user.deletedAt) {
+      throw new BadRequestException('Lien de réinitialisation invalide ou expiré.');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 12);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { passwordHash },
+      }),
+      this.prisma.passwordResetToken.delete({ where: { id: record.id } }),
+    ]);
+
+    await this.auditService.log({
+      userId: record.userId,
+      action: 'password_reset_completed',
+      resource: 'user',
+    });
+
+    return { message: 'Mot de passe mis à jour avec succès.' };
   }
 
   async linkTelegram(userId: string, telegramId: string): Promise<void> {

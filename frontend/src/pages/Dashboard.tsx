@@ -38,8 +38,12 @@ export function Dashboard() {
     const loadDashboard = async () => {
       try {
         if (isClientMode) {
-          const jobsData = await api.getJobs({ perspective: 'mine' });
+          const [jobsData, notificationsData] = await Promise.all([
+            api.getJobs({ perspective: 'mine' }),
+            api.getNotifications(),
+          ]);
           setMyPostedJobs(jobsData.slice(0, 8));
+          setNotifications(notificationsData.slice(0, 5));
         } else {
           const [statsData, notificationsData, jobsData, balance, allJobs] = await Promise.all([
             api.getDashboardStats(),
@@ -113,6 +117,22 @@ export function Dashboard() {
             </div>
           </Link>
 
+          {notifications.length > 0 && (
+            <div className="stitch-box" style={{ ...card, marginBottom: 28 }}>
+              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <Bell className="w-5 h-5" style={{ color: gold }} /> Notifications
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {notifications.map((n) => (
+                  <div key={n.id} style={{ padding: 12, borderRadius: 8, background: 'rgba(15,25,36,0.5)' }}>
+                    <p className="body-f cream-hi" style={{ fontSize: 14, fontWeight: 600 }}>{n.title}</p>
+                    <p className="body-f muted2" style={{ fontSize: 13, marginTop: 4 }}>{n.message}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="stitch-box" style={card}>
             <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>
               Mes tâches publiées
@@ -133,6 +153,9 @@ export function Dashboard() {
                       <h4 className="serif cream-hi" style={{ fontSize: 15, fontWeight: 700 }}>{job.title}</h4>
                       <p className="body-f muted2" style={{ fontSize: 13, marginTop: 4 }}>
                         {job.address.city} · {formatPrice(job.estimatedPrice)}
+                        {job.status === 'pending' && (job.pendingApplicationCount ?? 0) > 0 && (
+                          <> · {job.pendingApplicationCount} candidature{(job.pendingApplicationCount ?? 0) > 1 ? 's' : ''} en attente</>
+                        )}
                       </p>
                     </Link>
                     <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: gold, padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
@@ -189,13 +212,13 @@ export function Dashboard() {
             {
               id: 'credits',
               label: 'Obtenir des crédits',
-              description: '1 crédit = 1 job acceptée',
+              description: '1 crédit = 1 candidature',
               done: creditBalance > 0,
               link: '/credits',
             },
             {
               id: 'job',
-              label: 'Accepter une première job',
+              label: 'Postuler à une première job',
               description: 'Parcourir les tâches disponibles près de chez vous',
               done: hasAcceptedJob,
               link: '/jobs',

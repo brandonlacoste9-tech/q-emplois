@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ProvidersService, UpsertProviderDto } from './providers.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -21,6 +21,12 @@ export class ProvidersController {
   @ApiOperation({ summary: 'Mon profil prestataire' })
   me(@CurrentUser('userId') userId: string) {
     return this.providersService.findByUserId(userId);
+  }
+
+  @Get(':userId/public')
+  @ApiOperation({ summary: 'Profil public d\'un travailleur' })
+  getPublic(@Param('userId') userId: string) {
+    return this.providersService.getPublicProfile(userId);
   }
 
   @Put('me')

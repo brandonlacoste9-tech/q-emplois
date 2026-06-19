@@ -176,6 +176,37 @@ export interface Job {
   distance?: number; // in km
   contactRedacted?: boolean;
   addressRedacted?: boolean;
+  pendingApplicationCount?: number;
+  myApplicationStatus?: string | null;
+}
+
+export interface TaskApplication {
+  id: string;
+  taskerId: string;
+  message?: string | null;
+  status: string;
+  createdAt: string;
+  tasker: TaskerCardData;
+}
+
+export interface TaskerCardData {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  serviceTypes?: ServiceType[];
+  rating?: number;
+  reviewCount?: number;
+  isVerified?: boolean;
+  hourlyRate?: number;
+  city?: string;
+  message?: string | null;
+}
+
+export interface PriceGuideRange {
+  min: number;
+  max: number;
+  unit: 'job' | 'hour';
+  note?: string;
 }
 
 export type JobStatus = 

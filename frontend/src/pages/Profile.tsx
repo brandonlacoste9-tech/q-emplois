@@ -82,6 +82,7 @@ export function Profile() {
           hourlyRate: formData.hourlyRate,
           serviceRadiusKm: formData.serviceRadius,
           licenseNumber: formData.licenseNumber,
+          licenseDocumentUrl: formData.licenseDocument,
           locationAddress: formData.address?.street,
         });
       }
@@ -94,6 +95,21 @@ export function Profile() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      addToast('Fichier trop volumineux (max 1 Mo)', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData({ ...formData, licenseDocument: reader.result as string });
+      addToast('Document prêt à enregistrer', 'success');
+    };
+    reader.readAsDataURL(file);
   };
 
   const toggleServiceType = (type: ServiceType) => {
@@ -284,8 +300,14 @@ export function Profile() {
               {field("Numéro de certification (optionnel)", isEditing ? formData.licenseNumber : profile.licenseNumber, (v) => setFormData({ ...formData, licenseNumber: v }), <Award className="w-4 h-4" />, 'text', 'ex: CERT-1234-5678')}
               <div style={{ marginTop: 14 }}>
                 {isEditing ? (
-                <p className="body-f muted2" style={{ fontSize: 13 }}>Le téléversement de documents sera disponible prochainement.</p>
-              ) : profile.licenseDocument ? (
+                  <div>
+                    <label className="q-label">Pièce d&apos;identité (max 1 Mo)</label>
+                    <input type="file" accept="image/*,.pdf" onChange={handleDocumentUpload} className="q-field" style={{ padding: 8 }} />
+                    {formData.licenseDocument && (
+                      <p className="body-f muted2" style={{ fontSize: 12, marginTop: 8 }}>Document sélectionné — enregistrez pour soumettre.</p>
+                    )}
+                  </div>
+                ) : profile.licenseDocument ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'rgba(127,176,105,0.12)', borderRadius: 8 }}>
                     <Award className="w-5 h-5" style={{ color: '#7FB069' }} />
                     <div>

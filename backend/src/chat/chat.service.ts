@@ -18,7 +18,7 @@ export class ChatService {
     if (!task || task.status === TaskStatus.open) {
       if (task?.clientId === userId) return;
       throw new ForbiddenException(
-        'La messagerie s\'ouvre lorsque la tâche est acceptée.',
+        'La messagerie s\'ouvre lorsque vous avez choisi un travailleur.',
       );
     }
   }
