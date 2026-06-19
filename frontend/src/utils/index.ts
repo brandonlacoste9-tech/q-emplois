@@ -68,9 +68,11 @@ export function formatJobLocation(job: {
   address: { street?: string; city?: string; postalCode?: string };
   distance?: number;
   contactRedacted?: boolean;
+  addressRedacted?: boolean;
 }): string {
   const city = job.address.city || 'Québec';
-  if (job.contactRedacted) {
+  const hideAddress = job.addressRedacted ?? job.contactRedacted;
+  if (hideAddress) {
     const area = job.address.postalCode;
     const approx = job.distance != null ? formatDistance(job.distance) : null;
     if (approx && area) return `${approx} · ${city} · ${area}`;

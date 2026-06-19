@@ -15,11 +15,12 @@ export class ChatService {
       where: { id: conversation.taskId },
       select: { status: true, clientId: true, taskerId: true },
     });
-    if (!task || task.status !== TaskStatus.open) return;
-    if (task.clientId === userId) return;
-    throw new ForbiddenException(
-      'La messagerie s\'ouvre lorsque la tâche est acceptée et les coordonnées sont partagées.',
-    );
+    if (!task || task.status === TaskStatus.open) {
+      if (task?.clientId === userId) return;
+      throw new ForbiddenException(
+        'La messagerie s\'ouvre lorsque la tâche est acceptée.',
+      );
+    }
   }
 
   async listConversations(userId: string) {

@@ -134,7 +134,7 @@ export function JobDetail() {
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Clock className="w-4 h-4" />{formatDuration(job.estimatedDuration)}</span>
             )}
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><MapPin className="w-4 h-4" />{formatJobLocation(job)}</span>
-            {!job.contactRedacted && job.distance != null && (
+            {!job.addressRedacted && job.distance != null && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><MapPin className="w-4 h-4" />{formatDistance(job.distance)}</span>
             )}
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><DollarSign className="w-4 h-4" /><span className="cream-hi" style={{ fontWeight: 700 }}>{formatPrice(job.estimatedPrice)}</span></span>
@@ -142,7 +142,13 @@ export function JobDetail() {
 
           {job.contactRedacted && showTaskerActions && (
             <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 20, fontStyle: 'italic' }}>
-              L&apos;adresse complète et les coordonnées du client seront visibles une fois la tâche acceptée.
+              Contact et adresse masqués sur le tableau. Acceptez la tâche pour contacter le client; l&apos;adresse exacte apparaît au démarrage.
+            </p>
+          )}
+
+          {!job.contactRedacted && job.addressRedacted && showTaskerActions && (
+            <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 20, fontStyle: 'italic' }}>
+              Vous pouvez contacter le client. Démarrez le job pour voir l&apos;adresse complète.
             </p>
           )}
 

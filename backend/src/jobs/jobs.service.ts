@@ -56,10 +56,27 @@ export class JobsService {
     ) / 10;
   }
 
-  private shouldRevealContact(task: { clientId: string; taskerId?: string | null; status: TaskStatus }, viewerUserId: string): boolean {
+  private shouldRevealContact(
+    task: { clientId: string; taskerId?: string | null; status: TaskStatus },
+    viewerUserId: string,
+  ): boolean {
     if (task.clientId === viewerUserId) return true;
-    if (task.taskerId === viewerUserId) return true;
-    return task.status !== TaskStatus.open;
+    if (task.taskerId === viewerUserId && task.status !== TaskStatus.open) return true;
+    return false;
+  }
+
+  private shouldRevealAddress(
+    task: { clientId: string; taskerId?: string | null; status: TaskStatus },
+    viewerUserId: string,
+  ): boolean {
+    if (task.clientId === viewerUserId) return true;
+    if (
+      task.taskerId === viewerUserId &&
+      (task.status === TaskStatus.in_progress || task.status === TaskStatus.completed)
+    ) {
+      return true;
+    }
+    return false;
   }
 
   private publicPostalArea(postalCode?: string | null): string {
@@ -68,6 +85,7 @@ export class JobsService {
 
   private mapTask(task: any, provider: any | undefined, viewerUserId: string) {
     const revealContact = this.shouldRevealContact(task, viewerUserId);
+    const revealAddress = this.shouldRevealAddress(task, viewerUserId);
     const clientName = revealContact
       ? [task.client?.firstName, task.client?.lastName].filter(Boolean).join(' ') || 'Client'
       : 'Client';
@@ -83,13 +101,13 @@ export class JobsService {
         ? task.description
         : sanitizePublicDescription(task.description),
       address: {
-        street: revealContact ? task.address : '',
+        street: revealAddress ? task.address : '',
         city: task.city ?? '',
-        postalCode: revealContact
+        postalCode: revealAddress
           ? task.postalCode ?? ''
           : this.publicPostalArea(task.postalCode),
         coordinates:
-          revealContact && task.locationLat != null && task.locationLng != null
+          revealAddress && task.locationLat != null && task.locationLng != null
             ? { lat: Number(task.locationLat), lng: Number(task.locationLng) }
             : undefined,
       },
@@ -100,6 +118,7 @@ export class JobsService {
       createdAt: task.createdAt.toISOString(),
       distance: this.computeDistance(task, provider),
       contactRedacted: !revealContact,
+      addressRedacted: !revealAddress,
     };
   }
 
@@ -313,15 +332,15 @@ export class JobsService {
       task.clientId,
       'job_accepted',
       'Tâche acceptée',
-      `${tasker?.firstName ?? 'Un travailleur'} a accepté « ${task.title} ». Vos coordonnées lui sont maintenant visibles pour planifier le travail.`,
+      `${tasker?.firstName ?? 'Un travailleur'} a accepté « ${task.title} ». Votre nom et téléphone lui sont visibles; l'adresse exacte s'affichera au démarrage du travail.`,
       { taskId },
     );
 
     await this.notificationsService.create(
       taskerId,
       'job_accepted',
-      'Coordonnées débloquées',
-      `Vous avez accepté « ${task.title} ». L'adresse complète et le contact du client sont maintenant disponibles.`,
+      'Contact débloqué',
+      `Vous avez accepté « ${task.title} ». Vous pouvez contacter le client; l'adresse exacte sera visible lorsque vous démarrez le job.`,
       { taskId },
     );
 
@@ -397,6 +416,22 @@ export class JobsService {
         client: { select: { firstName: true, lastName: true, phone: true } },
       },
     });
+
+    await this.notificationsService.create(
+      taskerId,
+      'job_started',
+      'Adresse débloquée',
+      `L'adresse complète de « ${task.title} » est maintenant visible.`,
+      { taskId },
+    );
+
+    await this.notificationsService.create(
+      task.clientId,
+      'job_started',
+      'Travailleur en route',
+      `${task.title} : le travailleur a démarré le job et voit votre adresse complète.`,
+      { taskId },
+    );
 
     return this.mapTask(updated, undefined, taskerId);
   }

@@ -353,7 +353,13 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDe
 
       {!isClient && job.contactRedacted && job.status === 'pending' && (
         <p className="body-f muted2" style={{ fontSize: 12, marginBottom: 14, fontStyle: 'italic' }}>
-          Adresse et coordonnées révélées après acceptation.
+          Contact et adresse révélés après acceptation; adresse exacte au démarrage.
+        </p>
+      )}
+
+      {!isClient && !job.contactRedacted && job.addressRedacted && job.status === 'accepted' && (
+        <p className="body-f muted2" style={{ fontSize: 12, marginBottom: 14, fontStyle: 'italic' }}>
+          Adresse exacte visible lorsque vous démarrez le job.
         </p>
       )}
 

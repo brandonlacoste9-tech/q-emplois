@@ -44,7 +44,7 @@ const T = {
     errPrice: 'Veuillez entrer un budget valide.',
     errGeneric: 'Une erreur est survenue lors de la publication.',
     success: 'Job publiée avec succès !',
-    privacyNote: 'Sur le tableau des jobs, seuls la ville et le secteur sont visibles. Votre adresse complète et vos coordonnées seront partagées automatiquement avec le travailleur qui accepte la tâche.',
+    privacyNote: 'Sur le tableau des jobs, seuls la ville et le secteur sont visibles. Quand un travailleur accepte, il voit votre nom et téléphone. L\'adresse exacte n\'est partagée qu\'au démarrage du travail.',
   },
   en: {
     title: 'Post a Job',
@@ -63,7 +63,7 @@ const T = {
     errPrice: 'Please enter a valid budget.',
     errGeneric: 'An error occurred while posting.',
     success: 'Job posted successfully!',
-    privacyNote: 'On the job board, only your city and general area are shown. Your full address and contact details are shared automatically when a tasker accepts the job.',
+    privacyNote: 'On the job board, only city and area are shown. When a tasker accepts, they see your name and phone. The exact address is shared only when they start the job.',
   },
 };
 
@@ -147,8 +147,8 @@ export function PostJob() {
           </h1>
           <p className="body-f muted" style={{ fontSize: 15, marginBottom: 28 }}>
             {lang === 'fr'
-              ? 'Votre job est visible sur le tableau. Seuls la ville et le secteur sont affichés. Quand un travailleur accepte, il reçoit votre adresse complète et pourra vous contacter.'
-              : 'Your job is on the board with city and area only. When a tasker accepts, they receive your full address and can contact you.'}
+              ? 'Votre job est sur le tableau (ville et secteur seulement). À l\'acceptation, le travailleur verra votre contact. L\'adresse exacte sera partagée quand il démarre le job.'
+              : 'Your job is on the board (city and area only). On accept, the tasker gets your contact. The exact address is shared when they start the job.'}
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
             <button onClick={() => navigate('/dashboard')} className="gold-btn" style={{ padding: '12px 24px', fontSize: 15 }}>
