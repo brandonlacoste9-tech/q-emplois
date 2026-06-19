@@ -71,11 +71,11 @@ export function formatJobLocation(job: {
 }): string {
   const city = job.address.city || 'Québec';
   if (job.contactRedacted) {
-    const area = job.address.postalCode?.slice(0, 3);
+    const area = job.address.postalCode;
     const approx = job.distance != null ? formatDistance(job.distance) : null;
-    if (approx && area) return `${approx} · ${city} (${area})`;
+    if (approx && area) return `${approx} · ${city} · ${area}`;
     if (approx) return `${approx} · ${city}`;
-    if (area) return `${city} (${area})`;
+    if (area) return area.startsWith('Secteur') ? `${city} · ${area}` : `${city} (${area})`;
     return city;
   }
   if (job.address.street) return `${job.address.street}, ${city}`;

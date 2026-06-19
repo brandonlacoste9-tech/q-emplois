@@ -44,6 +44,7 @@ const T = {
     errPrice: 'Veuillez entrer un budget valide.',
     errGeneric: 'Une erreur est survenue lors de la publication.',
     success: 'Job publiée avec succès !',
+    privacyNote: 'Sur le tableau des jobs, seuls la ville et le secteur sont visibles. Votre adresse complète et vos coordonnées seront partagées automatiquement avec le travailleur qui accepte la tâche.',
   },
   en: {
     title: 'Post a Job',
@@ -62,6 +63,7 @@ const T = {
     errPrice: 'Please enter a valid budget.',
     errGeneric: 'An error occurred while posting.',
     success: 'Job posted successfully!',
+    privacyNote: 'On the job board, only your city and general area are shown. Your full address and contact details are shared automatically when a tasker accepts the job.',
   },
 };
 
@@ -145,8 +147,8 @@ export function PostJob() {
           </h1>
           <p className="body-f muted" style={{ fontSize: 15, marginBottom: 28 }}>
             {lang === 'fr'
-              ? 'Votre job est maintenant visible par les pros locaux. Vous serez notifié(e) dès qu\'un pro l\'accepte.'
-              : 'Your job is now visible to local pros. You\'ll be notified as soon as a pro accepts it.'}
+              ? 'Votre job est visible sur le tableau. Seuls la ville et le secteur sont affichés. Quand un travailleur accepte, il reçoit votre adresse complète et pourra vous contacter.'
+              : 'Your job is on the board with city and area only. When a tasker accepts, they receive your full address and can contact you.'}
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
             <button onClick={() => navigate('/dashboard')} className="gold-btn" style={{ padding: '12px 24px', fontSize: 15 }}>
@@ -265,6 +267,9 @@ export function PostJob() {
                     <input className="q-field" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} placeholder="H2X 1Y6" required />
                   </div>
                 </div>
+                <p className="body-f muted2" style={{ fontSize: 12, lineHeight: 1.5, padding: '10px 12px', borderRadius: 8, background: 'rgba(184,123,68,0.1)', border: '1px dashed rgba(217,179,140,0.25)' }}>
+                  🔒 {t.privacyNote}
+                </p>
               </div>
             )}
 

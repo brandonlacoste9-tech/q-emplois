@@ -9,6 +9,7 @@ import { AuditService } from '../common/audit/audit.service';
 import { CreditsService } from '../credits/credits.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
+import { publicPostalSector, sanitizePublicDescription } from '../common/utils/privacy';
 import { CreateTaskDto, DeclineTaskDto } from './dto/job.dto';
 import { TaskStatus } from '@prisma/client';
 
@@ -62,7 +63,7 @@ export class JobsService {
   }
 
   private publicPostalArea(postalCode?: string | null): string {
-    return postalCode?.replace(/\s/g, '').toUpperCase().slice(0, 3) ?? '';
+    return publicPostalSector(postalCode);
   }
 
   private mapTask(task: any, provider: any | undefined, viewerUserId: string) {
@@ -78,7 +79,9 @@ export class JobsService {
       clientPhone: revealContact ? task.client?.phone ?? undefined : undefined,
       serviceType: task.serviceType,
       title: task.title,
-      description: task.description,
+      description: revealContact
+        ? task.description
+        : sanitizePublicDescription(task.description),
       address: {
         street: revealContact ? task.address : '',
         city: task.city ?? '',
@@ -310,7 +313,15 @@ export class JobsService {
       task.clientId,
       'job_accepted',
       'Tâche acceptée',
-      `${tasker?.firstName ?? 'Un travailleur'} a accepté votre tâche « ${task.title} ».`,
+      `${tasker?.firstName ?? 'Un travailleur'} a accepté « ${task.title} ». Vos coordonnées lui sont maintenant visibles pour planifier le travail.`,
+      { taskId },
+    );
+
+    await this.notificationsService.create(
+      taskerId,
+      'job_accepted',
+      'Coordonnées débloquées',
+      `Vous avez accepté « ${task.title} ». L'adresse complète et le contact du client sont maintenant disponibles.`,
       { taskId },
     );
 
