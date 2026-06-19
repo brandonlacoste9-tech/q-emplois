@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { SERVICE_TYPE_LABELS, type ServiceType } from '../types';
+import { geocodeQuebecAddress } from '../utils/geocode';
 
 // Curated subset for client posting UI — covers 90% of demand without overwhelming the user
 const SERVICE_TYPES: { type: ServiceType; emoji: string }[] = [
@@ -113,6 +114,7 @@ export function PostJob() {
     if (!validateStep3()) return;
     setIsLoading(true);
     try {
+      const coords = geocodeQuebecAddress(formData.city, formData.postalCode);
       await api.createJob({
         title: formData.title,
         description: formData.description,
@@ -123,7 +125,8 @@ export function PostJob() {
           street: formData.street,
           city: formData.city,
           postalCode: formData.postalCode,
-        }
+          coordinates: coords ?? undefined,
+        },
       });
       setPosted(true);
     } catch (err) {

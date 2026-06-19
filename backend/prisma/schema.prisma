@@ -341,6 +341,7 @@ model Task {
 
   creditTransactions CreditTransaction[]
   reviews            TaskReview[]
+  conversations      Conversation[]
 
   @@index([clientId])
   @@index([taskerId])
@@ -425,6 +426,7 @@ model Conversation {
   providerId String
   provider   User          @relation("ProviderConversations", fields: [providerId], references: [id], onDelete: Cascade)
   taskId     String?
+  task       Task?         @relation(fields: [taskId], references: [id], onDelete: SetNull)
   messages   ChatMessage[]
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt

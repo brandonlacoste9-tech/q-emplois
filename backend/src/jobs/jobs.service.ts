@@ -7,6 +7,8 @@ import {
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AuditService } from '../common/audit/audit.service';
 import { CreditsService } from '../credits/credits.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { CreateTaskDto, DeclineTaskDto } from './dto/job.dto';
 import { TaskStatus } from '@prisma/client';
 
@@ -16,9 +18,44 @@ export class JobsService {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
     private readonly creditsService: CreditsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
-  private mapTask(task: any) {
+  private haversineKm(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  private computeDistance(task: any, provider?: any): number | undefined {
+    if (
+      provider?.locationLat == null ||
+      provider?.locationLng == null ||
+      task.locationLat == null ||
+      task.locationLng == null
+    ) {
+      return undefined;
+    }
+    return Math.round(
+      this.haversineKm(
+        Number(provider.locationLat),
+        Number(provider.locationLng),
+        Number(task.locationLat),
+        Number(task.locationLng),
+      ) * 10,
+    ) / 10;
+  }
+
+  private mapTask(task: any, provider?: any) {
     const clientName = [task.client?.firstName, task.client?.lastName]
       .filter(Boolean)
       .join(' ') || 'Client';
@@ -45,6 +82,7 @@ export class JobsService {
       estimatedPrice: Number(task.estimatedPrice),
       status: this.mapStatus(task.status),
       createdAt: task.createdAt.toISOString(),
+      distance: this.computeDistance(task, provider),
     };
   }
 
@@ -77,6 +115,12 @@ export class JobsService {
 
   async list(userId: string, filters?: { status?: string; serviceType?: string }) {
     const status = this.reverseStatus(filters?.status);
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { provider: true },
+    });
+    const provider = user?.provider;
+
     const tasks = await this.prisma.task.findMany({
       where: {
         ...(status ? { status } : {}),
@@ -92,10 +136,44 @@ export class JobsService {
       },
       orderBy: { createdAt: 'desc' },
     });
-    return tasks.map((t) => this.mapTask(t));
+
+    let results = tasks.map((t) => this.mapTask(t, provider));
+
+    if (provider) {
+      results = results.filter((job) => {
+        if (job.status !== 'pending') return true;
+        if (job.clientId === userId) return true;
+        if (provider.serviceTypes?.length && !provider.serviceTypes.includes(job.serviceType)) {
+          return false;
+        }
+        if (
+          job.distance != null &&
+          provider.serviceRadiusKm != null &&
+          job.distance > Number(provider.serviceRadiusKm)
+        ) {
+          return false;
+        }
+        return true;
+      });
+
+      results.sort((a, b) => {
+        if (a.status === 'pending' && b.status === 'pending') {
+          if (a.distance != null && b.distance != null) return a.distance - b.distance;
+          if (a.distance != null) return -1;
+          if (b.distance != null) return 1;
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    }
+
+    return results;
   }
 
   async getById(id: string, userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { provider: true },
+    });
     const task = await this.prisma.task.findUnique({
       where: { id },
       include: {
@@ -110,10 +188,20 @@ export class JobsService {
     ) {
       throw new ForbiddenException('Accès refusé.');
     }
-    return this.mapTask(task);
+    return this.mapTask(task, user?.provider);
   }
 
   async create(clientId: string, dto: CreateTaskDto) {
+    let locationLat = dto.locationLat;
+    let locationLng = dto.locationLng;
+    if (locationLat == null || locationLng == null) {
+      const coords = geocodeQuebecAddress(dto.city, dto.postalCode);
+      if (coords) {
+        locationLat = coords.lat;
+        locationLng = coords.lng;
+      }
+    }
+
     const task = await this.prisma.task.create({
       data: {
         clientId,
@@ -123,8 +211,8 @@ export class JobsService {
         address: dto.address,
         city: dto.city,
         postalCode: dto.postalCode,
-        locationLat: dto.locationLat,
-        locationLng: dto.locationLng,
+        locationLat,
+        locationLng,
         scheduledDate: dto.scheduledDate ? new Date(dto.scheduledDate) : undefined,
         estimatedDuration: dto.estimatedDuration ?? 60,
         estimatedPrice: dto.estimatedPrice,
@@ -193,6 +281,18 @@ export class JobsService {
       resourceId: taskId,
     });
 
+    const tasker = await this.prisma.user.findUnique({
+      where: { id: taskerId },
+      select: { firstName: true, lastName: true },
+    });
+    await this.notificationsService.create(
+      task.clientId,
+      'job_accepted',
+      'Tâche acceptée',
+      `${tasker?.firstName ?? 'Un travailleur'} a accepté votre tâche « ${task.title} ».`,
+      { taskId },
+    );
+
     return this.mapTask(updated);
   }
 
@@ -238,6 +338,17 @@ export class JobsService {
         client: { select: { firstName: true, lastName: true, phone: true } },
       },
     });
+
+    const notifyUserId = userId === task.clientId ? task.taskerId : task.clientId;
+    if (notifyUserId) {
+      await this.notificationsService.create(
+        notifyUserId,
+        'job_completed',
+        'Tâche terminée',
+        `La tâche « ${task.title} » a été marquée comme terminée.`,
+        { taskId },
+      );
+    }
 
     return this.mapTask(updated);
   }

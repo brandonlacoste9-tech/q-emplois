@@ -12,6 +12,7 @@ import { Dashboard } from './pages/Dashboard'
 import { Jobs } from './pages/Jobs'
 import { Profile } from './pages/Profile'
 import { PostJob } from './pages/PostJob'
+import { JobDetail } from './pages/JobDetail'
 import { Credits } from './pages/Credits'
 import { Messages } from './pages/Messages'
 import { CookieConsent } from './components/CookieConsent'
@@ -53,11 +54,21 @@ function App() {
         <Route
           path="/jobs"
           element={
-            <RoleRoute allowedRoles={['provider', 'admin']} fallback="/dashboard">
+            <ProtectedRoute>
               <AppShell>
                 <Jobs />
               </AppShell>
-            </RoleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:id"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <JobDetail />
+              </AppShell>
+            </ProtectedRoute>
           }
         />
         <Route

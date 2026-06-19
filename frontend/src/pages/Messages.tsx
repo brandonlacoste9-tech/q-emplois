@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
@@ -10,6 +11,9 @@ const gold = '#B87B44';
 export function Messages() {
   const { user } = useAuth();
   const { addToast } = useToast();
+  const [searchParams] = useSearchParams();
+  const jobIdParam = searchParams.get('jobId');
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -22,11 +26,17 @@ export function Messages() {
     api.getConversations()
       .then((data) => {
         setConversations(data);
-        if (data.length > 0) setActiveId(data[0].id);
+        if (jobIdParam) {
+          const match = data.find((c) => c.jobId === jobIdParam);
+          if (match) setActiveId(match.id);
+          else if (data.length > 0) setActiveId(data[0].id);
+        } else if (data.length > 0) {
+          setActiveId(data[0].id);
+        }
       })
       .catch(() => addToast('Erreur de chargement des conversations', 'error'))
       .finally(() => setLoading(false));
-  }, [addToast]);
+  }, [addToast, jobIdParam]);
 
   useEffect(() => {
     if (!activeId) return;
@@ -74,6 +84,7 @@ export function Messages() {
   };
 
   const activeConv = conversations.find((c) => c.id === activeId);
+  const jobLinkedConv = jobIdParam && !conversations.some((c) => c.jobId === jobIdParam);
 
   return (
     <div className="leather" style={{ minHeight: '100vh' }}>
@@ -81,6 +92,12 @@ export function Messages() {
         <h1 className="serif cream-hi" style={{ fontSize: 'clamp(1.6rem, 4vw, 2.2rem)', fontWeight: 900, marginBottom: 24 }}>
           Messages
         </h1>
+
+        {jobLinkedConv && (
+          <div className="body-f muted" style={{ padding: '12px 16px', marginBottom: 16, borderRadius: 8, background: 'rgba(184,123,68,0.12)', fontSize: 14 }}>
+            Aucun fil de discussion pour cette tâche pour le moment. Un chat s'ouvrira automatiquement quand un travailleur accepte la job.
+          </div>
+        )}
 
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
@@ -106,7 +123,10 @@ export function Messages() {
                     }}
                   >
                     <p className="body-f cream-hi" style={{ fontWeight: 600, fontSize: 14 }}>{c.clientName}</p>
-                    <p className="body-f muted2" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {c.jobTitle && (
+                      <p className="body-f muted2" style={{ fontSize: 11, marginTop: 2 }}>{c.jobTitle}</p>
+                    )}
+                    <p className="body-f muted2" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
                       {c.lastMessage?.content ?? 'Nouvelle conversation'}
                     </p>
                   </button>
@@ -119,6 +139,9 @@ export function Messages() {
                 <>
                   <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(217,179,140,0.12)' }}>
                     <p className="serif cream-hi" style={{ fontWeight: 700 }}>{activeConv.clientName}</p>
+                    {activeConv.jobTitle && (
+                      <p className="body-f muted2" style={{ fontSize: 13, marginTop: 2 }}>{activeConv.jobTitle}</p>
+                    )}
                   </div>
                   <div style={{ flex: 1, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {messages.map((m) => {

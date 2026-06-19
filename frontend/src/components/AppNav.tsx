@@ -12,6 +12,7 @@ export function AppNav() {
   const nav = isClient
     ? [
         { label: 'Tableau de bord', path: '/dashboard' },
+        { label: 'Mes tâches', path: '/jobs' },
         { label: 'Publier une job', path: '/post-job' },
         { label: 'Messages', path: '/messages' },
         { label: "L'Atelier", path: '/latelier' },

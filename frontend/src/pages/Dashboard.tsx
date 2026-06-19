@@ -14,6 +14,7 @@ import {
 import type { DashboardStats, Notification, Job, JobStatus } from '../types';
 import { JOB_STATUS_LABELS } from '../types';
 import { api } from '../services/api';
+import { TaskerOnboarding } from '../components/TaskerOnboarding';
 import { formatPrice, formatShortDate, formatTime, formatDistance } from '../utils';
 
 const wrap: React.CSSProperties = { maxWidth: 1200, margin: '0 auto', padding: '32px 24px' };
@@ -27,6 +28,8 @@ export function Dashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [upcomingJobs, setUpcomingJobs] = useState<Job[]>([]);
   const [myPostedJobs, setMyPostedJobs] = useState<Job[]>([]);
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [hasAcceptedJob, setHasAcceptedJob] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,14 +39,18 @@ export function Dashboard() {
           const jobsData = await api.getJobs();
           setMyPostedJobs(jobsData.slice(0, 8));
         } else {
-          const [statsData, notificationsData, jobsData] = await Promise.all([
+          const [statsData, notificationsData, jobsData, balance, allJobs] = await Promise.all([
             api.getDashboardStats(),
             api.getNotifications(),
             api.getJobs({ status: 'accepted' }),
+            api.getCreditBalance(),
+            api.getJobs(),
           ]);
           setStats(statsData);
           setNotifications(notificationsData.slice(0, 5));
           setUpcomingJobs(jobsData.slice(0, 3));
+          setCreditBalance(balance.balance);
+          setHasAcceptedJob(allJobs.some((j) => j.status !== 'pending'));
         }
       } catch (error) {
         console.error('Failed to load dashboard:', error);
@@ -108,7 +115,7 @@ export function Dashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {myPostedJobs.map((job) => (
-                  <Link key={job.id} to="/post-job" style={{ textDecoration: 'none' }}>
+                  <Link key={job.id} to={`/jobs/${job.id}`} style={{ textDecoration: 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: 12, borderRadius: 8, background: 'rgba(15,25,36,0.5)' }}>
                     <div style={{ flex: 1 }}>
                       <h4 className="serif cream-hi" style={{ fontSize: 15, fontWeight: 700 }}>{job.title}</h4>
@@ -147,6 +154,32 @@ export function Dashboard() {
   return (
     <div className="leather" style={{ minHeight: '100vh' }}>
       <div style={wrap}>
+        <TaskerOnboarding
+          steps={[
+            {
+              id: 'profile',
+              label: 'Compléter votre profil',
+              description: 'Types de services, ville et rayon',
+              done: (profile?.serviceTypes?.length ?? 0) > 0 && !!profile?.address?.street,
+              link: '/profile',
+            },
+            {
+              id: 'credits',
+              label: 'Obtenir des crédits',
+              description: '1 crédit = 1 job acceptée',
+              done: creditBalance > 0,
+              link: '/credits',
+            },
+            {
+              id: 'job',
+              label: 'Accepter une première job',
+              description: 'Parcourir les tâches disponibles près de chez vous',
+              done: hasAcceptedJob,
+              link: '/jobs',
+            },
+          ]}
+        />
+
         {/* Welcome */}
         <div style={{ marginBottom: 28 }}>
           <h1 className="serif cream-hi" style={{ fontSize: 'clamp(1.6rem, 4vw, 2.2rem)', fontWeight: 900 }}>
@@ -202,7 +235,8 @@ export function Dashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {upcomingJobs.map((job) => (
-                  <div key={job.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: 12, borderRadius: 8, background: 'rgba(15,25,36,0.5)' }}>
+                  <Link key={job.id} to={`/jobs/${job.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: 12, borderRadius: 8, background: 'rgba(15,25,36,0.5)' }}>
                     <div className="svc-icon" style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Briefcase className="w-5 h-5" style={{ color: gold }} />
                     </div>
@@ -219,6 +253,7 @@ export function Dashboard() {
                     </div>
                     <p className="serif cream-hi" style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap' }}>{formatPrice(job.estimatedPrice)}</p>
                   </div>
+                  </Link>
                 ))}
               </div>
             )}

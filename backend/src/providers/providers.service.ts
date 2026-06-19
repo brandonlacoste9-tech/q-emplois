@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreditsService } from '../credits/credits.service';
+import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { UserRole } from '@prisma/client';
 
 export interface UpsertProviderDto {
@@ -24,6 +25,16 @@ export class ProvidersService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Utilisateur non trouvé.');
 
+    let locationLat = dto.locationLat;
+    let locationLng = dto.locationLng;
+    if ((locationLat == null || locationLng == null) && dto.locationAddress) {
+      const coords = geocodeQuebecAddress(dto.locationAddress);
+      if (coords) {
+        locationLat = coords.lat;
+        locationLng = coords.lng;
+      }
+    }
+
     const provider = await this.prisma.provider.upsert({
       where: { userId },
       create: {
@@ -33,8 +44,8 @@ export class ProvidersService {
         serviceRadiusKm: dto.serviceRadiusKm ?? 25,
         licenseNumber: dto.licenseNumber,
         locationAddress: dto.locationAddress,
-        locationLat: dto.locationLat,
-        locationLng: dto.locationLng,
+        locationLat,
+        locationLng,
       },
       update: {
         serviceTypes: dto.serviceTypes,
@@ -42,8 +53,8 @@ export class ProvidersService {
         serviceRadiusKm: dto.serviceRadiusKm,
         licenseNumber: dto.licenseNumber,
         locationAddress: dto.locationAddress,
-        locationLat: dto.locationLat,
-        locationLng: dto.locationLng,
+        locationLat,
+        locationLng,
       },
     });
 

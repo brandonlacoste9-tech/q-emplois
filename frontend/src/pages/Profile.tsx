@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
@@ -15,10 +15,10 @@ import {
   Save,
   X,
   Star,
-  Upload,
   Coins,
 } from 'lucide-react';
 import { formatPrice } from '../utils';
+import { useToast } from '../components/Toast';
 
 const gold = '#B87B44';
 const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 20 };
@@ -31,14 +31,20 @@ const SERVICE_TYPES: ServiceType[] = [
 
 export function Profile() {
   const { profile: initialProfile, refreshProfile } = useAuth();
+  const { addToast } = useToast();
   const isClient = initialProfile?.role === 'client';
   const [profile, setProfile] = useState<TradesmanProfile | null>(initialProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<TradesmanProfile>>({});
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [reviews, setReviews] = useState<Array<{ id: string; rating: number; comment?: string; createdAt: string }>>([]);
+
+  useEffect(() => {
+    if (initialProfile?.id) {
+      api.getReviewsForUser(initialProfile.id).then(setReviews).catch(() => setReviews([]));
+    }
+  }, [initialProfile?.id]);
 
   useEffect(() => {
     if (!isClient) {
@@ -54,18 +60,32 @@ export function Profile() {
   }, [initialProfile]);
 
   const handleEdit = () => { setIsEditing(true); setFormData(profile || {}); };
-  const handleCancel = () => { setIsEditing(false); setFormData(profile || {}); setSelectedFile(null); };
+  const handleCancel = () => { setIsEditing(false); setFormData(profile || {}); };
 
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      if (selectedFile) await api.uploadLicense(selectedFile);
-      await api.updateProfile(formData);
+      await api.updateUser({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+      });
+      if (!isClient) {
+        await api.updateProvider({
+          serviceTypes: formData.serviceTypes || [],
+          hourlyRate: formData.hourlyRate,
+          serviceRadiusKm: formData.serviceRadius,
+          licenseNumber: formData.licenseNumber,
+          locationAddress: formData.address?.street,
+        });
+      }
       await refreshProfile();
       setIsEditing(false);
-      setSelectedFile(null);
+      addToast('Profil enregistré', 'success');
     } catch (error) {
       console.error('Failed to update profile:', error);
+      addToast('Erreur lors de la mise à jour', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -228,8 +248,9 @@ export function Profile() {
 
             {/* Pricing & radius */}
             <div className="stitch-box" style={card}>
-              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Tarification et rayon</h3>
+              <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Tarification et zone</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                {field('Ville / secteur de base', isEditing ? formData.address?.street : profile.address?.street, (v) => setFormData({ ...formData, address: { ...formData.address, street: v, city: formData.address?.city ?? '', postalCode: formData.address?.postalCode ?? '' } }), <MapPin className="w-4 h-4" />, 'text', 'ex: Montréal, H2X')}
                 {field('Taux horaire ($/h)', isEditing ? formData.hourlyRate : profile.hourlyRate, (v) => setFormData({ ...formData, hourlyRate: parseFloat(v) }), <DollarSign className="w-4 h-4" />, 'number')}
                 {field('Rayon de service (km)', isEditing ? formData.serviceRadius : profile.serviceRadius, (v) => setFormData({ ...formData, serviceRadius: parseInt(v) }), <MapPin className="w-4 h-4" />, 'number')}
               </div>
@@ -246,14 +267,8 @@ export function Profile() {
               {field("Numéro de certification (optionnel)", isEditing ? formData.licenseNumber : profile.licenseNumber, (v) => setFormData({ ...formData, licenseNumber: v }), <Award className="w-4 h-4" />, 'text', 'ex: CERT-1234-5678')}
               <div style={{ marginTop: 14 }}>
                 {isEditing ? (
-                  <>
-                    <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={(e) => e.target.files && setSelectedFile(e.target.files[0])} />
-                    <button type="button" onClick={() => fileRef.current?.click()} className="ghost-btn" style={{ width: '100%', padding: 16, fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderStyle: 'dashed' }}>
-                      <Upload className="w-4 h-4" /> {selectedFile ? selectedFile.name : 'Télécharger une pièce justificative'}
-                    </button>
-                    <p className="body-f muted2" style={{ fontSize: 12, marginTop: 6 }}>Pièce d'identité ou certification (optionnel)</p>
-                  </>
-                ) : profile.licenseDocument ? (
+                <p className="body-f muted2" style={{ fontSize: 13 }}>Le téléversement de documents sera disponible prochainement.</p>
+              ) : profile.licenseDocument ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'rgba(127,176,105,0.12)', borderRadius: 8 }}>
                     <Award className="w-5 h-5" style={{ color: '#7FB069' }} />
                     <div>
@@ -267,6 +282,26 @@ export function Profile() {
               </div>
             </div>
             </>
+            )}
+
+            {reviews.length > 0 && (
+              <div className="stitch-box" style={card}>
+                <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <Star className="w-5 h-5" style={{ color: gold }} /> Avis reçus
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {reviews.slice(0, 5).map((r) => (
+                    <div key={r.id} style={{ padding: 12, background: 'rgba(15,25,36,0.5)', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star key={n} className="w-4 h-4" style={{ color: gold, fill: n <= r.rating ? gold : 'transparent' }} />
+                        ))}
+                      </div>
+                      {r.comment && <p className="body-f muted" style={{ fontSize: 14 }}>{r.comment}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </div>

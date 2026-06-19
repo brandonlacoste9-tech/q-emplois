@@ -276,6 +276,7 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onRe
 
   return (
     <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 18, display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1, display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <div className="svc-icon" style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -317,6 +318,7 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onRe
       <p className="body-f muted" style={{ fontSize: 14, marginBottom: 16, flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
         {job.description}
       </p>
+      </Link>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 'auto', flexWrap: 'wrap' }}>
         {!isClient && job.status === 'pending' && (

@@ -1,5 +1,6 @@
 import { PrismaClient, UserRole, TaskStatus, CreditTransactionType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { geocodeQuebecAddress } from '../src/common/utils/geocode';
 
 const prisma = new PrismaClient();
 
@@ -29,10 +30,11 @@ async function main() {
 
   const taskers = await Promise.all(
     [
-      { email: 'demo.tasker1@qemplois.ca', firstName: 'Alex', lastName: 'Gagnon', phone: '5145550201', types: ['menage', 'nettoyage'] },
-      { email: 'demo.tasker2@qemplois.ca', firstName: 'Sophie', lastName: 'Roy', phone: '5145550202', types: ['demenagement', 'montage_meubles'] },
-      { email: 'demo.tasker3@qemplois.ca', firstName: 'Marc', lastName: 'Lavoie', phone: '5145550203', types: ['jardinage', 'autre'] },
+      { email: 'demo.tasker1@qemplois.ca', firstName: 'Alex', lastName: 'Gagnon', phone: '5145550201', types: ['menage', 'nettoyage'], city: 'Montréal' },
+      { email: 'demo.tasker2@qemplois.ca', firstName: 'Sophie', lastName: 'Roy', phone: '5145550202', types: ['demenagement', 'montage_meubles'], city: 'Montréal' },
+      { email: 'demo.tasker3@qemplois.ca', firstName: 'Marc', lastName: 'Lavoie', phone: '5145550203', types: ['jardinage', 'autre'], city: 'Verdun' },
     ].map(async (t) => {
+      const coords = geocodeQuebecAddress(t.city);
       const user = await prisma.user.upsert({
         where: { email: t.email },
         update: {},
@@ -49,13 +51,21 @@ async function main() {
       });
       await prisma.provider.upsert({
         where: { userId: user.id },
-        update: { serviceTypes: t.types },
+        update: {
+          serviceTypes: t.types,
+          locationAddress: t.city,
+          locationLat: coords?.lat,
+          locationLng: coords?.lng,
+        },
         create: {
           userId: user.id,
           serviceTypes: t.types,
           hourlyRate: 35,
-          serviceRadiusKm: 20,
+          serviceRadiusKm: 25,
           isVerified: true,
+          locationAddress: t.city,
+          locationLat: coords?.lat,
+          locationLng: coords?.lng,
         },
       });
       const wallet = await prisma.creditWallet.upsert({
@@ -89,11 +99,14 @@ async function main() {
     { title: 'Tonte de pelouse', description: 'Pelouse moyenne, équipement sur place.', serviceType: 'jardinage', address: '5600 Av. du Parc', city: 'Montréal', postalCode: 'H2V 4H1', price: 60 },
     { title: 'Livraison meubles Kijiji', description: 'Ramasser un canapé et livrer à Verdun.', serviceType: 'livraison', address: '3900 Rue Wellington', city: 'Verdun', postalCode: 'H4G 1V3', price: 75 },
     { title: 'Aide ménage hebdo', description: '2h de ménage régulier.', serviceType: 'menage', address: '1200 Rue Sherbrooke O', city: 'Montréal', postalCode: 'H3A 1H6', price: 70 },
+    { title: 'Déneigement entrée', description: 'Déblayer entrée et trottoir après tempête.', serviceType: 'autre', address: '880 Rue Rachel E', city: 'Montréal', postalCode: 'H2J 2J2', price: 45 },
+    { title: 'Courses et livraison', description: 'Faire l\'épicerie et livrer chez une personne âgée.', serviceType: 'coursier', address: '1500 Boul. René-Lévesque', city: 'Montréal', postalCode: 'H3G 1T7', price: 35 },
   ];
 
   for (let i = 0; i < demoTasks.length; i++) {
     const t = demoTasks[i];
     const client = clients[i % clients.length];
+    const coords = geocodeQuebecAddress(t.city, t.postalCode);
     const existing = await prisma.task.findFirst({
       where: { title: t.title, clientId: client.id },
     });
@@ -107,11 +120,18 @@ async function main() {
           address: t.address,
           city: t.city,
           postalCode: t.postalCode,
+          locationLat: coords?.lat,
+          locationLng: coords?.lng,
           estimatedPrice: t.price,
           estimatedDuration: 120,
           scheduledDate: new Date(Date.now() + (i + 1) * 86400000),
           status: TaskStatus.open,
         },
+      });
+    } else if (existing.locationLat == null && coords) {
+      await prisma.task.update({
+        where: { id: existing.id },
+        data: { locationLat: coords.lat, locationLng: coords.lng },
       });
     }
   }
@@ -119,6 +139,7 @@ async function main() {
   console.log('Seed complete:');
   console.log('  Clients:', clients.map((c) => c.email).join(', '));
   console.log('  Taskers:', taskers.map((t) => t.email).join(', '));
+  console.log('  Demo jobs:', demoTasks.length, '(with geocoded coordinates)');
   console.log('  Password for all demo accounts: Demo2026!');
 }
 

@@ -14,6 +14,7 @@ export class ChatService {
         messages: { orderBy: { createdAt: 'desc' }, take: 1 },
         client: { select: { id: true, firstName: true, lastName: true } },
         provider: { select: { id: true, firstName: true, lastName: true } },
+        task: { select: { id: true, title: true } },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -27,6 +28,7 @@ export class ChatService {
         clientId: c.clientId,
         clientName: [other.firstName, other.lastName].filter(Boolean).join(' '),
         jobId: c.taskId ?? undefined,
+        jobTitle: c.task?.title,
         unreadCount: 0,
         updatedAt: c.updatedAt.toISOString(),
         lastMessage: last

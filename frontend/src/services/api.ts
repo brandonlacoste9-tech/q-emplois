@@ -98,18 +98,44 @@ class ApiService {
     return response.data;
   }
 
-  async updateProfile(data: Partial<TradesmanProfile>): Promise<TradesmanProfile> {
-    const response = await this.client.patch('/users/me', data);
+  async updateUser(data: Partial<Pick<User, 'firstName' | 'lastName' | 'email' | 'phone'>>) {
+    const response = await this.client.put('/users/me', data);
     return response.data;
   }
 
-  async uploadLicense(file: File): Promise<{ url: string }> {
-    const formData = new FormData();
-    formData.append('license', file);
-    const response = await this.client.post('/profile/license', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+  async updateProvider(data: {
+    serviceTypes: ServiceType[];
+    hourlyRate?: number;
+    serviceRadiusKm?: number;
+    licenseNumber?: string;
+    locationAddress?: string;
+    locationLat?: number;
+    locationLng?: number;
+  }) {
+    const response = await this.client.put('/providers/me', data);
     return response.data;
+  }
+
+  /** @deprecated use updateUser + updateProvider */
+  async updateProfile(data: Partial<TradesmanProfile>): Promise<TradesmanProfile> {
+    await this.updateUser({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+    });
+    if (data.serviceTypes?.length) {
+      await this.updateProvider({
+        serviceTypes: data.serviceTypes,
+        hourlyRate: data.hourlyRate,
+        serviceRadiusKm: data.serviceRadius,
+        licenseNumber: data.licenseNumber,
+        locationAddress: data.address?.street,
+        locationLat: data.address?.coordinates?.lat,
+        locationLng: data.address?.coordinates?.lng,
+      });
+    }
+    return this.getProfile();
   }
 
   async getJobs(filters?: {
@@ -135,6 +161,8 @@ class ApiService {
       address: data.address?.street ?? '',
       city: data.address?.city,
       postalCode: data.address?.postalCode,
+      locationLat: data.address?.coordinates?.lat,
+      locationLng: data.address?.coordinates?.lng,
       scheduledDate: data.scheduledDate,
       estimatedPrice: data.estimatedPrice,
       estimatedDuration: data.estimatedDuration ?? 60,
@@ -188,6 +216,11 @@ class ApiService {
 
   async getReviewsForUser(userId: string) {
     const response = await this.client.get(`/reviews/user/${userId}`);
+    return response.data;
+  }
+
+  async getReviewsForTask(taskId: string) {
+    const response = await this.client.get(`/reviews/task/${taskId}`);
     return response.data;
   }
 
