@@ -139,14 +139,16 @@ export function Dashboard() {
                     <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: gold, padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
                       {JOB_STATUS_LABELS[job.status as JobStatus]}
                     </span>
-                    {job.status === 'pending' && (
+                    {job.status === 'pending' && job.clientId === profile?.id && (
                       <button
+                        type="button"
                         onClick={() => handleDeleteJob(job.id)}
                         className="ghost-btn"
                         title="Supprimer"
-                        style={{ padding: '6px 8px', color: '#C46B6B', borderColor: 'rgba(196,107,107,0.4)' }}
+                        aria-label="Supprimer"
+                        style={{ padding: 4, minWidth: 0, lineHeight: 0, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)', flexShrink: 0 }}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </button>
                     )}
                   </div>

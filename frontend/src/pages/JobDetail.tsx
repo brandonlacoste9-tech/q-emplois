@@ -196,16 +196,17 @@ export function JobDetail() {
               </span>
             )}
 
-            {isClient && job.status === 'pending' && (
+            {isClient && job.status === 'pending' && job.clientId === profile?.id && (
               <>
                 <span className="body-f muted2" style={{ fontSize: 14 }}>En attente d'un travailleur</span>
                 <button
+                  type="button"
                   onClick={handleDelete}
                   disabled={processing}
                   className="ghost-btn"
-                  style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.4)' }}
+                  style={{ padding: '6px 12px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 5, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)' }}
                 >
-                  <Trash2 className="w-4 h-4" /> Supprimer
+                  <Trash2 className="w-3 h-3" /> Supprimer
                 </button>
               </>
             )}

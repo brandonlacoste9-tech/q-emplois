@@ -14,6 +14,15 @@ import { formatPrice, formatDate, formatDuration, formatDistance } from '../util
 
 const gold = '#B87B44';
 
+const deleteBtnStyle: React.CSSProperties = {
+  padding: 4,
+  minWidth: 0,
+  lineHeight: 0,
+  color: '#C46B6B',
+  borderColor: 'rgba(196,107,107,0.35)',
+  flexShrink: 0,
+};
+
 const TASKER_TABS: { value: JobStatus; label: string }[] = [
   { value: 'pending', label: 'Disponibles' },
   { value: 'accepted', label: 'Acceptées' },
@@ -256,6 +265,7 @@ export function Jobs() {
                 onReview={() => setReviewJob(job)}
                 isProcessing={processingJob === job.id}
                 canAccept={!isClient && (creditBalance ?? 0) > 0}
+                canDelete={isClient && job.status === 'pending' && job.clientId === profile?.id}
               />
             ))}
           </div>
@@ -285,9 +295,10 @@ interface JobCardProps {
   onReview: () => void;
   isProcessing: boolean;
   canAccept: boolean;
+  canDelete: boolean;
 }
 
-function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDelete, onReview, isProcessing, canAccept }: JobCardProps) {
+function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDelete, onReview, isProcessing, canAccept, canDelete }: JobCardProps) {
   const statusColors: Record<JobStatus, string> = {
     pending: '#D9A441', accepted: '#7FB069', in_progress: '#6BA3C4',
     completed: '#9A8468', cancelled: '#C46B6B', declined: '#C46B6B',
@@ -375,19 +386,24 @@ function JobCard({ job, isClient, onAccept, onStart, onDecline, onComplete, onDe
             Laisser une évaluation
           </button>
         )}
-        {isClient && job.status === 'pending' && (
+        {canDelete && (
           <>
-            <span className="body-f muted2" style={{ fontSize: 13, flex: 1, textAlign: 'center' }}>En attente d'un travailleur</span>
+            <span className="body-f muted2" style={{ fontSize: 12, flex: 1, textAlign: 'center' }}>En attente d'un travailleur</span>
             <button
-              onClick={(e) => { e.preventDefault(); onDelete(job.id); }}
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(job.id); }}
               disabled={isProcessing}
               className="ghost-btn"
               title="Supprimer"
-              style={{ padding: '8px 12px', fontSize: 14, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.4)' }}
+              aria-label="Supprimer"
+              style={deleteBtnStyle}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3 h-3" />
             </button>
           </>
+        )}
+        {isClient && job.status === 'pending' && !canDelete && (
+          <span className="body-f muted2" style={{ fontSize: 12, width: '100%', textAlign: 'center' }}>En attente d'un travailleur</span>
         )}
       </div>
     </div>

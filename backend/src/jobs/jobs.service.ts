@@ -120,17 +120,24 @@ export class JobsService {
       include: { provider: true },
     });
     const provider = user?.provider;
+    const isClient = user?.role === 'client';
 
     const tasks = await this.prisma.task.findMany({
-      where: {
-        ...(status ? { status } : {}),
-        ...(filters?.serviceType ? { serviceType: filters.serviceType } : {}),
-        OR: [
-          { status: TaskStatus.open },
-          { taskerId: userId },
-          { clientId: userId },
-        ],
-      },
+      where: isClient
+        ? {
+            clientId: userId,
+            ...(status ? { status } : {}),
+            ...(filters?.serviceType ? { serviceType: filters.serviceType } : {}),
+          }
+        : {
+            ...(status ? { status } : {}),
+            ...(filters?.serviceType ? { serviceType: filters.serviceType } : {}),
+            OR: [
+              { status: TaskStatus.open },
+              { taskerId: userId },
+              { clientId: userId },
+            ],
+          },
       include: {
         client: { select: { firstName: true, lastName: true, phone: true } },
       },
