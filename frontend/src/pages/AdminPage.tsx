@@ -54,11 +54,6 @@ export function AdminPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<PendingVerification | null>(null);
   const [rejectReason, setRejectReason] = useState('');
-  const [auditLogs, setAuditLogs] = useState<Array<{ id: string; userId: string; action: string; resource: string; createdAt: string; details?: any; ipAddress?: string }>>([]);
-  const [auditPage, setAuditPage] = useState(1);
-  const [auditTotal, setAuditTotal] = useState(0);
-  const [auditAction, setAuditAction] = useState('');
-  const [showAudit, setShowAudit] = useState(false);
   const [rejectConfirm, setRejectConfirm] = useState(false);
 
   const load = async () => {
@@ -75,16 +70,6 @@ export function AdminPage() {
   };
 
   useEffect(() => { load(); }, []);
-
-  const loadAudit = async () => {
-    try {
-      const data = await api.getAuditLogs({ page: auditPage, action: auditAction || undefined });
-      setAuditLogs(data.logs);
-      setAuditTotal(data.total);
-    } catch {
-      setAuditLogs([]);
-    }
-  };
 
   const approve = async (providerId: string) => {
     setProcessing(providerId);
@@ -171,12 +156,6 @@ export function AdminPage() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 28 }}>
-          <button onClick={() => { setShowAudit(false); }} className={!showAudit ? 'gold-btn' : 'ghost-btn'} style={{ padding: '10px 20px' }}>Vérifications</button>
-          <button onClick={() => { setShowAudit(true); loadAudit(); }} className={showAudit ? 'gold-btn' : 'ghost-btn'} style={{ padding: '10px 20px' }}>Audit (Loi 25)</button>
-        </div>
-
-        {!showAudit ? (
         <div className="stitch-box" style={{ ...card, marginBottom: 28 }}>
           <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <Shield className="w-5 h-5" style={{ color: gold }} /> Vérifications en attente ({pending.length})
@@ -231,50 +210,6 @@ export function AdminPage() {
           </div>
         )}
       </div>
-
-      ) : (
-        // Audit log viewer
-        <div className="stitch-box" style={{ ...card, marginBottom: 28 }}>
-          <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Shield className="w-5 h-5" style={{ color: gold }} /> Logs d'audit ({auditTotal})
-          </h2>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            <select className="q-field" style={{ maxWidth: 200 }} value={auditAction} onChange={(e) => { setAuditAction(e.target.value); loadAudit(); }}>
-              <option value="">Toutes les actions</option>
-              <option value="provider_verified">Vérification approuvée</option>
-              <option value="provider_verification_rejected">Vérification rejetée</option>
-              <option value="deletion_requested">Suppression demandée</option>
-              <option value="login">Connexion</option>
-              <option value="data_access">Accès données</option>
-            </select>
-            <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
-              <button disabled={auditPage <= 1} onClick={() => { setAuditPage(auditPage - 1); loadAudit(); }} className="ghost-btn" style={{ padding: '6px 12px' }}>←</button>
-              <span className="body-f cream-hi" style={{ alignSelf: 'center', fontSize: 13 }}>{auditPage} / {Math.ceil(auditTotal / 50) || 1}</span>
-              <button disabled={auditPage >= Math.ceil(auditTotal / 50)} onClick={() => { setAuditPage(auditPage + 1); loadAudit(); }} className="ghost-btn" style={{ padding: '6px 12px' }}>→</button>
-            </div>
-          </div>
-          <table className="body-f" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead>
-              <tr style={{ color: '#D9A441', borderBottom: '1px solid rgba(217,179,140,0.2)' }}>
-                <th style={{ padding: 8, textAlign: 'left' }}>Date</th>
-                <th style={{ padding: 8, textAlign: 'left' }}>Action</th>
-                <th style={{ padding: 8, textAlign: 'left' }}>Ressource</th>
-                <th style={{ padding: 8, textAlign: 'left' }}>Utilisateur</th>
-              </tr>
-            </thead>
-            <tbody>
-              {auditLogs.map((l) => (
-                <tr key={l.id} style={{ borderBottom: '1px solid rgba(217,179,140,0.06)' }}>
-                  <td className="muted2" style={{ padding: 8 }}>{new Date(l.createdAt).toLocaleString('fr-CA')}</td>
-                  <td className="cream-hi" style={{ padding: 8 }}>{l.action}</td>
-                  <td className="muted2" style={{ padding: 8 }}>{l.resource} {l.resourceId?.slice(0, 8)}</td>
-                  <td className="muted2" style={{ padding: 8 }}>{l.userId?.slice(0, 8) || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
 
       {rejecting && (
         <div role="dialog" aria-modal="true" onClick={cancelReject} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
