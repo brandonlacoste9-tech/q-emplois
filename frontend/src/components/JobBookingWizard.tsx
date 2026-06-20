@@ -34,6 +34,7 @@ export type BookingFormData = {
   scheduledDate: string;
   estimatedPrice: string;
   street: string;
+  apt: string;
   city: string;
   postalCode: string;
   photoUrls: string[];
@@ -53,6 +54,7 @@ const T = {
     photosHint: 'Aide les travailleurs à mieux comprendre la tâche. Max 3 photos.',
     date: 'Date souhaitée (optionnel)',
     street: 'Rue (optionnel — à compléter après sélection)',
+    apt: 'Apt# (optionnel)',
     city: 'Ville',
     postal: 'Code postal',
     price: 'Budget ($)',
@@ -86,6 +88,7 @@ const T = {
     photosHint: 'Help taskers understand the job. Up to 3 photos.',
     date: 'Preferred date (optional)',
     street: 'Street (optional — add after you select a tasker)',
+    apt: 'Apt# (optional)',
     city: 'City',
     postal: 'Postal code',
     price: 'Budget ($)',
@@ -117,6 +120,7 @@ const emptyForm = (): BookingFormData => ({
   scheduledDate: '',
   estimatedPrice: '',
   street: '',
+  apt: '',
   city: '',
   postalCode: '',
   photoUrls: [],
@@ -131,7 +135,12 @@ function defaultTitle(data: BookingFormData): string {
 function buildJobPayload(data: BookingFormData) {
   const title = defaultTitle(data);
   const description = data.description.trim() || title;
-  const street = data.street.trim() || `Secteur ${data.postalCode.trim()}`;
+  
+  let street = data.street.trim() || `Secteur ${data.postalCode.trim()}`;
+  if (data.street.trim() && data.apt.trim()) {
+    street = `${data.street.trim()}, Apt ${data.apt.trim()}`;
+  }
+
   const coords = geocodeQuebecAddress(data.city, data.postalCode);
   return {
     title,
@@ -402,9 +411,15 @@ export function JobBookingWizard({ mode, searchParams, onPublished, onGuestCompl
                   label={t.photos}
                   hint={t.photosHint}
                 />
-                <div>
-                  <label className="q-label">{t.street}</label>
-                  <input className="q-field" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} placeholder="123 Rue Principale" />
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className="q-label">{t.street}</label>
+                    <input className="q-field" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} placeholder="123 Rue Principale" />
+                  </div>
+                  <div>
+                    <label className="q-label">{t.apt}</label>
+                    <input className="q-field" value={formData.apt} onChange={(e) => setFormData({ ...formData, apt: e.target.value })} placeholder="4B" />
+                  </div>
                 </div>
                 <p className="body-f muted2" style={{ fontSize: 12, lineHeight: 1.5, padding: '10px 12px', borderRadius: 8, background: 'rgba(184,123,68,0.1)', border: '1px dashed rgba(217,179,140,0.25)' }}>
                   🔒 {t.privacyNote}
