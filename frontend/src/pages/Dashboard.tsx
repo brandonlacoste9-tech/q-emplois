@@ -238,6 +238,13 @@ export function Dashboard() {
               link: '/profile',
             },
             {
+              id: 'verify',
+              label: 'Vérifier votre identité',
+              description: 'Téléversez une pièce d\'identité — approbation sous 48 h',
+              done: !!profile?.isVerified,
+              link: '/profile',
+            },
+            {
               id: 'credits',
               label: 'Obtenir des crédits',
               description: '1 crédit = 1 candidature',

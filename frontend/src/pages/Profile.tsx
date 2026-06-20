@@ -22,6 +22,11 @@ import { useToast } from '../components/Toast';
 import { gold } from '../styles/design-tokens';
 import { UserAvatar } from '../components/UserAvatar';
 import { ImageUpload } from '../components/ImageUpload';
+import {
+  getTaskerVerificationStatus,
+  VERIFICATION_LABELS,
+  VERIFICATION_HINTS,
+} from '../utils/taskerVerification';
 
 const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 20 };
 
@@ -142,6 +147,13 @@ export function Profile() {
     );
   }
 
+  const verificationStatus = getTaskerVerificationStatus(profile);
+  const verificationColors: Record<typeof verificationStatus, string> = {
+    verified: '#7FB069',
+    pending: '#D9A441',
+    unverified: '#C46B6B',
+  };
+
   const field = (label: string, value: string | number | undefined, onChange: (v: string) => void, icon: React.ReactNode, type = 'text', placeholder = '') => (
     <div>
       <label className="q-label">{label}</label>
@@ -188,7 +200,14 @@ export function Profile() {
         {showTaskerSetup && !canTask && (
           <div className="stitch-box body-f" style={{ ...card, marginBottom: 20, padding: 16, background: 'rgba(184,123,68,0.12)' }}>
             <p className="cream-hi" style={{ fontWeight: 600, marginBottom: 6 }}>Activer le mode travailleur</p>
-            <p className="muted" style={{ fontSize: 14 }}>Choisissez vos types de services et votre ville ci-dessous pour accepter des jobs.</p>
+            <p className="muted" style={{ fontSize: 14 }}>Choisissez vos types de services, votre ville et téléversez une pièce d&apos;identité pour postuler aux jobs.</p>
+          </div>
+        )}
+
+        {canTask && verificationStatus !== 'verified' && (
+          <div className="stitch-box body-f" style={{ ...card, marginBottom: 20, padding: 16, background: 'rgba(184,123,68,0.12)' }}>
+            <p className="cream-hi" style={{ fontWeight: 600, marginBottom: 6 }}>{VERIFICATION_LABELS[verificationStatus]}</p>
+            <p className="muted" style={{ fontSize: 14, margin: 0 }}>{VERIFICATION_HINTS[verificationStatus]}</p>
           </div>
         )}
 
@@ -222,9 +241,14 @@ export function Profile() {
                 <span className="body-f muted2" style={{ fontSize: 13 }}>({profile.reviewCount ?? 0} avis)</span>
               </div>
               <div style={{ marginTop: 14 }}>
-                <span className="body-f" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 999, color: '#1F2F3F', background: profile.isVerified ? '#7FB069' : '#D9A441' }}>
-                  {profile.isVerified ? <><Check className="w-3 h-3" /> Profil vérifié</> : 'Vérification en cours'}
+                <span className="body-f" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 999, color: '#1F2F3F', background: verificationColors[verificationStatus] }}>
+                  {verificationStatus === 'verified' ? <><Check className="w-3 h-3" /> {VERIFICATION_LABELS.verified}</> : VERIFICATION_LABELS[verificationStatus]}
                 </span>
+                {canTask && (
+                  <p className="body-f muted2" style={{ fontSize: 12, marginTop: 10, lineHeight: 1.5 }}>
+                    {VERIFICATION_HINTS[verificationStatus]}
+                  </p>
+                )}
               </div>
               <div className="divider" style={{ margin: '18px 0' }} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left' }}>
@@ -366,22 +390,29 @@ export function Profile() {
               </h4>
               {field("Numéro de certification (optionnel)", isEditing ? formData.licenseNumber : profile.licenseNumber, (v) => setFormData({ ...formData, licenseNumber: v }), <Award className="w-4 h-4" />, 'text', 'ex: CERT-1234-5678')}
               <div style={{ marginTop: 14 }}>
-                {isEditing ? (
-                  <div>
-                    <label className="q-label">Pièce d&apos;identité (max 1 Mo)</label>
+                {canTask && verificationStatus !== 'verified' && (
+                  <div style={{ marginBottom: 12 }}>
+                    <label className="q-label">Pièce d&apos;identité (requis, max 1 Mo)</label>
                     <input type="file" accept="image/*,.pdf" onChange={handleDocumentUpload} className="q-field" style={{ padding: 8 }} />
-                    <p className="body-f muted2" style={{ fontSize: 12, marginTop: 8 }}>Téléversement immédiat — vérification par l&apos;équipe sous 48 h.</p>
+                    <p className="body-f muted2" style={{ fontSize: 12, marginTop: 8 }}>
+                      Téléversement immédiat — vérification par l&apos;équipe sous 48 h.
+                    </p>
                   </div>
-                ) : profile.licenseDocument ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'rgba(127,176,105,0.12)', borderRadius: 8 }}>
-                    <Award className="w-5 h-5" style={{ color: '#7FB069' }} />
+                )}
+                {profile.licenseDocument ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: verificationStatus === 'verified' ? 'rgba(127,176,105,0.12)' : 'rgba(217,164,65,0.12)', borderRadius: 8 }}>
+                    <Award className="w-5 h-5" style={{ color: verificationStatus === 'verified' ? '#7FB069' : '#D9A441' }} />
                     <div>
-                      <p className="body-f cream-hi" style={{ fontSize: 14, fontWeight: 600 }}>Document téléchargé</p>
-                      <p className="body-f muted2" style={{ fontSize: 12 }}>Vérifié par notre équipe</p>
+                      <p className="body-f cream-hi" style={{ fontSize: 14, fontWeight: 600 }}>Document téléversé</p>
+                      <p className="body-f muted2" style={{ fontSize: 12 }}>
+                        {verificationStatus === 'verified'
+                          ? 'Identité confirmée par notre équipe'
+                          : 'En attente de vérification (sous 48 h)'}
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <p className="body-f muted2" style={{ fontSize: 14 }}>Aucun document téléchargé</p>
+                ) : canTask ? null : (
+                  <p className="body-f muted2" style={{ fontSize: 14 }}>Aucun document téléversé</p>
                 )}
               </div>
             </div>

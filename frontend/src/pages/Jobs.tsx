@@ -12,6 +12,12 @@ import {
 } from 'lucide-react';
 import { formatPrice, formatDate, formatDuration, formatJobLocation } from '../utils';
 import { gold } from '../styles/design-tokens';
+import {
+  canTaskerApply,
+  getTaskerVerificationStatus,
+  VERIFICATION_HINTS,
+  VERIFICATION_LABELS,
+} from '../utils/taskerVerification';
 
 const deleteBtnStyle: React.CSSProperties = {
   padding: 4,
@@ -43,7 +49,7 @@ const SERVICE_TYPES: ServiceType[] = [
 ];
 
 export function Jobs() {
-  const { profile, isClientMode } = useAuth();
+  const { profile, isClientMode, canTask } = useAuth();
   const isClient = isClientMode;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [activeTab, setActiveTab] = useState<string>(isClient ? 'all' : 'pending');
@@ -192,6 +198,8 @@ export function Jobs() {
   });
 
   const tabs = isClient ? CLIENT_TABS : TASKER_TABS;
+  const verificationStatus = getTaskerVerificationStatus(profile);
+  const taskerCanApply = canTaskerApply(profile);
 
   return (
     <div className="leather" style={{ minHeight: '100vh' }}>
@@ -225,6 +233,16 @@ export function Jobs() {
             )}
           </div>
         </div>
+
+        {!isClient && canTask && !taskerCanApply && (
+          <div className="stitch-box body-f" style={{ background: 'rgba(184,123,68,0.12)', padding: 16, marginBottom: 20 }}>
+            <p className="cream-hi" style={{ fontWeight: 600, marginBottom: 6 }}>{VERIFICATION_LABELS[verificationStatus]}</p>
+            <p className="muted" style={{ fontSize: 14, marginBottom: 12 }}>{VERIFICATION_HINTS[verificationStatus]}</p>
+            <Link to="/profile" className="gold-btn" style={{ padding: '8px 16px', fontSize: 13, textDecoration: 'none', display: 'inline-block' }}>
+              Compléter la vérification
+            </Link>
+          </div>
+        )}
 
         {showFilters && !isClient && (
           <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 18, marginBottom: 20 }}>
@@ -274,7 +292,8 @@ export function Jobs() {
                 onDelete={handleDelete}
                 onReview={() => setReviewJob(job)}
                 isProcessing={processingJob === job.id}
-                canApply={!isClient && (creditBalance ?? 0) > 0 && job.myApplicationStatus !== 'pending'}
+                canApply={!isClient && taskerCanApply && (creditBalance ?? 0) > 0 && job.myApplicationStatus !== 'pending'}
+                verificationBlocked={!isClient && canTask && !taskerCanApply}
                 priceGuide={priceGuides[job.serviceType] ?? priceGuides.autre}
                 canDelete={isClient && job.status === 'pending' && job.clientId === profile?.id}
               />
@@ -306,11 +325,12 @@ interface JobCardProps {
   onReview: () => void;
   isProcessing: boolean;
   canApply: boolean;
+  verificationBlocked?: boolean;
   canDelete: boolean;
   priceGuide?: PriceGuideRange;
 }
 
-function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onReview, isProcessing, canApply, canDelete, priceGuide }: JobCardProps) {
+function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onReview, isProcessing, canApply, verificationBlocked, canDelete, priceGuide }: JobCardProps) {
   const statusColors: Record<JobStatus, string> = {
     pending: '#D9A441', accepted: '#7FB069', in_progress: '#6BA3C4',
     completed: '#9A8468', cancelled: '#C46B6B', declined: '#C46B6B',
@@ -391,7 +411,12 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onRev
             <button onClick={() => onAccept(job.id)} disabled={isProcessing || !canApply} className="gold-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: canApply ? 1 : 0.5 }}>
               <Check className="w-4 h-4" /> Postuler
             </button>
-            {!canApply && (
+            {!canApply && verificationBlocked && (
+              <Link to="/profile" className="ghost-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}>
+                Vérification requise
+              </Link>
+            )}
+            {!canApply && !verificationBlocked && (
               <Link to="/credits" className="ghost-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}>
                 Acheter crédits
               </Link>

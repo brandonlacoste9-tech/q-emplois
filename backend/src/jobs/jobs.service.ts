@@ -48,6 +48,27 @@ export class JobsService {
     return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
+  private async assertCanApplyAsTasker(taskerId: string): Promise<void> {
+    const provider = await this.prisma.provider.findUnique({
+      where: { userId: taskerId },
+    });
+    if (!provider) {
+      throw new BadRequestException(
+        'Complétez votre profil travailleur et téléversez une pièce d\'identité pour postuler.',
+      );
+    }
+    if (!provider.licenseDocumentUrl) {
+      throw new BadRequestException(
+        'Téléversez une pièce d\'identité sur votre profil avant de postuler.',
+      );
+    }
+    if (!provider.isVerified) {
+      throw new BadRequestException(
+        'Votre profil est en cours de vérification. Vous pourrez postuler une fois approuvé.',
+      );
+    }
+  }
+
   private computeDistance(task: any, provider?: any): number | undefined {
     if (
       provider?.locationLat == null ||
@@ -316,6 +337,8 @@ export class JobsService {
   }
 
   async claim(taskId: string, taskerId: string, skipCreditSpend = false) {
+    await this.assertCanApplyAsTasker(taskerId);
+
     const task = await this.prisma.task.findUnique({ where: { id: taskId } });
     if (!task) throw new NotFoundException('Tâche non trouvée.');
     if (task.status !== TaskStatus.open) {
@@ -398,6 +421,8 @@ export class JobsService {
   }
 
   async apply(taskId: string, taskerId: string, dto: ApplyTaskDto) {
+    await this.assertCanApplyAsTasker(taskerId);
+
     const task = await this.prisma.task.findUnique({ where: { id: taskId } });
     if (!task) throw new NotFoundException('Tâche non trouvée.');
     if (task.status !== TaskStatus.open) {

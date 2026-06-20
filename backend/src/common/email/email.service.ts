@@ -102,4 +102,23 @@ export class EmailService {
       `,
     });
   }
+
+  async sendVerificationPendingAdmin(
+    adminEmail: string,
+    taskerName: string,
+    taskerEmail: string,
+    adminUrl: string,
+  ): Promise<void> {
+    await this.send({
+      to: adminEmail,
+      subject: `Vérification en attente — ${taskerName}`,
+      html: `
+        <p>Bonjour,</p>
+        <p><strong>${taskerName}</strong> (${taskerEmail}) a téléversé une pièce d'identité.</p>
+        <p><a href="${adminUrl}">Examiner la file de vérification</a></p>
+        <p>— Q-Emplois</p>
+      `,
+      text: `${taskerName} (${taskerEmail}) attend une vérification. ${adminUrl}`,
+    });
+  }
 }

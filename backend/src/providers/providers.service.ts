@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreditsService } from '../credits/credits.service';
 import { StorageService } from '../common/storage/storage.service';
+import { EmailService } from '../common/email/email.service';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { phoneToWhatsappId } from '../common/utils/phone';
 
@@ -66,6 +68,8 @@ export class ProvidersService {
     private readonly prisma: PrismaService,
     private readonly creditsService: CreditsService,
     private readonly storageService: StorageService,
+    private readonly emailService: EmailService,
+    private readonly configService: ConfigService,
   ) {}
 
   async upsertForUser(userId: string, dto: UpsertProviderDto) {
@@ -149,6 +153,7 @@ export class ProvidersService {
   async search(serviceType?: string, city?: string, postalCode?: string) {
     const providers = await this.prisma.provider.findMany({
       where: {
+        isVerified: true,
         NOT: { serviceTypes: { isEmpty: true } },
         ...(serviceType ? { serviceTypes: { has: serviceType } } : {}),
         ...(city
@@ -215,6 +220,9 @@ export class ProvidersService {
       },
     });
     if (!provider) throw new NotFoundException('Profil prestataire non trouvé.');
+    if (!provider.isVerified) {
+      throw new NotFoundException('Profil prestataire non trouvé.');
+    }
 
     return {
       id: provider.user.id,
@@ -270,6 +278,19 @@ export class ProvidersService {
         verifiedAt: null,
       },
     });
+
+    const adminEmail =
+      this.configService.get<string>('ADMIN_EMAIL') || 'admin@qemplois.ca';
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    const taskerName =
+      [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+    await this.emailService.sendVerificationPendingAdmin(
+      adminEmail,
+      taskerName,
+      user.email,
+      `${frontendUrl}/admin`,
+    );
 
     return { licenseDocumentUrl: url };
   }

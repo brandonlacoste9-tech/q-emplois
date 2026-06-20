@@ -15,6 +15,12 @@ import {
 import { formatDate, formatDistance, formatDuration, formatPrice, formatJobLocation } from '../utils';
 import { gold } from '../styles/design-tokens';
 import { UserAvatar } from '../components/UserAvatar';
+import {
+  canTaskerApply,
+  getTaskerVerificationStatus,
+  VERIFICATION_HINTS,
+  VERIFICATION_LABELS,
+} from '../utils/taskerVerification';
 
 export function JobDetail() {
   const { id } = useParams<{ id: string }>();
@@ -157,7 +163,9 @@ export function JobDetail() {
   const isJobOwner = job.clientId === profile?.id;
   const showTaskerActions = canTask && !isJobOwner;
   const hasApplied = job.myApplicationStatus === 'pending';
-  const canApply = showTaskerActions && job.status === 'pending' && !hasApplied && (creditBalance ?? 0) > 0;
+  const taskerCanApply = canTaskerApply(profile);
+  const verificationStatus = getTaskerVerificationStatus(profile);
+  const canApply = showTaskerActions && job.status === 'pending' && !hasApplied && (creditBalance ?? 0) > 0 && taskerCanApply;
 
   return (
     <div className="leather" style={{ minHeight: '100vh' }}>
@@ -220,6 +228,16 @@ export function JobDetail() {
             <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 20, fontStyle: 'italic' }}>
               Contact et adresse masqués. Postulez pour être considéré; le client choisira un travailleur.
             </p>
+          )}
+
+          {showTaskerActions && !taskerCanApply && job.status === 'pending' && !hasApplied && (
+            <div className="stitch-box body-f" style={{ padding: 14, marginBottom: 20, background: 'rgba(184,123,68,0.12)' }}>
+              <p className="cream-hi" style={{ fontWeight: 600, marginBottom: 6 }}>{VERIFICATION_LABELS[verificationStatus]}</p>
+              <p className="muted" style={{ fontSize: 13, marginBottom: 10 }}>{VERIFICATION_HINTS[verificationStatus]}</p>
+              <Link to="/profile" className="gold-btn" style={{ padding: '8px 14px', fontSize: 13, textDecoration: 'none', display: 'inline-block' }}>
+                Compléter la vérification
+              </Link>
+            </div>
           )}
 
           {hasApplied && (
