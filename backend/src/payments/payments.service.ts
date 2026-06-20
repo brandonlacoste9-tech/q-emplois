@@ -10,6 +10,7 @@ import Stripe from 'stripe';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreditsService, CREDIT_PACKS } from '../credits/credits.service';
 import { EscrowMilestoneStatus } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class PaymentsService {
@@ -20,6 +21,7 @@ export class PaymentsService {
     private readonly prisma: PrismaService,
     @Inject(forwardRef(() => CreditsService))
     private readonly creditsService: CreditsService,
+    private readonly notificationsService: NotificationsService,
   ) {
     const key = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (key) {
@@ -266,6 +268,23 @@ export class PaymentsService {
         verifiedBy: userId,
       },
     });
+
+    // Notify both parties
+    const amount = `$${Number(milestone.amount).toFixed(2)}`;
+    await this.notificationsService.create(
+      contract.clientId,
+      'escrow_release',
+      'Jalon libéré',
+      `Un jalon de ${amount} a été libéré pour le contrat « ${contract.taskDescription} ».`,
+      { contractId, milestoneId, amount: Number(milestone.amount) },
+    );
+    await this.notificationsService.create(
+      contract.providerId,
+      'escrow_release',
+      'Paiement reçu',
+      `Un paiement de ${amount} a été libéré pour le jalon « ${milestone.description} ».`,
+      { contractId, milestoneId, amount: Number(milestone.amount) },
+    );
 
     return { success: true, milestoneId };
   }
