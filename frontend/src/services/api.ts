@@ -424,8 +424,11 @@ class ApiService {
     return response.data;
   }
 
-  async rejectVerification(providerId: string) {
-    const response = await this.client.post(`/admin/verifications/${providerId}/reject`);
+  async rejectVerification(providerId: string, reason?: string) {
+    const response = await this.client.post(
+      `/admin/verifications/${providerId}/reject`,
+      reason ? { reason } : {},
+    );
     return response.data;
   }
 }
