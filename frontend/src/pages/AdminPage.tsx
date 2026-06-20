@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 import { BarChart3, Check, ExternalLink, Shield, X } from 'lucide-react';
+import { gold } from '../styles/design-tokens';
 
-const gold = '#B87B44';
 const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 20 };
 
 interface BetaMetrics {

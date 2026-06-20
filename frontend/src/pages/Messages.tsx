@@ -5,8 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import type { Conversation, Message } from '../types';
 import { MessageSquare, Send, Loader2 } from 'lucide-react';
-
-const gold = '#B87B44';
+import { gold } from '../styles/design-tokens';
 
 export function Messages() {
   const { user } = useAuth();

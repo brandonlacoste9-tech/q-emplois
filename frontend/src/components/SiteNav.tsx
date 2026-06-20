@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { BrandLogo } from "./BrandLogo";
+import { colors } from "../styles/design-tokens";
 
 type Lang = "fr" | "en";
 
@@ -58,7 +59,7 @@ export function SiteNav({
               border: "1px dashed rgba(217,179,140,0.35)",
               borderRadius: 6,
               background: "transparent",
-              color: "#D9B38C",
+              color: colors.cream,
               cursor: "pointer",
               fontSize: 12,
               fontFamily: "monospace",

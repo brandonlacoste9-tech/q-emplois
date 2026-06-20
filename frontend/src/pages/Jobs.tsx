@@ -11,8 +11,7 @@ import {
   MapPin, Calendar, Clock, DollarSign, Check, Filter, Briefcase, Loader2, Play, Coins, Trash2,
 } from 'lucide-react';
 import { formatPrice, formatDate, formatDuration, formatJobLocation } from '../utils';
-
-const gold = '#B87B44';
+import { gold } from '../styles/design-tokens';
 
 const deleteBtnStyle: React.CSSProperties = {
   padding: 4,

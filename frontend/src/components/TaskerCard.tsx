@@ -2,8 +2,7 @@ import { Star, BadgeCheck, MapPin } from 'lucide-react';
 import type { TaskerCardData } from '../types';
 import { SERVICE_TYPE_LABELS } from '../types';
 import { formatPrice } from '../utils';
-
-const gold = '#B87B44';
+import { gold } from '../styles/design-tokens';
 
 interface TaskerCardProps {
   tasker: TaskerCardData;

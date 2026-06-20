@@ -2,6 +2,7 @@
    Q-emplois — Shared "Cuir québécois" theme
    Navy leather palette aligned with the homepage (LandingPage).
    Imported globally so every page shares the same look & feel.
+   TS mirror: frontend/src/styles/design-tokens.ts (keep :root in sync)
    Palette:  bg #1F2F3F | cream #D9B38C | gold #B87B44
    Fonts:    Playfair Display (display) + Lora (body)
    ============================================================ */

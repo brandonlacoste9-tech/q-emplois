@@ -19,8 +19,8 @@ import {
 } from 'lucide-react';
 import { formatPrice } from '../utils';
 import { useToast } from '../components/Toast';
+import { gold } from '../styles/design-tokens';
 
-const gold = '#B87B44';
 const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 20 };
 
 // Focused on regular local jobs (not prestige trades)

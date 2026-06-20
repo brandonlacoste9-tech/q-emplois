@@ -1,0 +1,45 @@
+---
+description: Québec emplois cuir québécois design system — colors, components, branding
+globs: frontend/src/**/*.{tsx,ts,css}
+alwaysApply: true
+---
+
+# Québec emplois design system
+
+## Source of truth
+
+- **CSS classes:** `frontend/src/styles/theme.css` (`.leather`, `.stitch-box`, `.gold-btn`, `.ghost-btn`, `.q-field`, `.q-label`, `.serif`, `.body-f`, `.cream-hi`, `.muted`, `.nav-link`)
+- **TS tokens:** `frontend/src/styles/design-tokens.ts` — import `colors`, `gold`, `alpha`, `fonts`, `gradients` for inline styles
+- **Logo:** `frontend/src/components/BrandLogo.tsx` only — never duplicate the wordmark
+- **Marketing shell:** `SiteNav`, `SiteFooter` for public pages; `AppNav` for logged-in app
+- **Hero asset:** `frontend/public/hero/hero-quebec.jpg`
+
+## Palette (navy leather)
+
+| Token | Hex |
+|-------|-----|
+| bg | `#1F2F3F` |
+| cream | `#D9B38C` |
+| gold | `#B87B44` |
+| cream-hi | `#E8CDB0` |
+
+Do **not** use Tailwind `quebec-blue` (`#003DA5`) on marketing/auth pages — that is legacy.
+
+## Rules for new UI
+
+1. Prefer `theme.css` classes over inline styles.
+2. When inline styles are needed, import from `design-tokens.ts` — never hard-code `#B87B44`, `#D9B38C`, etc.
+3. Use `BrandLogo` with `size="lg"|"md"|"sm"` — spells **Québec** on large, **Quebec** on nav.
+4. Public pages: wrap in `<div className="leather">`, use `.stitch-box` for cards, `.gold-btn` for primary CTAs.
+5. FR-default copy; EN toggle where the page already supports `lang`.
+6. Brand name in copy: **Québec emplois** or **Québec Emplois** — not bare **Q-Emplois** unless space-constrained (SMS).
+
+## Example
+
+```tsx
+import { colors, gold, alpha, gradients } from '../styles/design-tokens';
+
+<div className="leather stitch-box" style={{ color: colors.cream }}>
+  <span style={{ background: gold, color: colors.onGold }}>1</span>
+</div>
+```

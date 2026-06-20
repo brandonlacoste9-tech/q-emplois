@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { BrandLogo } from './BrandLogo';
-
-const gold = '#B87B44';
+import { gold } from '../styles/design-tokens';
 
 export function AppNav() {
   const [open, setOpen] = useState(false);

@@ -3,10 +3,9 @@ import { Link } from 'react-router-dom';
 import { SiteNav } from '../components/SiteNav';
 import { SiteFooter } from '../components/SiteFooter';
 import { Copy, MapPin, Shield, Sparkles, Users } from 'lucide-react';
+import { colors, gold } from '../styles/design-tokens';
 
 type Lang = 'fr' | 'en';
-
-const gold = '#B87B44';
 
 const T = {
   fr: {
@@ -165,7 +164,7 @@ export function AidePage() {
   const t = T[lang];
 
   return (
-    <div className="leather" style={{ minHeight: '100vh', color: '#D9B38C' }}>
+    <div className="leather" style={{ minHeight: '100vh', color: colors.cream }}>
       <SiteNav lang={lang} onToggleLang={() => setLang(lang === 'fr' ? 'en' : 'fr')} />
 
       <section style={{ padding: '120px 24px 48px', maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>

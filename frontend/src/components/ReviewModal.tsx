@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { api } from '../services/api';
 import { useToast } from '../components/Toast';
-
-const gold = '#B87B44';
+import { gold } from '../styles/design-tokens';
 
 interface ReviewModalProps {
   taskId: string;

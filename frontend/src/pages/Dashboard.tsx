@@ -18,10 +18,10 @@ import { JOB_STATUS_LABELS } from '../types';
 import { api } from '../services/api';
 import { TaskerOnboarding } from '../components/TaskerOnboarding';
 import { formatPrice, formatShortDate, formatTime, formatDistance } from '../utils';
+import { gold } from '../styles/design-tokens';
 
 const wrap: React.CSSProperties = { maxWidth: 1200, margin: '0 auto', padding: '32px 24px' };
 const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 20 };
-const gold = '#B87B44';
 
 export function Dashboard() {
   const { profile, isClientMode } = useAuth();

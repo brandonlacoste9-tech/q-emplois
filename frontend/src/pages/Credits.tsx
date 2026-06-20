@@ -5,8 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { formatPrice } from '../utils';
 import { Coins, Award, Loader2, ShoppingCart } from 'lucide-react';
-
-const gold = '#B87B44';
+import { gold } from '../styles/design-tokens';
 
 type PackKey = 'starter' | 'standard' | 'pro';
 

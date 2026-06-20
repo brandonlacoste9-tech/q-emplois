@@ -13,8 +13,7 @@ import {
   Loader2, MapPin, MessageSquare, Play, Star, Trash2, X,
 } from 'lucide-react';
 import { formatDate, formatDistance, formatDuration, formatPrice, formatJobLocation } from '../utils';
-
-const gold = '#B87B44';
+import { gold } from '../styles/design-tokens';
 
 export function JobDetail() {
   const { id } = useParams<{ id: string }>();

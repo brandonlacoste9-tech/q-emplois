@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Check, Circle, ChevronRight } from 'lucide-react';
-
-const gold = '#B87B44';
+import { gold } from '../styles/design-tokens';
 
 export interface OnboardingStep {
   id: string;

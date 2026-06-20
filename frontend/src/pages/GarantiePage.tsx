@@ -2,13 +2,13 @@ import { Link } from 'react-router-dom';
 import { SiteNav } from '../components/SiteNav';
 import { SiteFooter } from '../components/SiteFooter';
 import { Shield, Mail, CheckCircle } from 'lucide-react';
+import { colors, gold } from '../styles/design-tokens';
 
-const gold = '#B87B44';
 const SUPPORT_EMAIL = 'support@qemplois.ca';
 
 export function GarantiePage() {
   return (
-    <div className="leather" style={{ minHeight: '100vh', color: '#D9B38C' }}>
+    <div className="leather" style={{ minHeight: '100vh', color: colors.cream }}>
       <SiteNav lang="fr" onToggleLang={() => undefined} />
 
       <section style={{ maxWidth: 760, margin: '0 auto', padding: '120px 24px 64px' }}>
