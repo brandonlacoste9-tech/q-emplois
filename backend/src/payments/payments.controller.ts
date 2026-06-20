@@ -49,6 +49,7 @@ class CreateEscrowDto {
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
+  @Public()
   @Post('webhook')
   @ApiOperation({ summary: 'Stripe webhook' })
   handleWebhook(

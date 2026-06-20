@@ -25,6 +25,7 @@ import { StorageModule } from './common/storage/storage.module';
 import { AdminModule } from './admin/admin.module';
 import { GeoModule } from './geo/geo.module';
 import { MediaModule } from './media/media.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { MediaModule } from './media/media.module';
     AdminModule,
     GeoModule,
     MediaModule,
+    WebhooksModule,
   ],
 })
 export class AppModule {}

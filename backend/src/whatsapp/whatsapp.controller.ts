@@ -28,13 +28,42 @@ export class WhatsAppController {
 
     this.logger.debug(`Received WhatsApp message from ${from}`);
 
+    // Handle /start link_<userId> for account linking
+    const linkMatch = messageBody.match(/^\/start\s+link_([a-zA-Z0-9-]+)/);
+    if (linkMatch) {
+      const userId = linkMatch[1];
+      try {
+        const user = await this.taskAlerts['prisma'].user.findUnique({ where: { id: userId } });
+        if (!user) {
+          return this.xmlReply('❌ Lien invalide. Aucun compte trouvé.');
+        }
+        const existing = await this.taskAlerts['prisma'].user.findUnique({ where: { whatsappId: from } });
+        if (existing && existing.id !== userId) {
+          return this.xmlReply('❌ Ce numéro WhatsApp est déjà lié à un autre compte.');
+        }
+        await this.taskAlerts['prisma'].user.update({
+          where: { id: userId },
+          data: { whatsappId: from },
+        });
+        this.logger.log(`WhatsApp linked: user=${userId} number=${from}`);
+        return this.xmlReply(`✅ Compte lié avec succès, ${profileName} !\n\nTu recevras maintenant tes notifications Q-Emplois ici en temps réel.\n📌 Envoie STOP pour te désabonner.`);
+      } catch (err) {
+        this.logger.error('WhatsApp link error:', err);
+        return this.xmlReply('❌ Erreur lors de la liaison. Réessaye plus tard.');
+      }
+    }
+
     const taskReply = await this.taskAlerts.handleTaskerReply(from, messageBody, profileName);
     const response =
       taskReply ?? this.whatsAppService.processGeneralMessage(messageBody, profileName);
 
+    return this.xmlReply(response);
+  }
+
+  private xmlReply(text: string): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-<Message>${this.escapeXml(response)}</Message>
+<Message>${this.escapeXml(text)}</Message>
 </Response>`;
   }
 

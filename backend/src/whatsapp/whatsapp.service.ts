@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../common/prisma/prisma.service';
 import Twilio from 'twilio';
 
 @Injectable()
@@ -8,7 +9,10 @@ export class WhatsAppService {
   private twilioClient: Twilio.Twilio | null = null;
   private fromNumber: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
     const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
     const apiKeySid = this.configService.get<string>('TWILIO_API_KEY_SID');
@@ -68,6 +72,14 @@ Commandes: POSTULER · PASSER · STOP · /aide`;
 
   processGeneralMessage(message: string, name: string): string {
     const messageLower = message.toLowerCase().trim();
+
+    // Handle /start link_<userId> for account linking
+    const linkMatch = message.match(/^\/start\s+link_([a-zA-Z0-9-]+)/);
+    if (linkMatch) {
+      const userId = linkMatch[1];
+      // This path is handled asynchronously in the controller via linkAccount
+      return ''; // not reachable — controller intercepts first
+    }
     const frontendUrl =
       this.configService.get<string>('FRONTEND_URL') || 'https://q-emplois.vercel.app';
 
