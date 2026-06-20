@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -32,7 +32,12 @@ export class AdminController {
   }
 
   @Post('verifications/:providerId/reject')
-  reject(@Param('providerId') providerId: string, @CurrentUser('userId') adminId: string) {
-    return this.adminService.rejectVerification(providerId, adminId);
+  @ApiOperation({ summary: 'Rejeter un document de vérification' })
+  reject(
+    @Param('providerId') providerId: string,
+    @CurrentUser('userId') adminId: string,
+    @Body() body?: { reason?: string },
+  ) {
+    return this.adminService.rejectVerification(providerId, adminId, body?.reason);
   }
 }

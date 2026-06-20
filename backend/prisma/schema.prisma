@@ -107,6 +107,9 @@ model Provider {
   licenseDocumentUrl String?
   isVerified         Boolean  @default(false)
   verifiedAt         DateTime?
+  verifiedBy         String?  // Admin userId who approved (Loi 25 audit trail)
+  rejectedAt         DateTime?
+  rejectionReason    String?  // Why the document was rejected (shown to tasker)
   
   // Ratings
   rating             Float    @default(0)

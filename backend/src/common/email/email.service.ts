@@ -103,6 +103,26 @@ export class EmailService {
     });
   }
 
+  async sendTaskerRejected(
+    to: string,
+    firstName?: string | null,
+    reason?: string,
+  ): Promise<void> {
+    const reasonBlock = reason
+      ? `<p><strong>Motif :</strong> ${reason}</p>`
+      : `<p>Aucun motif précis n'a été fourni.</p>`;
+    await this.send({
+      to,
+      subject: 'Vérification refusée — Q-Emplois',
+      html: `
+        <p>Bonjour ${firstName ?? ''},</p>
+        <p>Votre pièce d'identité n'a pas pu être vérifiée. Vous pouvez téléverser un nouveau document sur votre profil pour relancer la vérification.</p>
+        ${reasonBlock}
+        <p>— L'équipe Q-Emplois</p>
+      `,
+    });
+  }
+
   async sendVerificationPendingAdmin(
     adminEmail: string,
     taskerName: string,

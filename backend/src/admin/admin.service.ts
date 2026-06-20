@@ -114,6 +114,10 @@ export class AdminService {
       serviceTypes: p.serviceTypes,
       licenseDocumentUrl: p.licenseDocumentUrl,
       licenseNumber: p.licenseNumber,
+      verifiedAt: p.verifiedAt?.toISOString() ?? null,
+      verifiedBy: p.verifiedBy,
+      rejectedAt: p.rejectedAt?.toISOString() ?? null,
+      rejectionReason: p.rejectionReason,
       updatedAt: p.updatedAt.toISOString(),
     }));
   }
@@ -127,7 +131,13 @@ export class AdminService {
 
     const updated = await this.prisma.provider.update({
       where: { id: providerId },
-      data: { isVerified: true, verifiedAt: new Date() },
+      data: {
+        isVerified: true,
+        verifiedAt: new Date(),
+        verifiedBy: adminUserId,
+        rejectedAt: null,
+        rejectionReason: null,
+      },
     });
 
     await this.auditService.log({
@@ -135,6 +145,7 @@ export class AdminService {
       action: 'provider_verified',
       resource: 'provider',
       resourceId: providerId,
+      details: { verifiedAt: updated.verifiedAt },
     });
 
     if (provider.user.email) {
@@ -144,13 +155,27 @@ export class AdminService {
     return updated;
   }
 
-  async rejectVerification(providerId: string, adminUserId: string) {
-    const provider = await this.prisma.provider.findUnique({ where: { id: providerId } });
+  async rejectVerification(
+    providerId: string,
+    adminUserId: string,
+    reason?: string,
+  ) {
+    const provider = await this.prisma.provider.findUnique({
+      where: { id: providerId },
+      include: { user: { select: { email: true, firstName: true } } },
+    });
     if (!provider) throw new NotFoundException('Prestataire non trouvé.');
 
     await this.prisma.provider.update({
       where: { id: providerId },
-      data: { licenseDocumentUrl: null, isVerified: false, verifiedAt: null },
+      data: {
+        licenseDocumentUrl: null,
+        isVerified: false,
+        verifiedAt: null,
+        verifiedBy: null,
+        rejectedAt: new Date(),
+        rejectionReason: reason ?? null,
+      },
     });
 
     await this.auditService.log({
@@ -158,7 +183,16 @@ export class AdminService {
       action: 'provider_verification_rejected',
       resource: 'provider',
       resourceId: providerId,
+      details: { reason: reason ?? null },
     });
+
+    if (provider.user.email) {
+      await this.emailService.sendTaskerRejected(
+        provider.user.email,
+        provider.user.firstName,
+        reason,
+      );
+    }
 
     return { success: true };
   }
