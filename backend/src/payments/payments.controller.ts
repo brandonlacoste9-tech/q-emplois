@@ -9,6 +9,7 @@ import {
   UseGuards,
   RawBodyRequest,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 import { PaymentsService } from './payments.service';
@@ -49,6 +50,7 @@ class CreateEscrowDto {
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
+  @SkipThrottle()
   @Public()
   @Post('webhook')
   @ApiOperation({ summary: 'Stripe webhook' })

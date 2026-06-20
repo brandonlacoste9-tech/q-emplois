@@ -1,4 +1,5 @@
 import { Controller, Get, Put, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ProvidersService, UpsertProviderDto } from './providers.service';
 import { UploadLicenseDocumentDto } from './dto/license-document.dto';

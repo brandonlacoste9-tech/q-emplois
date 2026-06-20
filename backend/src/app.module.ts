@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ServicesModule } from './services/services.module';
@@ -34,6 +36,10 @@ import { WebhooksModule } from './webhooks/webhooks.module';
       envFilePath: ['.env', '.env.local'],
     }),
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,        // 1 minute window
+      limit: 30,          // 30 requests per minute default
+    }]),
     PrismaModule,
     RedisModule,
     AuditModule,
@@ -59,6 +65,12 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     GeoModule,
     MediaModule,
     WebhooksModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}
