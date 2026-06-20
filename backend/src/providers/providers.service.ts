@@ -249,6 +249,28 @@ export class ProvidersService {
       throw new NotFoundException('Profil prestataire non trouvé.');
     }
 
+    const claimedCount = await this.prisma.task.count({
+      where: { taskerId: userId, status: { in: ['claimed', 'in_progress', 'completed'] } }
+    });
+    const completedCount = await this.prisma.task.count({
+      where: { taskerId: userId, status: 'completed' }
+    });
+    const completionRate = claimedCount > 0 ? Math.round((completedCount / claimedCount) * 100) : null;
+
+    const applications = await this.prisma.taskApplication.findMany({
+      where: { taskerId: userId },
+      select: { createdAt: true, task: { select: { createdAt: true } } }
+    });
+    
+    let responseTimeMins: number | null = null;
+    if (applications.length > 0) {
+      const totalMs = applications.reduce((acc, app) => {
+        const diff = app.createdAt.getTime() - app.task.createdAt.getTime();
+        return acc + Math.max(0, diff); // ensure no negative times
+      }, 0);
+      responseTimeMins = Math.round(totalMs / applications.length / 1000 / 60);
+    }
+
     return {
       id: provider.user.id,
       firstName: provider.user.firstName,
@@ -261,6 +283,8 @@ export class ProvidersService {
       hourlyRate: provider.hourlyRate ? Number(provider.hourlyRate) : undefined,
       city: provider.locationAddress,
       memberSince: provider.user.createdAt.toISOString(),
+      completionRate,
+      responseTimeMins,
     };
   }
 

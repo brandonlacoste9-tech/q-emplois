@@ -21,6 +21,8 @@ interface PublicTasker {
   city?: string;
   memberSince?: string;
   avatar?: string;
+  completionRate?: number | null;
+  responseTimeMins?: number | null;
 }
 
 export function TaskerPublicPage() {
@@ -80,6 +82,23 @@ export function TaskerPublicPage() {
                   {profile.hourlyRate != null && (
                     <p className="body-f muted" style={{ fontSize: 14, marginTop: 8 }}>{formatPrice(profile.hourlyRate)}/h</p>
                   )}
+                  
+                  <div style={{ display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
+                    {profile.completionRate != null && (
+                      <span className="body-f" style={{ fontSize: 13, background: 'rgba(217,179,140,0.1)', padding: '4px 10px', borderRadius: 6, color: '#D9B38C' }}>
+                        Taux de complétion: <strong>{profile.completionRate}%</strong>
+                      </span>
+                    )}
+                    {profile.responseTimeMins != null && (
+                      <span className="body-f" style={{ fontSize: 13, background: 'rgba(217,179,140,0.1)', padding: '4px 10px', borderRadius: 6, color: '#D9B38C' }}>
+                        Temps de réponse: <strong>
+                          {profile.responseTimeMins < 60 
+                            ? `${profile.responseTimeMins} min` 
+                            : `${Math.round(profile.responseTimeMins / 60)} h`}
+                        </strong>
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 

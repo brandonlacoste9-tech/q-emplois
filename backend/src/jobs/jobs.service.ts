@@ -12,6 +12,7 @@ import { CreditsService } from '../credits/credits.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { EmailService } from '../common/email/email.service';
 import { ConfigService } from '@nestjs/config';
+import { NotificationService as ExternalNotificationService } from '../common/services/notification.service';
 import { WhatsappTaskAlertsService } from '../whatsapp/whatsapp-task-alerts.service';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { publicPostalSector, sanitizePublicDescription } from '../common/utils/privacy';
@@ -28,6 +29,7 @@ export class JobsService {
     private readonly auditService: AuditService,
     private readonly creditsService: CreditsService,
     private readonly notificationsService: NotificationsService,
+    private readonly externalNotifications: ExternalNotificationService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
     @Optional() private readonly whatsappAlerts?: WhatsappTaskAlertsService,
@@ -341,6 +343,36 @@ export class JobsService {
       });
     }
 
+    // Notify eligible taskers using the external notification service
+    try {
+      const eligibleProviders = await this.prisma.provider.findMany({
+        where: {
+          isVerified: true,
+          serviceTypes: { has: task.serviceType },
+        },
+        include: { user: true },
+      });
+
+      for (const provider of eligibleProviders) {
+        if (task.locationLat != null && task.locationLng != null && provider.locationLat != null && provider.locationLng != null) {
+          const dist = this.haversineKm(
+            Number(provider.locationLat),
+            Number(provider.locationLng),
+            Number(task.locationLat),
+            Number(task.locationLng)
+          );
+          if (dist <= provider.serviceRadiusKm) {
+            await this.externalNotifications.notifyTaskerNewJob(provider.userId, task);
+          }
+        } else {
+          // If no coordinates, just notify them
+          await this.externalNotifications.notifyTaskerNewJob(provider.userId, task);
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Error notifying eligible taskers: ${(error as Error).message}`);
+    }
+
     return this.mapTask(task, undefined, clientId);
   }
 
@@ -617,6 +649,11 @@ export class JobsService {
     await this.prisma.taskApplication.update({
       where: { id: application.id },
       data: { status: TaskApplicationStatus.selected },
+    });
+
+    // Notify the selected tasker via external notifications
+    await this.externalNotifications.notifyTaskerSelected(taskerId, task).catch(err => {
+      this.logger.warn(`Failed to send external notification to selected tasker: ${(err as Error).message}`);
     });
 
     return this.claim(taskId, taskerId, true);

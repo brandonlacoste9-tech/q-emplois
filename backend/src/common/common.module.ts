@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
@@ -7,6 +7,9 @@ import { AuditModule } from './audit/audit.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { DataRetentionService } from './services/data-retention.service';
+import { NotificationService } from './services/notification.service';
+import { TelegramService } from './services/telegram.service';
+import { WhatsAppModule } from '../whatsapp/whatsapp.module';
 
 @Global()
 @Module({
@@ -14,6 +17,7 @@ import { DataRetentionService } from './services/data-retention.service';
     PrismaModule,
     RedisModule,
     AuditModule,
+    forwardRef(() => WhatsAppModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -25,12 +29,14 @@ import { DataRetentionService } from './services/data-retention.service';
       inject: [ConfigService],
     }),
   ],
-  providers: [JwtAuthGuard, RolesGuard, DataRetentionService],
+  providers: [JwtAuthGuard, RolesGuard, DataRetentionService, NotificationService, TelegramService],
   exports: [
     PrismaModule,
     RedisModule,
     AuditModule,
     DataRetentionService,
+    NotificationService,
+    TelegramService,
     JwtModule,
     JwtAuthGuard,
     RolesGuard,
