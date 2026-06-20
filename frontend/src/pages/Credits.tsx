@@ -59,6 +59,10 @@ export function Credits() {
   }, [canTask, addToast]);
 
   useEffect(() => {
+    load();
+  }, [canTask]);
+
+  useEffect(() => {
     if (searchParams.get('success')) {
       addToast('Achat de crédits réussi!', 'success');
       load();
