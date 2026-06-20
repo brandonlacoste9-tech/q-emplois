@@ -23,6 +23,7 @@ export interface TradesmanProfile extends User {
   serviceRadius: number; // in km
   licenseNumber?: string;
   licenseDocument?: string;
+  verificationExpiresAt?: string | null;
   bio?: string;
   address?: Address;
   availability: Availability;

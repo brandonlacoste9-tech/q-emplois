@@ -1,6 +1,7 @@
 import { Controller, Get, Put, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ProvidersService, UpsertProviderDto } from './providers.service';
+import { UploadLicenseDocumentDto } from './dto/license-document.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/user.decorator';
@@ -50,7 +51,7 @@ export class ProvidersController {
   @ApiOperation({ summary: 'Téléverser une pièce d\'identité' })
   uploadLicense(
     @CurrentUser('userId') userId: string,
-    @Body() dto: { data: string; filename: string; contentType: string },
+    @Body() dto: UploadLicenseDocumentDto,
   ) {
     return this.providersService.uploadLicenseDocument(userId, dto);
   }

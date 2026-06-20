@@ -108,6 +108,7 @@ model Provider {
   isVerified         Boolean  @default(false)
   verifiedAt         DateTime?
   verifiedBy         String?  // Admin userId who approved (Loi 25 audit trail)
+  verificationExpiresAt DateTime?  // isVerified becomes false after this date (re-upload required)
   rejectedAt         DateTime?
   rejectionReason    String?  // Why the document was rejected (shown to tasker)
   

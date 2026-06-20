@@ -147,13 +147,21 @@ export class ProvidersService {
       },
     });
     if (!provider) throw new NotFoundException('Profil prestataire non trouvé.');
-    return provider;
+    return {
+      ...provider,
+      verificationExpiresAt:
+        provider.verificationExpiresAt?.toISOString() ?? null,
+    };
   }
 
   async search(serviceType?: string, city?: string, postalCode?: string) {
     const providers = await this.prisma.provider.findMany({
       where: {
         isVerified: true,
+        OR: [
+          { verificationExpiresAt: null },
+          { verificationExpiresAt: { gt: new Date() } },
+        ],
         NOT: { serviceTypes: { isEmpty: true } },
         ...(serviceType ? { serviceTypes: { has: serviceType } } : {}),
         ...(city

@@ -148,11 +148,12 @@ export function Profile() {
     );
   }
 
-  const verificationStatus = getTaskerVerificationStatus(profile);
+  const verificationStatus = getTaskerVerificationStatus(profile, profile?.verificationExpiresAt);
   const verificationColors: Record<typeof verificationStatus, string> = {
     verified: '#7FB069',
     pending: '#D9A441',
     unverified: '#C46B6B',
+    expired: '#C46B6B',
   };
 
   const field = (label: string, value: string | number | undefined, onChange: (v: string) => void, icon: React.ReactNode, type = 'text', placeholder = '') => (
@@ -248,6 +249,11 @@ export function Profile() {
                 {canTask && (
                   <p className="body-f muted2" style={{ fontSize: 12, marginTop: 10, lineHeight: 1.5 }}>
                     {VERIFICATION_HINTS[verificationStatus]}
+                  </p>
+                )}
+                {canTask && verificationStatus === 'verified' && profile?.verificationExpiresAt && (
+                  <p className="body-f muted2" style={{ fontSize: 11, marginTop: 4 }}>
+                    Valide jusqu'au {new Date(profile.verificationExpiresAt).toLocaleDateString('fr-CA')}
                   </p>
                 )}
               </div>

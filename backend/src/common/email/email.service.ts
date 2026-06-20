@@ -123,6 +123,66 @@ export class EmailService {
     });
   }
 
+  async sendStaleVerificationNotice(
+    to: string,
+    firstName?: string | null,
+  ): Promise<void> {
+    await this.send({
+      to,
+      subject: 'Vérification en cours — Q-Emplois',
+      html: `
+        <p>Bonjour ${firstName ?? ''},</p>
+        <p>Votre pièce d'identité est toujours en cours de vérification. Notre équipe revient vers vous sous 48 heures ouvrables.</p>
+        <p>Si vous n'avez rien reçu d'ici là, contactez-nous et nous prioriserons votre dossier.</p>
+        <p>— L'équipe Q-Emplois</p>
+      `,
+    });
+  }
+
+  async sendAdminStaleDigest(
+    to: string,
+    stale: Array<{
+      providerId: string;
+      taskerName: string;
+      taskerEmail: string;
+      pendingSince: string;
+    }>,
+  ): Promise<void> {
+    const rows = stale
+      .map(
+        (s) => `<li><strong>${s.taskerName}</strong> (${s.taskerEmail}) — en attente depuis ${new Date(s.pendingSince).toLocaleDateString('fr-CA')}</li>`,
+      )
+      .join('');
+    await this.send({
+      to,
+      subject: `Vérifications en attente >48h — ${stale.length} dossier(s)`,
+      html: `
+        <p>Bonjour,</p>
+        <p>Les pièces d'identité suivantes attendent une vérification depuis plus de 48 heures :</p>
+        <ul>${rows}</ul>
+        <p>— Q-Emplois</p>
+      `,
+    });
+  }
+
+  async sendVerificationExpiredNotice(
+    to: string,
+    firstName?: string | null,
+  ): Promise<void> {
+    const frontendUrl =
+      process.env.FRONTEND_URL || 'http://localhost:5173';
+    await this.send({
+      to,
+      subject: 'Votre vérification a expiré — Q-Emplois',
+      html: `
+        <p>Bonjour ${firstName ?? ''},</p>
+        <p>Votre vérification Q-Emplois a expiré (validité de 12 mois). Pour continuer à postuler aux tâches, téléversez une nouvelle pièce d'identité sur votre profil.</p>
+        <p><a href="${frontendUrl}/profile">Mettre à jour mon profil</a></p>
+        <p>— L'équipe Q-Emplois</p>
+      `,
+    });
+  }
+
   async sendVerificationPendingAdmin(
     adminEmail: string,
     taskerName: string,

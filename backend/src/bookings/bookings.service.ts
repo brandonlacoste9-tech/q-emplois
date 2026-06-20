@@ -27,6 +27,15 @@ export class BookingsService {
       throw new BadRequestException('Ce prestataire n\'est pas encore vérifié.');
     }
 
+    if (
+      provider.verificationExpiresAt &&
+      provider.verificationExpiresAt < new Date()
+    ) {
+      throw new BadRequestException(
+        'La vérification de ce prestataire a expiré. Choisissez-en un autre.',
+      );
+    }
+
     // Verify service exists
     const service = await this.prisma.service.findUnique({
       where: { id: dto.serviceId },

@@ -67,6 +67,14 @@ export class JobsService {
         'Votre profil est en cours de vérification. Vous pourrez postuler une fois approuvé.',
       );
     }
+    if (
+      provider.verificationExpiresAt &&
+      provider.verificationExpiresAt < new Date()
+    ) {
+      throw new BadRequestException(
+        'Votre vérification a expiré. Téléversez une nouvelle pièce d\'identité pour continuer.',
+      );
+    }
   }
 
   private computeDistance(task: any, provider?: any): number | undefined {

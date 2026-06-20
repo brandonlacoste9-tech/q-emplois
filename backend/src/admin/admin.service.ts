@@ -5,6 +5,21 @@ import { AuditService } from '../common/audit/audit.service';
 
 @Injectable()
 export class AdminService {
+  /**
+   * Verification expiry policy: 12 months from approval.
+   * After this date, isVerified becomes false and the tasker must
+   * re-upload their ID document. Configurable via env if Law 25
+   * policy changes; defaults to 365 days.
+   */
+  private static readonly VERIFICATION_TTL_DAYS =
+    Number(process.env.VERIFICATION_TTL_DAYS) || 365;
+
+  private computeExpiryDate(): Date {
+    const expires = new Date();
+    expires.setDate(expires.getDate() + AdminService.VERIFICATION_TTL_DAYS);
+    return expires;
+  }
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
@@ -135,6 +150,7 @@ export class AdminService {
         isVerified: true,
         verifiedAt: new Date(),
         verifiedBy: adminUserId,
+        verificationExpiresAt: this.computeExpiryDate(),
         rejectedAt: null,
         rejectionReason: null,
       },
@@ -173,6 +189,7 @@ export class AdminService {
         isVerified: false,
         verifiedAt: null,
         verifiedBy: null,
+        verificationExpiresAt: null,
         rejectedAt: new Date(),
         rejectionReason: reason ?? null,
       },

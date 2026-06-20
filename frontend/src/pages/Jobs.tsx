@@ -199,8 +199,8 @@ export function Jobs() {
   });
 
   const tabs = isClient ? CLIENT_TABS : TASKER_TABS;
-  const verificationStatus = getTaskerVerificationStatus(profile);
-  const taskerCanApply = canTaskerApply(profile);
+  const verificationStatus = getTaskerVerificationStatus(profile, profile?.verificationExpiresAt);
+  const taskerCanApply = canTaskerApply(profile, profile?.verificationExpiresAt);
 
   return (
     <div className="leather" style={{ minHeight: '100vh' }}>

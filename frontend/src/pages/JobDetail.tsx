@@ -164,8 +164,8 @@ export function JobDetail() {
   const isJobOwner = job.clientId === profile?.id;
   const showTaskerActions = canTask && !isJobOwner;
   const hasApplied = job.myApplicationStatus === 'pending';
-  const taskerCanApply = canTaskerApply(profile);
-  const verificationStatus = getTaskerVerificationStatus(profile);
+  const taskerCanApply = canTaskerApply(profile, profile?.verificationExpiresAt);
+  const verificationStatus = getTaskerVerificationStatus(profile, profile?.verificationExpiresAt);
   const canApply = showTaskerActions && job.status === 'pending' && !hasApplied && (creditBalance ?? 0) > 0 && taskerCanApply;
 
   return (
