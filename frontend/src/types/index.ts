@@ -18,6 +18,8 @@ export interface TradesmanProfile extends User {
   role?: 'client' | 'provider' | 'admin';
   isTaskerEnabled?: boolean;
   whatsappNotifyEnabled?: boolean;
+  telegramId?: string;
+  telegramBotLink?: string;
   serviceTypes: ServiceType[];
   hourlyRate: number;
   serviceRadius: number; // in km

@@ -15,6 +15,7 @@ export function BookPage() {
       scheduledDate: data.scheduledDate,
       estimatedPrice: data.estimatedPrice,
       street: data.street,
+      apt: data.apt,
       city: data.city,
       postalCode: data.postalCode,
       photoUrls: data.photoUrls,

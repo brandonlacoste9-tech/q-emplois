@@ -344,39 +344,61 @@ export function Profile() {
               )}
             </div>
 
-            {/* WhatsApp alerts */}
+            {/* Notifications alerts */}
             {canTask && (
               <div style={{ marginBottom: 20 }}>
                 <h4 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
-                  Alertes WhatsApp
+                  Alertes de nouvelles tâches
                 </h4>
-                <div className="stitch-box" style={{ padding: 16, background: 'rgba(21,35,50,0.55)' }}>
-                  {isEditing ? (
-                    <label className="body-f" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', fontSize: 14, lineHeight: 1.6 }}>
-                      <input
-                        type="checkbox"
-                        checked={!!formData.whatsappNotifyEnabled}
-                        onChange={(e) => setFormData({ ...formData, whatsappNotifyEnabled: e.target.checked })}
-                        style={{ marginTop: 4, accentColor: gold }}
-                      />
-                      <span>
-                        Recevoir une alerte WhatsApp quand une tâche correspond à mes services (Loi 25 — consentement explicite).
-                        {!formData.phone && formData.whatsappNotifyEnabled && (
-                          <span style={{ display: 'block', color: '#E8A87C', marginTop: 6, fontSize: 13 }}>
-                            Ajoutez votre numéro de téléphone ci-dessus pour activer les alertes.
-                          </span>
-                        )}
-                      </span>
-                    </label>
-                  ) : (
-                    <p className="body-f muted" style={{ fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-                      {profile.whatsappNotifyEnabled
-                        ? '✅ Alertes activées — répondez POSTULER ou PASSER aux messages. STOP pour désactiver.'
-                        : 'Alertes désactivées — modifiez le profil pour les activer.'}
-                    </p>
-                  )}
-                  <p className="body-f muted2" style={{ fontSize: 12, marginTop: 12, marginBottom: 0 }}>
-                    Répondez *POSTULER* pour candidater (1 crédit). Le client choisit parmi les candidats.
+                <div className="stitch-box" style={{ padding: 16, background: 'rgba(21,35,50,0.55)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* WhatsApp Option */}
+                  <div>
+                    {isEditing ? (
+                      <label className="body-f" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', fontSize: 14, lineHeight: 1.6 }}>
+                        <input
+                          type="checkbox"
+                          checked={!!formData.whatsappNotifyEnabled}
+                          onChange={(e) => setFormData({ ...formData, whatsappNotifyEnabled: e.target.checked })}
+                          style={{ marginTop: 4, accentColor: gold }}
+                        />
+                        <span>
+                          <strong>WhatsApp / SMS :</strong> Recevoir une alerte quand une tâche correspond à mes services (Loi 25 — consentement explicite).
+                          {!formData.phone && formData.whatsappNotifyEnabled && (
+                            <span style={{ display: 'block', color: '#E8A87C', marginTop: 6, fontSize: 13 }}>
+                              Ajoutez votre numéro de téléphone ci-dessus pour activer les alertes.
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    ) : (
+                      <p className="body-f muted" style={{ fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                        {profile.whatsappNotifyEnabled
+                          ? '✅ WhatsApp activé — répondez POSTULER ou PASSER aux messages. STOP pour désactiver.'
+                          : '💬 WhatsApp désactivé — modifiez le profil pour activer.'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="divider" style={{ margin: '4px 0', borderColor: 'rgba(217,179,140,0.1)' }} />
+
+                  {/* Telegram Option */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                      <div>
+                        <p className="body-f muted" style={{ fontSize: 14, margin: 0 }}>
+                          {profile.telegramId ? '✅ Telegram connecté' : '✈️ Telegram non connecté'}
+                        </p>
+                      </div>
+                      {(!isEditing && profile.telegramBotLink && !profile.telegramId) && (
+                        <a href={profile.telegramBotLink} target="_blank" rel="noopener noreferrer" className="gold-btn" style={{ padding: '6px 12px', fontSize: 13, textDecoration: 'none', display: 'inline-block' }}>
+                          Connecter Telegram
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="body-f muted2" style={{ fontSize: 12, marginTop: 4, marginBottom: 0 }}>
+                    Répondez *POSTULER* depuis votre messagerie pour candidater (1 crédit).
                   </p>
                 </div>
               </div>

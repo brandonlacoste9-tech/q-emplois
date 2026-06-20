@@ -9,6 +9,7 @@ export interface BookingDraft {
   scheduledDate: string;
   estimatedPrice: string;
   street: string;
+  apt: string;
   city: string;
   postalCode: string;
   photoUrls: string[];
