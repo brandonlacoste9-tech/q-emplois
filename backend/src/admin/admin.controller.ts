@@ -46,4 +46,13 @@ export class AdminController {
   ) {
     return this.adminService.rejectVerification(providerId, adminId, body?.reason);
   }
+
+  @Post('invites')
+  @ApiOperation({ summary: 'Générer un code d\'invitation fondateur' })
+  generateInvite(
+    @CurrentUser('userId') adminId: string,
+    @Body() body?: { maxRedemptions?: number; rewardCredits?: number; discountPct?: number },
+  ) {
+    return this.adminService.generateInvite(adminId, body);
+  }
 }

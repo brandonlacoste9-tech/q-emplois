@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Inject, forwardRef } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Inject, forwardRef } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { CreditsService, CREDIT_PACKS } from './credits.service';
 import { PaymentsService } from '../payments/payments.service';
@@ -47,5 +47,14 @@ export class CreditsController {
     @Body() dto: PurchasePackDto,
   ) {
     return this.paymentsService.createCreditCheckout(userId, dto.pack);
+  }
+
+  @Post('redeem-invite')
+  @ApiOperation({ summary: 'Utiliser un code d\'invitation fondateur' })
+  redeemInvite(
+    @CurrentUser('userId') userId: string,
+    @Body() dto: { code: string },
+  ) {
+    return this.creditsService.redeemInvite(userId, dto.code);
   }
 }

@@ -76,6 +76,7 @@ export class CreditsService {
   async getBalance(userId: string) {
     const wallet = await this.ensureWallet(userId);
     return {
+      id: wallet.id,
       balance: wallet.balance,
       isFoundingTasker: wallet.isFoundingTasker,
       lifetimeDiscountPercent: wallet.lifetimeDiscountPercent,
@@ -188,5 +189,37 @@ export class CreditsService {
       `Achat ${pack.label}`,
       stripePaymentIntentId,
     );
+  }
+
+  async redeemInvite(userId: string, code: string) {
+    const invite = await this.prisma.inviteCode.findUnique({ where: { code } });
+    if (!invite) throw new BadRequestException('Code d\'invitation invalide.');
+    if (invite.usedCount >= invite.maxRedemptions) throw new BadRequestException('Ce code a déjà atteint son maximum d\'utilisations.');
+    if (invite.expiresAt && invite.expiresAt < new Date()) throw new BadRequestException('Ce code a expiré.');
+
+    const wallet = await this.getBalance(userId);
+    if (wallet.isFoundingTasker) throw new BadRequestException('Vous êtes déjà tasker fondateur.');
+
+    await this.prisma.inviteCode.update({ where: { code }, data: { usedCount: { increment: 1 } } });
+    await this.prisma.creditWallet.update({
+      where: { userId },
+      data: {
+        isFoundingTasker: true,
+        lifetimeDiscountPercent: invite.lifetimeDiscountPct,
+        balance: { increment: invite.rewardCredits },
+        foundingTaskerNumber: invite.usedCount + 1,
+      },
+    });
+
+    await this.prisma.creditTransaction.create({
+      data: {
+        walletId: wallet.id,
+        amount: invite.rewardCredits,
+        type: 'bonus',
+        description: `Code fondateur: ${code}`,
+      },
+    });
+
+    return { success: true, creditsAdded: invite.rewardCredits, discountPercent: invite.lifetimeDiscountPct };
   }
 }

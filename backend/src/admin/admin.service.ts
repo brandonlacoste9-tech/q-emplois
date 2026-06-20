@@ -224,6 +224,23 @@ export class AdminService {
     return { success: true };
   }
 
+  async generateInvite(
+    adminId: string,
+    body?: { maxRedemptions?: number; rewardCredits?: number; discountPct?: number },
+  ) {
+    const code = `FOUNDER-${Date.now().toString(36).toUpperCase()}`;
+    const invite = await this.prisma.inviteCode.create({
+      data: {
+        code,
+        maxRedemptions: body?.maxRedemptions ?? 50,
+        rewardCredits: body?.rewardCredits ?? 100,
+        lifetimeDiscountPct: body?.discountPct ?? 15,
+        createdBy: adminId,
+      },
+    });
+    return { code: invite.code, maxRedemptions: invite.maxRedemptions, rewardCredits: invite.rewardCredits };
+  }
+
   async searchProviders(q?: string, status?: string) {
     const where: Record<string, unknown> = {};
     if (status === 'verified') where.isVerified = true;

@@ -430,6 +430,22 @@ model CreditWallet {
   @@map("credit_wallets")
 }
 
+// Invite codes for founding tasker program
+model InviteCode {
+  id                    String   @id @default(uuid())
+  code                  String   @unique
+  maxRedemptions        Int      @default(50)
+  usedCount             Int      @default(0)
+  rewardCredits         Int      @default(100)
+  lifetimeDiscountPct   Int      @default(15)
+  createdBy             String?
+  createdAt             DateTime @default(now())
+  expiresAt             DateTime?
+
+  @@index([code])
+  @@map("invite_codes")
+}
+
 model CreditTransaction {
   id                    String                @id @default(uuid())
   walletId              String
