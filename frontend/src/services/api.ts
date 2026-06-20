@@ -386,6 +386,18 @@ class ApiService {
     return response.data;
   }
 
+  async getAuditLogs(params: { page?: number; action?: string; userId?: string } = {}) {
+    const response = await this.client.get('/admin/audit-logs', { params });
+    return response.data;
+  }
+
+  async getMilestoneInvoice(contractId: string, milestoneId: string): Promise<{ html: string; invoiceNumber: string }> {
+    const response = await this.client.get(
+      `/payments/escrow/${contractId}/milestones/${milestoneId}/invoice`,
+    );
+    return response.data;
+  }
+
   async updateAvailability(data: {
     day: string;
     isAvailable: boolean;

@@ -64,6 +64,21 @@ export function LAtelierPage() {
     }
   };
 
+  const handleInvoice = async (contractId: string, milestoneId: string) => {
+    try {
+      const { html, invoiceNumber } = await api.getMilestoneInvoice(contractId, milestoneId);
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `facture-${invoiceNumber}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      addToast('Erreur lors du téléchargement de la facture', 'error');
+    }
+  };
+
   const handleCreateEscrow = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
@@ -192,8 +207,13 @@ export function LAtelierPage() {
                         <td style={{ padding: 16 }}>{c.status}</td>
                         <td style={{ padding: 16 }}>
                           {c.milestones.map((m) => (
-                            <div key={m.id} style={{ fontSize: 12, marginBottom: 4 }}>
-                              {m.description}: ${Number(m.amount).toFixed(2)} ({m.status})
+                            <div key={m.id} style={{ fontSize: 12, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span>{m.description}: ${Number(m.amount).toFixed(2)} ({m.status})</span>
+                              {m.status === 'RELEASED' && (
+                                <button onClick={() => handleInvoice(c.id, m.id)} className="ghost-btn" style={{ fontSize: 10, padding: '1px 6px', color: '#7FB069', borderColor: 'rgba(127,176,105,0.3)' }}>
+                                  🧾 Facture
+                                </button>
+                              )}
                             </div>
                           ))}
                         </td>
