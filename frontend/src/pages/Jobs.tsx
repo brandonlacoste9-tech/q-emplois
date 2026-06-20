@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { formatPrice, formatDate, formatDuration, formatJobLocation } from '../utils';
 import { gold } from '../styles/design-tokens';
+import { CreditsLink } from '../components/CreditsLink';
 import {
   canTaskerApply,
   getTaskerVerificationStatus,
@@ -215,11 +216,11 @@ export function Jobs() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {!isClient && creditBalance !== null && (
-              <Link to="/credits" className="stitch-box body-f" style={{ padding: '8px 14px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(21,35,50,0.7)' }}>
+              <CreditsLink className="stitch-box body-f" style={{ padding: '8px 14px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(21,35,50,0.7)' }}>
                 <Coins className="w-4 h-4" style={{ color: gold }} />
                 <span className="cream-hi" style={{ fontWeight: 700 }}>{creditBalance}</span>
                 <span className="muted2">crédits</span>
-              </Link>
+              </CreditsLink>
             )}
             {!isClient && (
               <button onClick={() => setShowFilters(!showFilters)} className="ghost-btn" style={{ padding: '8px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -417,9 +418,9 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onRev
               </Link>
             )}
             {!canApply && !verificationBlocked && (
-              <Link to="/credits" className="ghost-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}>
+              <CreditsLink className="ghost-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}>
                 Acheter crédits
-              </Link>
+              </CreditsLink>
             )}
           </>
         )}

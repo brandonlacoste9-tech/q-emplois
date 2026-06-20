@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Inject, forwardRef } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { CreditsService, CREDIT_PACKS } from './credits.service';
 import { PaymentsService } from '../payments/payments.service';
@@ -18,6 +18,7 @@ class PurchasePackDto {
 export class CreditsController {
   constructor(
     private readonly creditsService: CreditsService,
+    @Inject(forwardRef(() => PaymentsService))
     private readonly paymentsService: PaymentsService,
   ) {}
 

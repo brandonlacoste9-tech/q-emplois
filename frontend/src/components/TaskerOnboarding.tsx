@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Check, Circle, ChevronRight } from 'lucide-react';
 import { gold } from '../styles/design-tokens';
+import { CreditsLink } from './CreditsLink';
 
 export interface OnboardingStep {
   id: string;
@@ -32,8 +33,10 @@ export function TaskerOnboarding({ steps }: TaskerOnboardingProps) {
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {steps.map((step) => (
-          <Link
+        {steps.map((step) => {
+          const RowLink = step.link === '/credits' ? CreditsLink : Link;
+          return (
+          <RowLink
             key={step.id}
             to={step.link}
             style={{
@@ -57,8 +60,9 @@ export function TaskerOnboarding({ steps }: TaskerOnboardingProps) {
               <p className="body-f muted2" style={{ fontSize: 12 }}>{step.description}</p>
             </div>
             {!step.done && <ChevronRight className="w-4 h-4" style={{ color: gold }} />}
-          </Link>
-        ))}
+          </RowLink>
+          );
+        })}
       </div>
     </div>
   );

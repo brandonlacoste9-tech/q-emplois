@@ -15,6 +15,7 @@ import {
 import { formatDate, formatDistance, formatDuration, formatPrice, formatJobLocation } from '../utils';
 import { gold } from '../styles/design-tokens';
 import { UserAvatar } from '../components/UserAvatar';
+import { CreditsLink } from '../components/CreditsLink';
 import {
   canTaskerApply,
   getTaskerVerificationStatus,
@@ -291,7 +292,7 @@ export function JobDetail() {
                   <Check className="w-4 h-4" /> Postuler (1 crédit)
                 </button>
                 {(creditBalance ?? 0) <= 0 && (
-                  <Link to="/credits" className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none' }}>Acheter des crédits</Link>
+                  <CreditsLink className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none' }}>Acheter des crédits</CreditsLink>
                 )}
               </>
             )}

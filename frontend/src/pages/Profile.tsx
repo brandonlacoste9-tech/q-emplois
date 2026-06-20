@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { SERVICE_TYPE_LABELS, type ServiceType, type TradesmanProfile } from '../types';
@@ -22,6 +22,7 @@ import { useToast } from '../components/Toast';
 import { gold } from '../styles/design-tokens';
 import { UserAvatar } from '../components/UserAvatar';
 import { ImageUpload } from '../components/ImageUpload';
+import { CreditsLink } from '../components/CreditsLink';
 import {
   getTaskerVerificationStatus,
   VERIFICATION_LABELS,
@@ -266,7 +267,7 @@ export function Profile() {
                     <p className="serif cream-hi" style={{ fontSize: 22, fontWeight: 900 }}>{creditBalance}</p>
                   </div>
                 </div>
-                <Link to="/credits" className="ghost-btn" style={{ padding: '8px 14px', fontSize: 13, textDecoration: 'none' }}>Acheter</Link>
+                <CreditsLink className="ghost-btn" style={{ padding: '8px 14px', fontSize: 13, textDecoration: 'none' }}>Acheter</CreditsLink>
               </div>
             )}
 

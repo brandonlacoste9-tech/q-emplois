@@ -74,7 +74,7 @@ export class PaymentsService {
       cancel_url: `${this.configService.get('FRONTEND_URL', 'http://localhost:5173')}/credits?cancelled=1`,
     });
 
-    return { checkoutUrl: session.url, sessionId: session.id };
+    return { checkoutUrl: session.url ?? null, sessionId: session.id };
   }
 
   isConfigured(): boolean {

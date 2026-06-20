@@ -270,7 +270,7 @@ class ApiService {
     return response.data;
   }
 
-  async purchaseCreditPack(pack: 'starter' | 'standard' | 'pro'): Promise<{ checkoutUrl: string }> {
+  async purchaseCreditPack(pack: 'starter' | 'standard' | 'pro'): Promise<{ checkoutUrl: string | null }> {
     const response = await this.client.post('/credits/purchase', { pack });
     return response.data;
   }
