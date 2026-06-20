@@ -51,31 +51,36 @@ export class PaymentsService {
       credits = Math.ceil(credits * (1 + wallet.lifetimeDiscountPercent / 100));
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'cad',
-            product_data: {
-              name: `Q-Emplois — ${pack.label}`,
-              description: `${credits} crédits pour réclamer des tâches`,
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'cad',
+              product_data: {
+                name: `Q-Emplois — ${pack.label}`,
+                description: `${credits} crédits pour réclamer des tâches`,
+              },
+              unit_amount: Math.round(pack.priceCad * 100),
             },
-            unit_amount: Math.round(pack.priceCad * 100),
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        metadata: {
+          userId,
+          packKey,
+          credits: String(credits),
+          type: 'credit_pack',
         },
-      ],
-      metadata: {
-        userId,
-        packKey,
-        credits: String(credits),
-        type: 'credit_pack',
-      },
-      success_url: `${this.configService.get('FRONTEND_URL', 'http://localhost:5173')}/credits?success=1`,
-      cancel_url: `${this.configService.get('FRONTEND_URL', 'http://localhost:5173')}/credits?cancelled=1`,
-    });
+        success_url: `${this.configService.get('FRONTEND_URL', 'http://localhost:5173')}/credits?success=1`,
+        cancel_url: `${this.configService.get('FRONTEND_URL', 'http://localhost:5173')}/credits?cancelled=1`,
+      });
+    } catch (error: any) {
+      throw new BadRequestException(`Erreur Stripe: ${error.message}`);
+    }
 
     return { checkoutUrl: session.url ?? null, sessionId: session.id };
   }
@@ -108,30 +113,35 @@ export class PaymentsService {
     const amountCad = Number(task.estimatedPrice);
     const frontend = this.configService.get('FRONTEND_URL', 'http://localhost:5173');
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'cad',
-            product_data: {
-              name: `Québec emplois — ${task.title}`,
-              description: 'Paiement sécurisé pour votre tâche locale',
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'cad',
+              product_data: {
+                name: `Québec emplois — ${task.title}`,
+                description: 'Paiement sécurisé pour votre tâche locale',
+              },
+              unit_amount: Math.round(amountCad * 100),
             },
-            unit_amount: Math.round(amountCad * 100),
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        metadata: {
+          type: 'task_payment',
+          taskId: task.id,
+          clientId,
         },
-      ],
-      metadata: {
-        type: 'task_payment',
-        taskId: task.id,
-        clientId,
-      },
-      success_url: `${frontend}/jobs/${task.id}?paid=1`,
-      cancel_url: `${frontend}/jobs/${task.id}?cancelled=1`,
-    });
+        success_url: `${frontend}/jobs/${task.id}?paid=1`,
+        cancel_url: `${frontend}/jobs/${task.id}?cancelled=1`,
+      });
+    } catch (error: any) {
+      throw new BadRequestException(`Erreur Stripe: ${error.message}`);
+    }
 
     await this.prisma.task.update({
       where: { id: taskId },
