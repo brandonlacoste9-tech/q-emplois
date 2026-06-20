@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { SERVICE_TYPE_LABELS, type ServiceType, type TradesmanProfile } from '../types';
@@ -48,6 +48,7 @@ export function Profile() {
   const [formData, setFormData] = useState<Partial<TradesmanProfile>>({});
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const [reviews, setReviews] = useState<Array<{ id: string; rating: number; comment?: string; createdAt: string }>>([]);
+  const [escrowContracts, setEscrowContracts] = useState<Array<{ id: string; taskDescription: string; status: string; milestones: Array<{ id: string; status: string; description: string; amount: number }> }>>([]);
 
   useEffect(() => {
     if (showTaskerSetup && !canTask) setIsEditing(true);
@@ -64,6 +65,10 @@ export function Profile() {
       api.getCreditBalance().then((b) => setCreditBalance(b.balance)).catch(() => undefined);
     }
   }, [canTask]);
+
+  useEffect(() => {
+    api.getEscrowContracts().then(setEscrowContracts).catch(() => setEscrowContracts([]));
+  }, []);
 
   useEffect(() => {
     if (initialProfile) {
@@ -444,6 +449,36 @@ export function Profile() {
                 </div>
               </div>
             )}
+
+            {/* Escrow / L'Atelier */}
+            <div className="stitch-box" style={{ ...card, marginTop: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <Coins className="w-5 h-5" style={{ color: gold }} /> L'Atelier
+                </h3>
+                <Link to="/latelier" className="body-f" style={{ color: '#7FB069', fontSize: 13, textDecoration: 'none' }}>
+                  Voir tout →
+                </Link>
+              </div>
+              {escrowContracts.length === 0 ? (
+                <p className="body-f muted2" style={{ fontSize: 14 }}>Aucun contrat actif.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {escrowContracts.slice(0, 3).map((c) => {
+                    const released = c.milestones.filter((m: any) => m.status === 'RELEASED').length;
+                    const total = c.milestones.length;
+                    return (
+                      <div key={c.id} style={{ padding: 12, background: 'rgba(15,25,36,0.5)', borderRadius: 8 }}>
+                        <p className="body-f cream-hi" style={{ fontWeight: 600, fontSize: 14 }}>{c.taskDescription}</p>
+                        <p className="body-f muted2" style={{ fontSize: 12, marginTop: 4 }}>
+                          {released}/{total} jalons · {c.status === 'locked' ? '🔒 Verrouillé' : c.status === 'pending' ? '⏳ En attente' : '✅ Complété'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
