@@ -113,6 +113,7 @@ export class JobsService {
       id: task.id,
       clientId: task.clientId,
       clientName,
+      clientAvatar: task.client?.avatarUrl ?? undefined,
       clientPhone: revealContact ? task.client?.phone ?? undefined : undefined,
       serviceType: task.serviceType,
       title: task.title,
@@ -141,6 +142,7 @@ export class JobsService {
       pendingApplicationCount,
       myApplicationStatus: myApplication?.status ?? null,
       paymentStatus: (task as { paymentStatus?: string }).paymentStatus ?? 'unpaid',
+      photoUrls: (task as { photoUrls?: string[] }).photoUrls ?? [],
     };
   }
 
@@ -197,7 +199,7 @@ export class JobsService {
             ],
           },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true } },
+        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -245,7 +247,7 @@ export class JobsService {
     const task = await this.prisma.task.findUnique({
       where: { id },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true } },
+        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -287,9 +289,10 @@ export class JobsService {
         scheduledDate: dto.scheduledDate ? new Date(dto.scheduledDate) : undefined,
         estimatedDuration: dto.estimatedDuration ?? 60,
         estimatedPrice: dto.estimatedPrice,
+        photoUrls: dto.photoUrls ?? [],
       },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true } },
+        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -339,7 +342,7 @@ export class JobsService {
         claimedAt: new Date(),
       },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true } },
+        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -494,6 +497,7 @@ export class JobsService {
             id: true,
             firstName: true,
             lastName: true,
+            avatarUrl: true,
             provider: {
               select: {
                 serviceTypes: true,
@@ -520,6 +524,7 @@ export class JobsService {
         id: app.tasker.id,
         firstName: app.tasker.firstName,
         lastName: app.tasker.lastName,
+        avatar: app.tasker.avatarUrl ?? undefined,
         serviceTypes: app.tasker.provider?.serviceTypes ?? [],
         rating: app.tasker.provider?.rating ?? 0,
         reviewCount: app.tasker.provider?.reviewCount ?? 0,
@@ -646,7 +651,7 @@ export class JobsService {
         cancelledAt: new Date(),
       },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true } },
+        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
         applications: { select: { id: true, status: true, taskerId: true } },
       },
     });
@@ -692,7 +697,7 @@ export class JobsService {
         claimedAt: null,
       },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true } },
+        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -716,7 +721,7 @@ export class JobsService {
         completedAt: new Date(),
       },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true } },
+        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -746,7 +751,7 @@ export class JobsService {
       where: { id: taskId },
       data: { status: TaskStatus.in_progress },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true } },
+        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },

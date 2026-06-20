@@ -54,6 +54,7 @@ model User {
   // Profile
   firstName           String?
   lastName            String?
+  avatarUrl           String?
   
   // Timestamps
   createdAt           DateTime           @default(now())
@@ -341,6 +342,7 @@ model Task {
 
   paymentStatus           String   @default("unpaid") // unpaid, pending, paid
   stripeCheckoutSessionId String?
+  photoUrls               String[] @default([])
 
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt

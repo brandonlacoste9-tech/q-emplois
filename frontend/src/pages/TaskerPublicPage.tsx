@@ -7,6 +7,7 @@ import { SERVICE_TYPE_LABELS, type ServiceType } from '../types';
 import { formatPrice } from '../utils';
 import { BadgeCheck, MapPin, Star } from 'lucide-react';
 import { gold } from '../styles/design-tokens';
+import { UserAvatar } from '../components/UserAvatar';
 
 interface PublicTasker {
   id: string;
@@ -19,6 +20,7 @@ interface PublicTasker {
   hourlyRate?: number;
   city?: string;
   memberSince?: string;
+  avatar?: string;
 }
 
 export function TaskerPublicPage() {
@@ -40,7 +42,6 @@ export function TaskerPublicPage() {
   const name = profile
     ? [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'Travailleur'
     : '';
-  const initials = name.charAt(0).toUpperCase() || '?';
 
   return (
     <div className="leather" style={{ minHeight: '100vh', color: '#D9B38C' }}>
@@ -58,22 +59,7 @@ export function TaskerPublicPage() {
           <>
             <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.75)', padding: 28 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 20 }}>
-                <div
-                  style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: '50%',
-                    background: gold,
-                    color: '#1F2F3F',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 28,
-                    fontWeight: 800,
-                  }}
-                >
-                  {initials}
-                </div>
+                <UserAvatar name={name} avatarUrl={profile.avatar} size={72} fontSize={28} />
                 <div>
                   <h1 className="serif cream-hi" style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>{name}</h1>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

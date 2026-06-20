@@ -6,6 +6,7 @@ import { getApiErrorMessage } from '../utils/apiError';
 import { BrandLogo } from '../components/BrandLogo';
 import { buildClientBookingHref } from '../utils/booking';
 import { buildJobPayload } from '../components/JobBookingWizard';
+import { uploadDraftPhotos } from '../components/ImageUpload';
 import { clearBookingDraft, loadBookingDraft } from '../utils/bookingDraft';
 import { api } from '../services/api';
 
@@ -132,7 +133,10 @@ export function RegisterClient() {
 
       const draft = fromBook ? loadBookingDraft() : null;
       if (draft?.serviceType) {
-        const job = await api.createJob(buildJobPayload(draft));
+        const photoUrls = draft.photoUrls?.length
+          ? await uploadDraftPhotos(draft.photoUrls)
+          : undefined;
+        const job = await api.createJob({ ...buildJobPayload(draft), photoUrls });
         clearBookingDraft();
         navigate(`/jobs/${job.id}`);
         return;

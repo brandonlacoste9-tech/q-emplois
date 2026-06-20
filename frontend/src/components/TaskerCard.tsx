@@ -4,6 +4,7 @@ import type { TaskerCardData } from '../types';
 import { SERVICE_TYPE_LABELS } from '../types';
 import { formatPrice } from '../utils';
 import { gold } from '../styles/design-tokens';
+import { UserAvatar } from './UserAvatar';
 
 interface TaskerCardProps {
   tasker: TaskerCardData;
@@ -14,7 +15,6 @@ interface TaskerCardProps {
 
 export function TaskerCard({ tasker, action, compact, linkProfile = true }: TaskerCardProps) {
   const name = [tasker.firstName, tasker.lastName].filter(Boolean).join(' ') || 'Travailleur';
-  const initials = name.charAt(0).toUpperCase();
 
   return (
     <div
@@ -29,22 +29,11 @@ export function TaskerCard({ tasker, action, compact, linkProfile = true }: Task
       }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flex: 1 }}>
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            background: gold,
-            color: '#1F2F3F',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            flexShrink: 0,
-          }}
-        >
-          {initials}
-        </div>
+        <UserAvatar
+          name={name}
+          avatarUrl={tasker.avatar}
+          size={44}
+        />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             {linkProfile && tasker.id ? (

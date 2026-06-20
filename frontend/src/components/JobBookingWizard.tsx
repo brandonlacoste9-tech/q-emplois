@@ -6,6 +6,7 @@ import { geocodeQuebecAddress } from '../utils/geocode';
 import { parseServiceParam } from '../utils/booking';
 import { BrandLogo } from './BrandLogo';
 import { AddressAutocomplete } from './AddressAutocomplete';
+import { ImageUpload } from './ImageUpload';
 
 const SERVICE_TYPES: { type: ServiceType; emoji: string }[] = [
   { type: 'menage', emoji: '🧹' },
@@ -35,6 +36,7 @@ export type BookingFormData = {
   street: string;
   city: string;
   postalCode: string;
+  photoUrls: string[];
 };
 
 type Lang = 'fr' | 'en';
@@ -47,6 +49,8 @@ const T = {
     subs: ['De quel type de service avez-vous besoin ?', 'Où et quand ? (ville et code postal suffisent pour commencer)', 'Quel est votre budget ?'],
     jobTitle: 'Titre (optionnel)',
     desc: 'Détails (optionnel)',
+    photos: 'Photos (optionnel)',
+    photosHint: 'Aide les travailleurs à mieux comprendre la tâche. Max 3 photos.',
     date: 'Date souhaitée (optionnel)',
     street: 'Rue (optionnel — à compléter après sélection)',
     city: 'Ville',
@@ -78,6 +82,8 @@ const T = {
     subs: ['What kind of service do you need?', 'Where and when? (city and postal code are enough to start)', 'What is your budget?'],
     jobTitle: 'Title (optional)',
     desc: 'Details (optional)',
+    photos: 'Photos (optional)',
+    photosHint: 'Help taskers understand the job. Up to 3 photos.',
     date: 'Preferred date (optional)',
     street: 'Street (optional — add after you select a tasker)',
     city: 'City',
@@ -113,6 +119,7 @@ const emptyForm = (): BookingFormData => ({
   street: '',
   city: '',
   postalCode: '',
+  photoUrls: [],
 });
 
 function defaultTitle(data: BookingFormData): string {
@@ -138,6 +145,7 @@ function buildJobPayload(data: BookingFormData) {
       postalCode: data.postalCode,
       coordinates: coords ?? undefined,
     },
+    photoUrls: data.photoUrls.length ? data.photoUrls : undefined,
   };
 }
 
@@ -383,6 +391,14 @@ export function JobBookingWizard({ mode, searchParams, onPublished, onGuestCompl
                   <label className="q-label">{t.desc}</label>
                   <textarea className="q-field" rows={2} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Détails du travail…" style={{ resize: 'vertical' }} />
                 </div>
+                <ImageUpload
+                  purpose="task"
+                  value={formData.photoUrls}
+                  onChange={(photoUrls) => setFormData((prev) => ({ ...prev, photoUrls }))}
+                  uploadImmediately={!isGuest}
+                  label={t.photos}
+                  hint={t.photosHint}
+                />
                 <div>
                   <label className="q-label">{t.street}</label>
                   <input className="q-field" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} placeholder="123 Rue Principale" />

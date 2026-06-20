@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { formatDate, formatDistance, formatDuration, formatPrice, formatJobLocation } from '../utils';
 import { gold } from '../styles/design-tokens';
+import { UserAvatar } from '../components/UserAvatar';
 
 export function JobDetail() {
   const { id } = useParams<{ id: string }>();
@@ -183,6 +184,26 @@ export function JobDetail() {
 
           <p className="body-f muted" style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>{job.description}</p>
 
+          {job.photoUrls && job.photoUrls.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
+              {job.photoUrls.map((url) => (
+                <a key={url} href={url} target="_blank" rel="noreferrer">
+                  <img
+                    src={url}
+                    alt=""
+                    style={{
+                      width: 96,
+                      height: 96,
+                      objectFit: 'cover',
+                      borderRadius: 8,
+                      border: '2px solid rgba(217,179,140,0.25)',
+                    }}
+                  />
+                </a>
+              ))}
+            </div>
+          )}
+
           <div className="body-f muted" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 24, fontSize: 14 }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Calendar className="w-4 h-4" />{formatDate(job.scheduledDate)}</span>
             {job.estimatedDuration > 0 && (
@@ -215,9 +236,7 @@ export function JobDetail() {
 
           {showTaskerActions && job.clientName && !job.contactRedacted && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'rgba(15,25,36,0.5)', borderRadius: 8, marginBottom: 20 }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: gold, color: '#1F2F3F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-                {job.clientName.charAt(0)}
-              </div>
+              <UserAvatar name={job.clientName} avatarUrl={job.clientAvatar} size={40} />
               <div>
                 <p className="body-f cream-hi" style={{ fontWeight: 600 }}>{job.clientName}</p>
                 {job.clientPhone && (

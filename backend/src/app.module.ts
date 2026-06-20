@@ -24,6 +24,7 @@ import { EmailModule } from './common/email/email.module';
 import { StorageModule } from './common/storage/storage.module';
 import { AdminModule } from './admin/admin.module';
 import { GeoModule } from './geo/geo.module';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { GeoModule } from './geo/geo.module';
     ReviewsModule,
     AdminModule,
     GeoModule,
+    MediaModule,
   ],
 })
 export class AppModule {}

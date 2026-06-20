@@ -174,6 +174,7 @@ class ApiService {
       scheduledDate: data.scheduledDate,
       estimatedPrice: data.estimatedPrice,
       estimatedDuration: data.estimatedDuration ?? 60,
+      photoUrls: data.photoUrls,
     });
     return response.data;
   }
@@ -396,6 +397,16 @@ class ApiService {
   async uploadLicenseDocument(data: { data: string; filename: string; contentType: string }) {
     const response = await this.client.post('/providers/me/license-document', data);
     return response.data;
+  }
+
+  async uploadImage(data: {
+    purpose: 'avatar' | 'task';
+    data: string;
+    filename: string;
+    contentType: string;
+  }) {
+    const response = await this.client.post('/media/upload', data);
+    return response.data as { url: string; purpose: string };
   }
 
   async getAdminMetrics(days = 30) {

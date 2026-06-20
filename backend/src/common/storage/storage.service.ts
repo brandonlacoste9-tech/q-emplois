@@ -1,8 +1,9 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-const MAX_BYTES = 1024 * 1024;
-const BUCKET = 'provider-documents';
+const MAX_DOC_BYTES = 1024 * 1024;
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const BUCKET_DOCS = 'provider-documents';
 
 @Injectable()
 export class StorageService {
@@ -23,8 +24,52 @@ export class StorageService {
     filename: string,
     contentType: string,
   ): Promise<string> {
-    if (buffer.length > MAX_BYTES) {
-      throw new BadRequestException('Fichier trop volumineux (max 1 Mo).');
+    return this.uploadPublicFile(BUCKET_DOCS, userId, buffer, filename, contentType, MAX_DOC_BYTES);
+  }
+
+  async uploadAvatar(
+    userId: string,
+    buffer: Buffer,
+    filename: string,
+    contentType: string,
+  ): Promise<string> {
+    if (!contentType.startsWith('image/')) {
+      throw new BadRequestException('Seules les images sont acceptées.');
+    }
+    return this.uploadPublicFile('avatars', userId, buffer, filename, contentType, MAX_IMAGE_BYTES);
+  }
+
+  async uploadTaskPhoto(
+    userId: string,
+    buffer: Buffer,
+    filename: string,
+    contentType: string,
+  ): Promise<string> {
+    if (!contentType.startsWith('image/')) {
+      throw new BadRequestException('Seules les images sont acceptées.');
+    }
+    return this.uploadPublicFile('task-photos', userId, buffer, filename, contentType, MAX_IMAGE_BYTES);
+  }
+
+  parseUploadPayload(data: string, contentType: string): { buffer: Buffer; contentType: string } {
+    if (data.startsWith('data:')) {
+      const match = data.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) throw new BadRequestException('Format de fichier invalide.');
+      return { buffer: Buffer.from(match[2], 'base64'), contentType: match[1] };
+    }
+    return { buffer: Buffer.from(data, 'base64'), contentType };
+  }
+
+  private async uploadPublicFile(
+    bucket: string,
+    userId: string,
+    buffer: Buffer,
+    filename: string,
+    contentType: string,
+    maxBytes: number,
+  ): Promise<string> {
+    if (buffer.length > maxBytes) {
+      throw new BadRequestException(`Fichier trop volumineux (max ${Math.round(maxBytes / 1024 / 1024)} Mo).`);
     }
 
     const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
@@ -32,16 +77,15 @@ export class StorageService {
 
     if (!this.isConfigured()) {
       this.logger.warn('Supabase Storage not configured — storing as data URL fallback');
-      const b64 = buffer.toString('base64');
-      return `data:${contentType};base64,${b64}`;
+      return `data:${contentType};base64,${buffer.toString('base64')}`;
     }
 
     const baseUrl = this.configService.get<string>('SUPABASE_URL')!.replace(/\/$/, '');
     const key = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    await this.ensureBucket(baseUrl, key);
+    await this.ensureBucket(baseUrl, key, bucket, maxBytes);
 
-    const uploadRes = await fetch(`${baseUrl}/storage/v1/object/${BUCKET}/${path}`, {
+    const uploadRes = await fetch(`${baseUrl}/storage/v1/object/${bucket}/${path}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${key}`,
@@ -54,14 +98,14 @@ export class StorageService {
     if (!uploadRes.ok) {
       const err = await uploadRes.text();
       this.logger.error(`Storage upload failed: ${err}`);
-      throw new BadRequestException('Impossible de téléverser le document.');
+      throw new BadRequestException('Impossible de téléverser le fichier.');
     }
 
-    return `${baseUrl}/storage/v1/object/public/${BUCKET}/${path}`;
+    return `${baseUrl}/storage/v1/object/public/${bucket}/${path}`;
   }
 
-  private async ensureBucket(baseUrl: string, key: string): Promise<void> {
-    const check = await fetch(`${baseUrl}/storage/v1/bucket/${BUCKET}`, {
+  private async ensureBucket(baseUrl: string, key: string, bucket: string, maxBytes: number): Promise<void> {
+    const check = await fetch(`${baseUrl}/storage/v1/bucket/${bucket}`, {
       headers: { Authorization: `Bearer ${key}` },
     });
     if (check.ok) return;
@@ -73,10 +117,10 @@ export class StorageService {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        id: BUCKET,
-        name: BUCKET,
+        id: bucket,
+        name: bucket,
         public: true,
-        file_size_limit: MAX_BYTES,
+        file_size_limit: maxBytes,
       }),
     });
   }

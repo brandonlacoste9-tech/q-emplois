@@ -42,6 +42,7 @@ export class ProfileService {
       firstName: user.firstName ?? '',
       lastName: user.lastName ?? '',
       phone: user.phone ?? '',
+      avatar: user.avatarUrl ?? undefined,
       isVerified: provider?.isVerified ?? false,
       rating: provider?.rating ?? 0,
       reviewCount: provider?.reviewCount ?? 0,

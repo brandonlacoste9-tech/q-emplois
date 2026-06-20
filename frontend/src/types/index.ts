@@ -180,6 +180,7 @@ export interface Job {
   pendingApplicationCount?: number;
   myApplicationStatus?: string | null;
   paymentStatus?: 'unpaid' | 'pending' | 'paid';
+  photoUrls?: string[];
 }
 
 export interface TaskApplication {
@@ -203,6 +204,7 @@ export interface TaskerCardData {
   city?: string;
   message?: string | null;
   distanceKm?: number;
+  avatar?: string;
 }
 
 export interface PriceGuideRange {

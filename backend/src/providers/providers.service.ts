@@ -28,7 +28,7 @@ function mapBrowseResult(
     locationAddress: string | null;
     locationLat: unknown;
     locationLng: unknown;
-    user: { id: string; firstName: string | null; lastName: string | null; createdAt: Date };
+    user: { id: string; firstName: string | null; lastName: string | null; avatarUrl: string | null; createdAt: Date };
   },
   distanceKm?: number,
 ) {
@@ -36,6 +36,7 @@ function mapBrowseResult(
     id: provider.user.id,
     firstName: provider.user.firstName,
     lastName: provider.user.lastName,
+    avatar: provider.user.avatarUrl ?? undefined,
     serviceTypes: provider.serviceTypes,
     rating: provider.rating,
     reviewCount: provider.reviewCount,
@@ -158,7 +159,7 @@ export class ProvidersService {
       },
       include: {
         user: {
-          select: { id: true, firstName: true, lastName: true, createdAt: true },
+          select: { id: true, firstName: true, lastName: true, avatarUrl: true, createdAt: true },
         },
       },
       take: 50,
@@ -207,6 +208,7 @@ export class ProvidersService {
             id: true,
             firstName: true,
             lastName: true,
+            avatarUrl: true,
             createdAt: true,
           },
         },
@@ -218,6 +220,7 @@ export class ProvidersService {
       id: provider.user.id,
       firstName: provider.user.firstName,
       lastName: provider.user.lastName,
+      avatar: provider.user.avatarUrl ?? undefined,
       serviceTypes: provider.serviceTypes,
       rating: provider.rating,
       reviewCount: provider.reviewCount,

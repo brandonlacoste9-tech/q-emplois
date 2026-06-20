@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsDateString, Min, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsDateString, Min, MaxLength, IsArray, ArrayMaxSize } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateTaskDto {
@@ -55,6 +55,13 @@ export class CreateTaskDto {
   @IsNumber()
   @Min(0)
   estimatedPrice: number;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(5)
+  photoUrls?: string[];
 }
 
 export class DeclineTaskDto {

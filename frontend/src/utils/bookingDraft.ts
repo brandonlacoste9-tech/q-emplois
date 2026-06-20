@@ -11,6 +11,7 @@ export interface BookingDraft {
   street: string;
   city: string;
   postalCode: string;
+  photoUrls: string[];
 }
 
 export function saveBookingDraft(draft: BookingDraft): void {

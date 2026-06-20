@@ -20,6 +20,8 @@ import {
 import { formatPrice } from '../utils';
 import { useToast } from '../components/Toast';
 import { gold } from '../styles/design-tokens';
+import { UserAvatar } from '../components/UserAvatar';
+import { ImageUpload } from '../components/ImageUpload';
 
 const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 20 };
 
@@ -194,8 +196,24 @@ export function Profile() {
           {/* Left column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="stitch-box" style={{ ...card, textAlign: 'center' }}>
-              <div style={{ width: 84, height: 84, borderRadius: '50%', background: gold, color: '#1F2F3F', margin: '0 auto 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, fontFamily: "'Playfair Display', serif" }}>
-                {profile.firstName?.charAt(0)}{profile.lastName?.charAt(0)}
+              <div style={{ margin: '0 auto 14px', width: 'fit-content' }}>
+                <UserAvatar
+                  firstName={profile.firstName}
+                  lastName={profile.lastName}
+                  avatarUrl={profile.avatar}
+                  size={84}
+                  fontSize={28}
+                />
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <ImageUpload
+                  purpose="avatar"
+                  value={profile.avatar ? [profile.avatar] : []}
+                  onChange={async () => {
+                    await refreshProfile();
+                    addToast('Photo de profil mise à jour', 'success');
+                  }}
+                />
               </div>
               <h2 className="serif cream-hi" style={{ fontSize: 20, fontWeight: 900 }}>{profile.firstName} {profile.lastName}</h2>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8 }}>

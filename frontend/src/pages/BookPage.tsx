@@ -17,6 +17,7 @@ export function BookPage() {
       street: data.street,
       city: data.city,
       postalCode: data.postalCode,
+      photoUrls: data.photoUrls,
     });
     navigate('/register/client?from=book');
   };
