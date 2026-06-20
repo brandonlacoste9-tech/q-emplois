@@ -8,7 +8,7 @@ WORKDIR /app
 COPY backend/package.json backend/package-lock.json ./
 COPY backend/prisma ./prisma/
 
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Copy the rest of the backend source
 COPY backend/ ./
