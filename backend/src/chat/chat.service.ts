@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { TaskStatus } from '@prisma/client';
 
 @Injectable()
 export class ChatService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   private async assertMessagingAllowed(
     conversation: { taskId: string | null; clientId: string; providerId: string },
@@ -98,6 +102,16 @@ export class ChatService {
       where: { id: conversationId },
       data: { updatedAt: new Date() },
     });
+
+    // Notify the recipient
+    const recipientId = conversation.clientId === userId ? conversation.providerId : conversation.clientId;
+    await this.notificationsService.create(
+      recipientId,
+      'new_message',
+      'Nouveau message',
+      content.slice(0, 120),
+      { conversationId, senderId: userId, content: content.slice(0, 500) },
+    );
 
     return message;
   }

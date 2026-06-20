@@ -3,11 +3,23 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import * as Sentry from '@sentry/node';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
-  
+
   const configService = app.get(ConfigService);
+
+  // Sentry
+  const sentryDsn = configService.get<string>('SENTRY_DSN');
+  if (sentryDsn) {
+    Sentry.init({
+      dsn: sentryDsn,
+      environment: configService.get('NODE_ENV', 'production'),
+      tracesSampleRate: 0.1,
+    });
+    console.log('📡 Sentry initialized');
+  }
   
   // Enable CORS
   app.enableCors({

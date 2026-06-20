@@ -94,7 +94,47 @@ export class VerificationJobsService {
     }
   }
 
-  /** Daily at 3:00 AM Eastern (off-hours, low-traffic window). */
+  /** Daily at 9:00 AM Eastern — stale jobs with 0 applications */
+  @Cron('0 9 * * *', { timeZone: 'America/Toronto' })
+  async handleStaleJobs(): Promise<void> {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const staleJobs = await this.prisma.task.findMany({
+      where: {
+        status: 'open',
+        createdAt: { lte: sevenDaysAgo },
+        applications: { none: {} },
+      },
+      include: {
+        client: { select: { email: true, firstName: true } },
+      },
+    });
+
+    if (staleJobs.length === 0) {
+      this.logger.log('No stale jobs with 0 applications.');
+      return;
+    }
+
+    this.logger.log(`Found ${staleJobs.length} stale job(s) with 0 applications.`);
+    for (const job of staleJobs) {
+      if (job.client.email) {
+        await this.email.send({
+          to: job.client.email,
+          subject: `Votre tâche « ${job.title} » n'a pas reçu de candidature`,
+          html: `<p>Bonjour ${job.client.firstName ?? ''},</p>
+<p>Votre tâche « ${job.title} » a été publiée il y a plus d'une semaine mais n'a reçu aucune candidature.</p>
+<p>Suggestions pour attirer des travailleurs :</p>
+<ul>
+<li>Vérifier que le prix estimé est compétitif</li>
+<li>Ajouter des photos pour donner plus de détails</li>
+<li>Élargir le rayon de recherche</li>
+</ul>
+<p><a href="${this.config.get('FRONTEND_URL', 'http://localhost:5173')}/jobs/${job.id}">Modifier ma tâche</a></p>
+<p>— Q-Emplois</p>`,
+        });
+      }
+    }
+  }
+  /** Daily at 3:00 AM ET — flip expired verifications */
   @Cron('0 3 * * *', { timeZone: 'America/Toronto' })
   async handleVerificationExpiry(): Promise<void> {
     const now = new Date();
