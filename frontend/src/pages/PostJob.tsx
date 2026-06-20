@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { SERVICE_TYPE_LABELS, type ServiceType, type PriceGuideRange } from '../types';
 import { geocodeQuebecAddress } from '../utils/geocode';
+import { parseServiceParam } from '../utils/booking';
 
 // Curated subset for client posting UI — covers 90% of demand without overwhelming the user
 const SERVICE_TYPES: { type: ServiceType; emoji: string }[] = [
@@ -43,7 +44,12 @@ const T = {
     errSvc: 'Veuillez sélectionner un type de service.',
     errPrice: 'Veuillez entrer un budget valide.',
     errGeneric: 'Une erreur est survenue lors de la publication.',
-    success: 'Job publiée avec succès !',
+    successTitle: 'Tâche publiée !',
+    successBody: 'Les travailleurs près de chez vous sont notifiés. Vous recevrez une alerte dès qu\'il y a des candidats.',
+    successHint: 'Les candidatures arrivent généralement en quelques heures.',
+    viewTask: 'Voir ma tâche',
+    dashboard: 'Tableau de bord',
+    postAnother: 'Publier une autre',
     privacyNote: 'Sur le tableau des jobs, seuls la ville et le secteur sont visibles. Vous choisissez le travailleur parmi les candidats. Contact débloqué à la sélection; adresse exacte au démarrage.',
     priceGuide: 'Fourchette typique pour ce service',
   },
@@ -63,7 +69,12 @@ const T = {
     errSvc: 'Please select a service type.',
     errPrice: 'Please enter a valid budget.',
     errGeneric: 'An error occurred while posting.',
-    success: 'Job posted successfully!',
+    successTitle: 'Task posted!',
+    successBody: 'Workers near you are being notified. You\'ll get an alert as soon as applicants arrive.',
+    successHint: 'Applications usually arrive within a few hours.',
+    viewTask: 'View my task',
+    dashboard: 'Dashboard',
+    postAnother: 'Post another',
     privacyNote: 'On the job board, only city and area are shown. You choose the tasker from applicants. Contact unlocks on selection; exact address when they start.',
     priceGuide: 'Typical range for this service',
   },
@@ -86,18 +97,20 @@ export function PostJob() {
   const [isLoading, setIsLoading] = useState(false);
   const [posted, setPosted] = useState(false);
   const [priceGuide, setPriceGuide] = useState<PriceGuideRange | null>(null);
+  const [postedJobId, setPostedJobId] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const t = T[lang];
 
   useEffect(() => {
     const need = searchParams.get('need')?.trim();
-    if (!need) return;
+    const service = parseServiceParam(searchParams.get('service'));
     setFormData((prev) => ({
       ...prev,
-      title: prev.title || need,
-      description: prev.description || need,
+      ...(need ? { title: prev.title || need, description: prev.description || need } : {}),
+      ...(service ? { serviceType: service } : {}),
     }));
+    if (service) setStep(2);
   }, [searchParams]);
 
   useEffect(() => {
@@ -139,7 +152,7 @@ export function PostJob() {
     setIsLoading(true);
     try {
       const coords = geocodeQuebecAddress(formData.city, formData.postalCode);
-      await api.createJob({
+      const job = await api.createJob({
         title: formData.title,
         description: formData.description,
         serviceType: formData.serviceType as ServiceType,
@@ -152,6 +165,7 @@ export function PostJob() {
           coordinates: coords ?? undefined,
         },
       });
+      setPostedJobId(job.id);
       setPosted(true);
     } catch (err) {
       setError(t.errGeneric);
@@ -165,19 +179,25 @@ export function PostJob() {
         <div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}>
           <div style={{ fontSize: 64, marginBottom: 16 }}>⚜️</div>
           <h1 className="serif cream-hi" style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
-            {lang === 'fr' ? 'Job publiée !' : 'Job Posted!'}
+            {t.successTitle}
           </h1>
-          <p className="body-f muted" style={{ fontSize: 15, marginBottom: 28 }}>
-            {lang === 'fr'
-              ? 'Votre job est sur le tableau (ville et secteur seulement). À l\'acceptation, le travailleur verra votre contact. L\'adresse exacte sera partagée quand il démarre le job.'
-              : 'Your job is on the board (city and area only). On accept, the tasker gets your contact. The exact address is shared when they start the job.'}
+          <p className="body-f muted" style={{ fontSize: 15, marginBottom: 12, lineHeight: 1.6 }}>
+            {t.successBody}
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <button onClick={() => navigate('/dashboard')} className="gold-btn" style={{ padding: '12px 24px', fontSize: 15 }}>
-              {lang === 'fr' ? 'Tableau de bord' : 'Dashboard'}
+          <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 28 }}>
+            {t.successHint}
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            {postedJobId && (
+              <button onClick={() => navigate(`/jobs/${postedJobId}`)} className="gold-btn" style={{ padding: '12px 24px', fontSize: 15 }}>
+                {t.viewTask}
+              </button>
+            )}
+            <button onClick={() => navigate('/dashboard')} className="ghost-btn" style={{ padding: '12px 24px', fontSize: 15 }}>
+              {t.dashboard}
             </button>
-            <button onClick={() => { setPosted(false); setStep(1); setFormData({ title: '', description: '', serviceType: '', scheduledDate: '', estimatedPrice: '', street: '', city: '', postalCode: '' }); }} className="ghost-btn" style={{ padding: '12px 24px', fontSize: 15 }}>
-              {lang === 'fr' ? 'Publier une autre' : 'Post Another'}
+            <button onClick={() => { setPosted(false); setPostedJobId(null); setStep(1); setFormData({ title: '', description: '', serviceType: '', scheduledDate: '', estimatedPrice: '', street: '', city: '', postalCode: '' }); }} className="ghost-btn" style={{ padding: '12px 24px', fontSize: 15 }}>
+              {t.postAnother}
             </button>
           </div>
         </div>

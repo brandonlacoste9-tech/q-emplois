@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { normalizeCanadianPhone } from '../utils/phone';
 import { getApiErrorMessage } from '../utils/apiError';
 import { BrandLogo } from '../components/BrandLogo';
+import { buildClientBookingHref } from '../utils/booking';
 
 type Lang = 'fr' | 'en';
 
@@ -77,6 +78,7 @@ export function RegisterClient() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const need = searchParams.get('need');
+  const service = searchParams.get('service');
   const t = T[lang];
 
   const validateStep1 = () => {
@@ -121,7 +123,7 @@ export function RegisterClient() {
         lastName: formData.lastName,
         phone: normalizeCanadianPhone(formData.phone),
       });
-      navigate(need ? `/post-job?need=${encodeURIComponent(need)}` : '/post-job');
+      navigate(buildClientBookingHref({ need: need ?? undefined, service: service ?? undefined, authenticated: true }));
     } catch (err) {
       setError(getApiErrorMessage(err, t.errGeneric));
       setIsLoading(false);

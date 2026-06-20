@@ -11,6 +11,7 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JobsService } from './jobs.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/user.decorator';
 import { CreateTaskDto, DeclineTaskDto, ApplyTaskDto } from './dto/job.dto';
 
@@ -21,6 +22,7 @@ import { CreateTaskDto, DeclineTaskDto, ApplyTaskDto } from './dto/job.dto';
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
+  @Public()
   @Get('guides/prices')
   @ApiOperation({ summary: 'Fourchettes de prix suggérées par type de service' })
   priceGuides(@Query('city') city?: string) {

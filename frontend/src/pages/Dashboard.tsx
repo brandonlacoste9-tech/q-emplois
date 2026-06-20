@@ -88,6 +88,14 @@ export function Dashboard() {
   }
 
   if (isClientMode) {
+    const pendingReview = myPostedJobs.filter(
+      (j) => j.status === 'pending' && (j.pendingApplicationCount ?? 0) > 0,
+    );
+    const totalApplicants = pendingReview.reduce(
+      (sum, j) => sum + (j.pendingApplicationCount ?? 0),
+      0,
+    );
+
     return (
       <div className="leather" style={{ minHeight: '100vh' }}>
         <div style={wrap}>
@@ -96,26 +104,46 @@ export function Dashboard() {
               Bonjour, {profile?.firstName} ⚜
             </h1>
             <p className="body-f muted" style={{ fontSize: 15, marginTop: 4 }}>
-              Publiez une tâche et trouvez un travailleur local
+              De quoi avez-vous besoin aujourd&apos;hui ?
             </p>
           </div>
 
-          <Link to="/post-job" style={{ textDecoration: 'none', display: 'block', marginBottom: 28 }}>
-            <div className="stitch-box stitch-box-interactive" style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div className="svc-icon" style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Briefcase className="w-6 h-6" style={{ color: gold }} />
-                </div>
-                <div>
-                  <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700 }}>Publier une nouvelle tâche</h3>
-                  <p className="body-f muted2" style={{ fontSize: 13 }}>
-                    Déménagement, ménage, montage — décrivez ce dont vous avez besoin
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5" style={{ color: gold }} />
+          <Link to="/post-job" style={{ textDecoration: 'none', display: 'block', marginBottom: 20 }}>
+            <div className="gold-btn" style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 17 }}>
+              <Briefcase className="w-5 h-5" />
+              Publier une tâche
             </div>
           </Link>
+
+          {pendingReview.length > 0 && (
+            <Link to={`/jobs/${pendingReview[0].id}`} style={{ textDecoration: 'none', display: 'block', marginBottom: 28 }}>
+              <div className="stitch-box stitch-box-interactive" style={{ ...card, borderColor: 'rgba(184,123,68,0.55)', background: 'rgba(184,123,68,0.12)' }}>
+                <p className="serif cream-hi" style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>
+                  {totalApplicants} candidature{totalApplicants > 1 ? 's' : ''} à consulter
+                </p>
+                <p className="body-f muted" style={{ fontSize: 14 }}>
+                  Comparez les travailleurs et choisissez celui qui vous convient — « {pendingReview[0].title} »
+                </p>
+              </div>
+            </Link>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 28 }}>
+            {[
+              { label: 'Ménage', service: 'menage', need: 'Ménage' },
+              { label: 'Déménagement', service: 'demenagement', need: 'Déménagement' },
+              { label: 'Montage', service: 'montage_meubles', need: 'Montage de meubles' },
+            ].map((item) => (
+              <Link
+                key={item.service}
+                to={`/post-job?service=${item.service}&need=${encodeURIComponent(item.need)}`}
+                className="ghost-btn"
+                style={{ padding: '12px 10px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
 
           {notifications.length > 0 && (
             <div className="stitch-box" style={{ ...card, marginBottom: 28 }}>

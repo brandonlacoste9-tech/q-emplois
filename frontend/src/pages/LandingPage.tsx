@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SEOHead } from "../components/SEOHead";
 import { BrandLogo } from "../components/BrandLogo";
+import { useAuth } from "../context/AuthContext";
+import { api } from "../services/api";
+import type { PriceGuideRange } from "../types";
+import { buildClientBookingHref, formatPriceGuideShort } from "../utils/booking";
 
 /* --- TRANSLATIONS --- */
 const T = {
@@ -26,13 +30,14 @@ const T = {
     },
     cats: {
       title: "Nos services les plus demandés",
+      priceFrom: "Typique",
       items: [
-        { icon: "❄️", name: "Déneigement", desc: "Entrées, balcons, escaliers — avant la tempête." },
-        { icon: "📦", name: "Déménagement & transport", desc: "Aide au déménagement, portage, livraison." },
-        { icon: "🔧", name: "Montage & petits travaux", desc: "Montage de meubles, fixations, réparations." },
-        { icon: "🧹", name: "Ménage & entretien", desc: "Ménage résidentiel, après-déménagement." },
-        { icon: "🍂", name: "Entretien saisonnier", desc: "Nettoyage de cour, feuilles, débarras." },
-        { icon: "💪", name: "Aide & manutention", desc: "Coup de main, levage, aide aux aînés." },
+        { icon: "❄️", name: "Déneigement", desc: "Entrées, balcons, escaliers — avant la tempête.", service: "nettoyage", need: "Déneigement" },
+        { icon: "📦", name: "Déménagement & transport", desc: "Aide au déménagement, portage, livraison.", service: "demenagement", need: "Déménagement" },
+        { icon: "🔧", name: "Montage & petits travaux", desc: "Montage de meubles, fixations, réparations.", service: "montage_meubles", need: "Montage de meubles" },
+        { icon: "🧹", name: "Ménage & entretien", desc: "Ménage résidentiel, après-déménagement.", service: "menage", need: "Ménage" },
+        { icon: "🍂", name: "Entretien saisonnier", desc: "Nettoyage de cour, feuilles, débarras.", service: "jardinage", need: "Entretien saisonnier" },
+        { icon: "💪", name: "Aide & manutention", desc: "Coup de main, levage, aide aux aînés.", service: "manutention", need: "Aide et manutention" },
       ],
     },
     how: {
@@ -97,13 +102,14 @@ const T = {
     },
     cats: {
       title: "Our most-requested services",
+      priceFrom: "Typical",
       items: [
-        { icon: "❄️", name: "Snow removal", desc: "Driveways, balconies, stairs — before the storm." },
-        { icon: "📦", name: "Moving & transport", desc: "Moving help, lifting, delivery." },
-        { icon: "🔧", name: "Assembly & small jobs", desc: "Furniture assembly, mounting, repairs." },
-        { icon: "🧹", name: "Cleaning & upkeep", desc: "Home cleaning, move-out cleaning." },
-        { icon: "🍂", name: "Seasonal upkeep", desc: "Yard cleanup, leaves, junk removal." },
-        { icon: "💪", name: "Help & lifting", desc: "A helping hand, heavy lifting, senior care." },
+        { icon: "❄️", name: "Snow removal", desc: "Driveways, balconies, stairs — before the storm.", service: "nettoyage", need: "Snow removal" },
+        { icon: "📦", name: "Moving & transport", desc: "Moving help, lifting, delivery.", service: "demenagement", need: "Moving help" },
+        { icon: "🔧", name: "Assembly & small jobs", desc: "Furniture assembly, mounting, repairs.", service: "montage_meubles", need: "Furniture assembly" },
+        { icon: "🧹", name: "Cleaning & upkeep", desc: "Home cleaning, move-out cleaning.", service: "menage", need: "Home cleaning" },
+        { icon: "🍂", name: "Seasonal upkeep", desc: "Yard cleanup, leaves, junk removal.", service: "jardinage", need: "Seasonal yard work" },
+        { icon: "💪", name: "Help & lifting", desc: "A helping hand, heavy lifting, senior care.", service: "manutention", need: "Help and lifting" },
       ],
     },
     how: {
@@ -162,7 +168,13 @@ export function LandingPage() {
   const [q, setQ] = useState("");
   const [chatIdx, setChatIdx] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [priceGuides, setPriceGuides] = useState<Record<string, PriceGuideRange>>({});
+  const { isAuthenticated } = useAuth();
   const t = T[lang];
+
+  useEffect(() => {
+    api.getPriceGuides().then(setPriceGuides).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     setChatIdx(0);
@@ -190,8 +202,7 @@ export function LandingPage() {
   };
 
   const seo = seoContent[lang];
-  const needQuery = q.trim() ? `?need=${encodeURIComponent(q.trim())}` : "";
-  const heroPostHref = `/register/client${needQuery}`;
+  const heroPostHref = buildClientBookingHref({ need: q, authenticated: isAuthenticated });
 
   return (
     <div style={{ background: "#1F2F3F", minHeight: "100vh", color: "#D9B38C" }}>
@@ -564,8 +575,19 @@ export function LandingPage() {
             {t.cats.title}
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 36 }}>
-            {t.cats.items.map((c, i) => (
-              <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+            {t.cats.items.map((c, i) => {
+              const guide = priceGuides[c.service] ?? priceGuides.autre;
+              const href = buildClientBookingHref({
+                need: c.need,
+                service: c.service,
+                authenticated: isAuthenticated,
+              });
+              return (
+              <Link
+                key={i}
+                to={href}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", textDecoration: "none", color: "inherit" }}
+              >
                 <div className="svc-icon">{c.icon}</div>
                 <h3 className="serif cream-hi" style={{ fontSize: 15, fontWeight: 700, marginTop: 14, marginBottom: 6 }}>
                   {c.name}
@@ -573,8 +595,14 @@ export function LandingPage() {
                 <p className="body-f muted2" style={{ fontSize: 12, lineHeight: 1.5 }}>
                   {c.desc}
                 </p>
-              </div>
-            ))}
+                {guide && (
+                  <p className="body-f" style={{ fontSize: 12, marginTop: 8, color: "#B87B44", fontWeight: 600 }}>
+                    {t.cats.priceFrom}: {formatPriceGuideShort(guide.min, guide.max, guide.unit, lang)}
+                  </p>
+                )}
+              </Link>
+              );
+            })}
           </div>
         </div>
       </section>
