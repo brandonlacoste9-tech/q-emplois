@@ -105,12 +105,22 @@ export class AdminService {
     };
   }
 
-  async listPendingVerifications() {
+  async listPendingVerifications(q?: string) {
+    const where: Record<string, unknown> = {
+      licenseDocumentUrl: { not: null },
+      isVerified: false,
+    };
+    if (q) {
+      where.user = {
+        OR: [
+          { firstName: { contains: q, mode: 'insensitive' } },
+          { lastName: { contains: q, mode: 'insensitive' } },
+          { email: { contains: q, mode: 'insensitive' } },
+        ],
+      };
+    }
     const providers = await this.prisma.provider.findMany({
-      where: {
-        licenseDocumentUrl: { not: null },
-        isVerified: false,
-      },
+      where,
       include: {
         user: {
           select: { id: true, email: true, firstName: true, lastName: true, phone: true },
@@ -212,5 +222,45 @@ export class AdminService {
     }
 
     return { success: true };
+  }
+
+  async searchProviders(q?: string, status?: string) {
+    const where: Record<string, unknown> = {};
+    if (status === 'verified') where.isVerified = true;
+    else if (status === 'pending') where.isVerified = false;
+    else if (status === 'expired') {
+      where.isVerified = true;
+      where.verificationExpiresAt = { lte: new Date() };
+    }
+    if (q) {
+      where.OR = [
+        { licenseNumber: { contains: q, mode: 'insensitive' } },
+        { serviceTypes: { has: q } },
+      ];
+    }
+    const providers = await this.prisma.provider.findMany({
+      where,
+      include: {
+        user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 100,
+    });
+    return providers.map((p) => ({
+      id: p.id,
+      userId: p.userId,
+      email: p.user.email,
+      firstName: p.user.firstName,
+      lastName: p.user.lastName,
+      phone: p.user.phone,
+      serviceTypes: p.serviceTypes,
+      isVerified: p.isVerified,
+      verifiedAt: p.verifiedAt?.toISOString() ?? null,
+      licenseNumber: p.licenseNumber,
+      rejectedAt: p.rejectedAt?.toISOString() ?? null,
+      rejectionReason: p.rejectionReason,
+      verificationExpiresAt: p.verificationExpiresAt?.toISOString() ?? null,
+      createdAt: p.createdAt.toISOString(),
+    }));
   }
 }

@@ -22,8 +22,14 @@ export class AdminController {
 
   @Get('verifications/pending')
   @ApiOperation({ summary: 'Documents en attente de vérification' })
-  listPending() {
-    return this.adminService.listPendingVerifications();
+  listPending(@Query('q') q?: string) {
+    return this.adminService.listPendingVerifications(q);
+  }
+
+  @Get('providers')
+  @ApiOperation({ summary: 'Rechercher des prestataires' })
+  searchProviders(@Query('q') q?: string, @Query('status') status?: string) {
+    return this.adminService.searchProviders(q, status);
   }
 
   @Post('verifications/:providerId/approve')

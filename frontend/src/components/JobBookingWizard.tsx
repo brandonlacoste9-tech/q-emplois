@@ -265,6 +265,9 @@ export function JobBookingWizard({ mode, searchParams, onPublished, onGuestCompl
                 {t.viewTask}
               </Link>
             )}
+            <Link to="/credits" className="ghost-btn" style={{ padding: '12px 24px', fontSize: 15, textDecoration: 'none' }}>
+              💳 Crédits
+            </Link>
             <Link to="/dashboard" className="ghost-btn" style={{ padding: '12px 24px', fontSize: 15, textDecoration: 'none' }}>
               {t.dashboard}
             </Link>
