@@ -15,6 +15,7 @@ import { Jobs } from './pages/Jobs'
 import { Profile } from './pages/Profile'
 import { PostJob } from './pages/PostJob'
 import { GarantiePage } from './pages/GarantiePage'
+import { RecrutePage } from './pages/RecrutePage'
 import { AdminPage } from './pages/AdminPage'
 import { JobDetail } from './pages/JobDetail'
 import { Credits } from './pages/Credits'
@@ -45,6 +46,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/garantie" element={<GarantiePage />} />
+        <Route path="/recrute" element={<RecrutePage />} />
         <Route path="/register" element={<RegisterChoose />} />
         <Route path="/register/client" element={<RegisterClient />} />
         <Route path="/register/tasker" element={<Register />} />

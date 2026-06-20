@@ -10,6 +10,7 @@ const FOOT = {
     copy: "© 2026 Q-emplois. Tous droits réservés.",
     find: "Trouver de l'aide",
     become: "Offrir mes services",
+    recrute: "Recrutement bêta",
     login: "Connexion",
     signup: "S'inscrire",
     garantie: "Garantie satisfaction",
@@ -21,6 +22,7 @@ const FOOT = {
     copy: "© 2026 Q-emplois. All rights reserved.",
     find: "Find help",
     become: "Offer my services",
+    recrute: "Beta recruitment",
     login: "Log in",
     signup: "Sign up",
     garantie: "Happiness pledge",
@@ -51,6 +53,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
         <div className="body-f" style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14 }}>
           <Link to="/contrats" className="nav-link">{t.find}</Link>
           <Link to="/pro" className="nav-link">{t.become}</Link>
+          <Link to="/recrute" className="nav-link">{t.recrute}</Link>
           <Link to="/login" className="nav-link">{t.login}</Link>
           <Link to="/register" className="nav-link">{t.signup}</Link>
           <Link to="/garantie" className="nav-link">{t.garantie}</Link>
