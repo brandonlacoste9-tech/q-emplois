@@ -11,6 +11,7 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { CreditsService, CREDIT_PACKS } from '../credits/credits.service';
 import { EscrowMilestoneStatus } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { generateInvoiceHtml, generateInvoiceNumber } from '../common/utils/invoice';
 
 @Injectable()
 export class PaymentsService {
@@ -297,5 +298,35 @@ export class PaymentsService {
       include: { milestones: true },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async generateMilestoneInvoice(userId: string, contractId: string, milestoneId: string) {
+    const contract = await this.prisma.escrowContract.findUnique({
+      where: { id: contractId },
+      include: { milestones: true },
+    });
+    if (!contract) throw new NotFoundException('Contrat introuvable.');
+    if (contract.clientId !== userId && contract.providerId !== userId) {
+      throw new BadRequestException('Accès refusé.');
+    }
+    const milestone = contract.milestones.find((m) => m.id === milestoneId);
+    if (!milestone) throw new NotFoundException('Jalon introuvable.');
+    if (milestone.status !== 'RELEASED') throw new BadRequestException('Facture disponible seulement pour les jalons libérés.');
+
+    const client = await this.prisma.user.findUnique({ where: { id: contract.clientId } });
+    const provider = await this.prisma.user.findUnique({ where: { id: contract.providerId } });
+
+    const html = generateInvoiceHtml({
+      invoiceNumber: generateInvoiceNumber(contractId, milestoneId),
+      date: new Date().toLocaleDateString('fr-CA'),
+      clientName: [client?.firstName, client?.lastName].filter(Boolean).join(' ') || 'Client',
+      providerName: [provider?.firstName, provider?.lastName].filter(Boolean).join(' ') || 'Prestataire',
+      lines: [{ description: milestone.description, amount: Number(milestone.amount) }],
+      subtotal: Number(milestone.amount),
+      tpsRate: 0.05,
+      tvqRate: 0.09975,
+    });
+
+    return { html, invoiceNumber: generateInvoiceNumber(contractId, milestoneId) };
   }
 }

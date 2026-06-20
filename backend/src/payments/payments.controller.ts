@@ -18,6 +18,7 @@ import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/user.decorator';
 import { IsString, IsNumber, IsArray, ValidateNested, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { generateInvoiceHtml, generateInvoiceNumber } from '../common/utils/invoice';
 
 class MilestoneDto {
   @IsString()
@@ -119,5 +120,16 @@ export class PaymentsController {
   @ApiBearerAuth()
   listEscrow(@CurrentUser('userId') userId: string) {
     return this.paymentsService.listEscrowContracts(userId);
+  }
+
+  @Get('escrow/:contractId/milestones/:milestoneId/invoice')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async invoice(
+    @CurrentUser('userId') userId: string,
+    @Param('contractId') contractId: string,
+    @Param('milestoneId') milestoneId: string,
+  ) {
+    return this.paymentsService.generateMilestoneInvoice(userId, contractId, milestoneId);
   }
 }
