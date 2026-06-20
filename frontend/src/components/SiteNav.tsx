@@ -49,8 +49,8 @@ export function SiteNav({
           <BrandLogo size="md" />
         </Link>
         <div className="body-f" style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 14 }}>
-          <Link to="/contrats" className="nav-link nav-hide-sm">{t.find}</Link>
-          <Link to="/pro" className="nav-link nav-hide-sm">{t.become}</Link>
+          <Link to="/aide" className="nav-link nav-hide-sm">{t.find}</Link>
+          <Link to="/recrute" className="nav-link nav-hide-sm">{t.become}</Link>
           <Link to="/login" className="nav-link">{t.login}</Link>
           <button
             onClick={onToggleLang}

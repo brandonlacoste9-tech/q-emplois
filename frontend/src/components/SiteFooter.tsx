@@ -15,6 +15,7 @@ const FOOT = {
     login: "Connexion",
     signup: "S'inscrire",
     garantie: "Garantie satisfaction",
+    privacy: "Politique de confidentialité",
     support: "Support",
   },
   en: {
@@ -28,6 +29,7 @@ const FOOT = {
     login: "Log in",
     signup: "Sign up",
     garantie: "Happiness pledge",
+    privacy: "Privacy policy",
     support: "Support",
   },
 };
@@ -59,6 +61,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
           <Link to="/login" className="nav-link">{t.login}</Link>
           <Link to="/register" className="nav-link">{t.signup}</Link>
           <Link to="/garantie" className="nav-link">{t.garantie}</Link>
+          <Link to="/politique-confidentialite" className="nav-link">{t.privacy}</Link>
           <a href="mailto:support@qemplois.ca" className="nav-link">{t.support}</a>
         </div>
       </div>

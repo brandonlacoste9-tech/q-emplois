@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { SERVICE_TYPE_LABELS, type ServiceType, type PriceGuideRange } from '../types';
 import { geocodeQuebecAddress } from '../utils/geocode';
@@ -87,7 +87,18 @@ export function PostJob() {
   const [posted, setPosted] = useState(false);
   const [priceGuide, setPriceGuide] = useState<PriceGuideRange | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const t = T[lang];
+
+  useEffect(() => {
+    const need = searchParams.get('need')?.trim();
+    if (!need) return;
+    setFormData((prev) => ({
+      ...prev,
+      title: prev.title || need,
+      description: prev.description || need,
+    }));
+  }, [searchParams]);
 
   useEffect(() => {
     if (step === 3 && formData.serviceType) {

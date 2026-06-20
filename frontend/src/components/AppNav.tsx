@@ -15,7 +15,6 @@ export function AppNav() {
     { label: 'Mes tâches', path: '/jobs' },
     { label: 'Publier une job', path: '/post-job' },
     { label: 'Messages', path: '/messages' },
-    { label: "L'Atelier", path: '/latelier' },
     { label: 'Profil', path: '/profile' },
   ];
 
@@ -24,7 +23,6 @@ export function AppNav() {
     { label: 'Jobs', path: '/jobs' },
     { label: 'Crédits', path: '/credits' },
     { label: 'Messages', path: '/messages' },
-    { label: "L'Atelier", path: '/latelier' },
     { label: 'Profil', path: '/profile' },
   ];
 

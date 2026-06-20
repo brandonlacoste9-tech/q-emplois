@@ -17,6 +17,7 @@ import { PostJob } from './pages/PostJob'
 import { GarantiePage } from './pages/GarantiePage'
 import { RecrutePage } from './pages/RecrutePage'
 import { AidePage } from './pages/AidePage'
+import { PolitiqueConfidentialitePage } from './pages/PolitiqueConfidentialitePage'
 import { AdminPage } from './pages/AdminPage'
 import { JobDetail } from './pages/JobDetail'
 import { Credits } from './pages/Credits'
@@ -47,6 +48,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/garantie" element={<GarantiePage />} />
+        <Route path="/politique-confidentialite" element={<PolitiqueConfidentialitePage />} />
         <Route path="/recrute" element={<RecrutePage />} />
         <Route path="/aide" element={<AidePage />} />
         <Route path="/register" element={<RegisterChoose />} />
@@ -113,11 +115,11 @@ function App() {
         <Route
           path="/contrats"
           element={
-            <RoleRoute allowedRoles={['provider', 'admin']} fallback="/dashboard">
+            <ProtectedRoute>
               <AppShell>
                 <Jobs />
               </AppShell>
-            </RoleRoute>
+            </ProtectedRoute>
           }
         />
         <Route path="/pro" element={<Register />} />

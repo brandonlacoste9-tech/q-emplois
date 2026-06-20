@@ -11,15 +11,15 @@ const T = {
     client: {
       kicker: "Client",
       h: "J'ai besoin d'aide",
-      d1: "Publiez une tâche — déménagement, ménage, montage.",
-      d2: "Un travailleur local accepte et fait le job.",
+      d1: "Publiez une tâche — ménage, déménagement, montage.",
+      d2: "Des travailleurs postulent; vous choisissez celui qui vous convient.",
       cta: "Publier une tâche",
     },
     jobs: {
-      kicker: "Q-jobs",
+      kicker: "Travailleur",
       h: "Je veux travailler",
-      d1: "Déneigement, déménagement, montage, ménage.",
-      d2: "Parcourez les jobs et gagnez de l'argent près de chez vous.",
+      d1: "Ménage, déménagement, montage, jardinage…",
+      d2: "Postulez aux jobs près de chez vous — alertes WhatsApp disponibles.",
       cta: "Devenir travailleur",
     },
     legal: "Conforme à la Loi 96 (langue) et à la Loi 25 (vie privée).",
@@ -30,15 +30,15 @@ const T = {
     client: {
       kicker: "Client",
       h: "I need help",
-      d1: "Post a task — moving, cleaning, assembly.",
-      d2: "A local tasker accepts and gets it done.",
+      d1: "Post a task — cleaning, moving, assembly.",
+      d2: "Taskers apply; you pick the one you want.",
       cta: "Post a task",
     },
     jobs: {
-      kicker: "Q-jobs",
+      kicker: "Tasker",
       h: "I want to work",
-      d1: "Snow removal, moving, assembly, cleaning.",
-      d2: "Browse jobs and earn money near you.",
+      d1: "Cleaning, moving, assembly, yard work…",
+      d2: "Apply to jobs near you — WhatsApp alerts available.",
       cta: "Become a tasker",
     },
     legal: "Compliant with Bill 96 (language) and Law 25 (privacy).",
@@ -83,11 +83,14 @@ export function PortalPage() {
       </div>
 
       <div style={{ width: '100%', maxWidth: 720, display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Card to="/register/client" {...t.client} />
-        <Card to="/register/tasker" {...t.jobs} />
+        <Card to="/aide" {...t.client} />
+        <Card to="/recrute" {...t.jobs} />
       </div>
 
-      <p className="body-f muted2" style={{ marginTop: 44, fontSize: 12, textAlign: 'center' }}>{t.legal}</p>
+      <p className="body-f muted2" style={{ marginTop: 44, fontSize: 12, textAlign: 'center' }}>
+        {t.legal}{' '}
+        <Link to="/politique-confidentialite" className="nav-link" style={{ fontSize: 12 }}>Politique de confidentialité</Link>
+      </p>
     </div>
   );
 }

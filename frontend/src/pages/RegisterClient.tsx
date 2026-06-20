@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { normalizeCanadianPhone } from '../utils/phone';
 import { getApiErrorMessage } from '../utils/apiError';
@@ -75,6 +75,8 @@ export function RegisterClient() {
   const [isLoading, setIsLoading] = useState(false);
   const { registerClient } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const need = searchParams.get('need');
   const t = T[lang];
 
   const validateStep1 = () => {
@@ -119,7 +121,7 @@ export function RegisterClient() {
         lastName: formData.lastName,
         phone: normalizeCanadianPhone(formData.phone),
       });
-      navigate('/post-job');
+      navigate(need ? `/post-job?need=${encodeURIComponent(need)}` : '/post-job');
     } catch (err) {
       setError(getApiErrorMessage(err, t.errGeneric));
       setIsLoading(false);

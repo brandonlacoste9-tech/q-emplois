@@ -46,17 +46,17 @@ const T = {
       ],
     },
     wa: {
-      title: "Parlez à Max sur WhatsApp",
-      sub: "Notre IA vous trouve un job ou un employé en moins de 5 minutes.",
-      cta: "Envoyer un message à Max",
+      title: "Alertes WhatsApp pour travailleurs",
+      sub: "Inscrivez-vous comme travailleur, activez les alertes dans votre profil, et recevez les nouvelles tâches près de chez vous. Répondez POSTULER pour candidater — le client choisit parmi les candidats.",
+      cta: "Devenir travailleur",
       msgs: [
-        { r: "u", t: "Salut Max, je cherche un job de livreur à Montréal" },
-        { r: "b", t: "Envoye! 🚚 J'ai 5 offres près de chez toi. Voici la meilleure :" },
-        { r: "b", t: "📦 Livreur Colis — 22$/h — 1.8 km\n📅 Aujourd'hui 14h-18h\n\n[Postuler]  [Voir d'autres]" },
-        { r: "u", t: "Postuler" },
-        { r: "b", t: "✅ C'est envoyé! L'employeur te contactera dans les 30 min. Bonne chance! 🍀" },
+        { r: "b", t: "🔔 Nouvelle tâche — Ménage, Montréal (~2 km)\n💰 ~80 $ · 📅 Sam 22 juin\n\nRépondez POSTULER ou PASSER" },
+        { r: "u", t: "POSTULER" },
+        { r: "b", t: "✅ Candidature envoyée! Le client choisit parmi les candidats. 1 crédit (remboursé si non retenu)." },
+        { r: "b", t: "🔔 Nouvelle tâche — Montage meubles, Rive-Sud (~4 km)" },
+        { r: "u", t: "PASSER" },
       ],
-      online: "En ligne",
+      online: "Alertes actives",
     },
     pro: {
       title: "Vous cherchez du travail ?",
@@ -117,17 +117,17 @@ const T = {
       ],
     },
     wa: {
-      title: "Talk to Max on WhatsApp",
-      sub: "Our AI finds you a job or an employee in under 5 minutes.",
-      cta: "Message Max",
+      title: "WhatsApp alerts for taskers",
+      sub: "Sign up as a tasker, enable alerts in your profile, and get notified when matching tasks are posted nearby. Reply APPLY to apply — the client picks from applicants.",
+      cta: "Become a tasker",
       msgs: [
-        { r: "u", t: "Hey Max, I'm looking for a delivery job in Montreal" },
-        { r: "b", t: "Let's go! 🚚 I've got 5 offers near you. Here's the best:" },
-        { r: "b", t: "📦 Package Delivery — $22/h — 1.8 km\n📅 Today 2pm-6pm\n\n[Apply]  [See others]" },
-        { r: "u", t: "Apply" },
-        { r: "b", t: "✅ Sent! The employer will contact you within 30 min. Good luck! 🍀" },
+        { r: "b", t: "🔔 New task — Cleaning, Montreal (~2 km)\n💰 ~$80 · 📅 Sat Jun 22\n\nReply APPLY or SKIP" },
+        { r: "u", t: "APPLY" },
+        { r: "b", t: "✅ Application sent! The client chooses among applicants. 1 credit (refunded if not selected)." },
+        { r: "b", t: "🔔 New task — Furniture assembly, South Shore (~4 km)" },
+        { r: "u", t: "SKIP" },
       ],
-      online: "Online",
+      online: "Alerts on",
     },
     pro: {
       title: "Looking for work?",
@@ -175,8 +175,6 @@ export function LandingPage() {
     }
   }, [chatIdx, t.wa.msgs.length]);
 
-  const whatsappUrl = import.meta.env.VITE_WHATSAPP_URL ?? "https://wa.me/";
-
   // SEO content based on language
   const seoContent = {
     fr: {
@@ -192,6 +190,8 @@ export function LandingPage() {
   };
 
   const seo = seoContent[lang];
+  const needQuery = q.trim() ? `?need=${encodeURIComponent(q.trim())}` : "";
+  const heroPostHref = `/register/client${needQuery}`;
 
   return (
     <div style={{ background: "#1F2F3F", minHeight: "100vh", color: "#D9B38C" }}>
@@ -375,8 +375,8 @@ export function LandingPage() {
           </Link>
           {/* Desktop links */}
           <div className="body-f nav-hide-sm" style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14 }}>
-            <Link to="/register/client" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.find}</Link>
-            <Link to="/register/tasker" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.become}</Link>
+            <Link to="/aide" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.find}</Link>
+            <Link to="/recrute" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.become}</Link>
             <Link to="/login" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.login}</Link>
             <button
               onClick={() => setLang(lang === "fr" ? "en" : "fr")}
@@ -429,8 +429,8 @@ export function LandingPage() {
               background: "rgba(31,47,63,0.98)",
             }}
           >
-            <Link to="/register/client" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.find}</Link>
-            <Link to="/register/tasker" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.become}</Link>
+            <Link to="/aide" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.find}</Link>
+            <Link to="/recrute" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.become}</Link>
             <Link to="/login" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.login}</Link>
             <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
               <button
@@ -515,7 +515,7 @@ export function LandingPage() {
                 }}
               />
             </div>
-            <Link to="/register/client" className="gold-btn" style={{ padding: "12px 24px", fontSize: 15, whiteSpace: "nowrap", border: "none" }}>
+            <Link to={heroPostHref} className="gold-btn" style={{ padding: "12px 24px", fontSize: 15, whiteSpace: "nowrap", border: "none" }}>
               {t.hero.cta}
             </Link>
           </div>
@@ -620,16 +620,14 @@ export function LandingPage() {
               <p className="body-f muted" style={{ fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
                 {t.wa.sub}
               </p>
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to="/recrute"
                 className="wa-btn"
-                style={{ padding: "14px 28px", fontSize: 15, display: "inline-flex", alignItems: "center", gap: 10 }}
+                style={{ padding: "14px 28px", fontSize: 15, display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none" }}
               >
                 <WaIcon />
                 {t.wa.cta}
-              </a>
+              </Link>
             </div>
 
             {/* Chat mockup */}
@@ -656,11 +654,11 @@ export function LandingPage() {
                     fontSize: 18,
                   }}
                 >
-                  🤖
+                  📱
                 </div>
                 <div>
                   <div className="serif" style={{ fontSize: 14, fontWeight: 700, color: "#E8CDB0" }}>
-                    Max (Ti-Guy)
+                    Québec emplois
                   </div>
                   <div style={{ fontSize: 11, color: "#4ade80" }}>● {t.wa.online}</div>
                 </div>
@@ -717,7 +715,7 @@ export function LandingPage() {
               ))}
             </div>
           </div>
-          <Link to="/register/tasker" className="gold-btn" style={{ padding: "14px 32px", fontSize: 16 }}>
+          <Link to="/recrute" className="gold-btn" style={{ padding: "14px 32px", fontSize: 16 }}>
             {t.pro.cta}
           </Link>
           <p className="body-f muted2" style={{ fontSize: 12, marginTop: 10 }}>
@@ -754,17 +752,20 @@ export function LandingPage() {
               </p>
             </div>
             <div className="body-f" style={{ display: "flex", gap: 20, fontSize: 13 }}>
-              <Link to="/register/client" style={{ color: "#9A8468" }}>
+              <Link to="/aide" style={{ color: "#9A8468" }}>
                 {t.nav.find}
               </Link>
-              <Link to="/register/tasker" style={{ color: "#9A8468" }}>
+              <Link to="/recrute" style={{ color: "#9A8468" }}>
                 {t.nav.become}
               </Link>
               <Link to="/login" style={{ color: "#9A8468" }}>
                 {t.nav.login}
               </Link>
-              <Link to="/register/tasker" style={{ color: "#9A8468" }}>
+              <Link to="/register" style={{ color: "#9A8468" }}>
                 {t.nav.signup}
+              </Link>
+              <Link to="/politique-confidentialite" style={{ color: "#9A8468" }}>
+                {lang === "fr" ? "Confidentialité" : "Privacy"}
               </Link>
             </div>
           </div>
