@@ -367,6 +367,31 @@ class ApiService {
   }): Promise<void> {
     await this.client.patch('/availability', data);
   }
+
+  async uploadLicenseDocument(data: { data: string; filename: string; contentType: string }) {
+    const response = await this.client.post('/providers/me/license-document', data);
+    return response.data;
+  }
+
+  async getAdminMetrics(days = 30) {
+    const response = await this.client.get('/admin/metrics', { params: { days } });
+    return response.data;
+  }
+
+  async getPendingVerifications() {
+    const response = await this.client.get('/admin/verifications/pending');
+    return response.data;
+  }
+
+  async approveVerification(providerId: string) {
+    const response = await this.client.post(`/admin/verifications/${providerId}/approve`);
+    return response.data;
+  }
+
+  async rejectVerification(providerId: string) {
+    const response = await this.client.post(`/admin/verifications/${providerId}/reject`);
+    return response.data;
+  }
 }
 
 export const api = new ApiService();

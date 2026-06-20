@@ -7,6 +7,10 @@
    - `JWT_SECRET` — min 32 chars
    - `CORS_ORIGIN` — Vercel frontend URL
    - `FRONTEND_URL` — same Vercel URL
+   - `RESEND_API_KEY` — transactional email (password reset, application alerts)
+   - `EMAIL_FROM` — e.g. `Q-Emplois <noreply@qemplois.ca>`
+   - `MIGRATE_DATABASE_URL` — Supabase **session pooler** `:5432` (for auto-migrate on deploy)
+   - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — ID document storage (optional; falls back to inline)
    - Remove `REDIS_URL` if it points to localhost (in-memory fallback is fine)
    - Optional: `STRIPE_*`, `TWILIO_*` for payments and WhatsApp
 

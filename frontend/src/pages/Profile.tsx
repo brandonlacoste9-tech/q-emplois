@@ -105,9 +105,19 @@ export function Profile() {
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => {
-      setFormData({ ...formData, licenseDocument: reader.result as string });
-      addToast('Document prêt à enregistrer', 'success');
+    reader.onload = async () => {
+      try {
+        const dataUrl = reader.result as string;
+        await api.uploadLicenseDocument({
+          data: dataUrl,
+          filename: file.name,
+          contentType: file.type || 'application/octet-stream',
+        });
+        await refreshProfile();
+        addToast('Document téléversé — en attente de vérification', 'success');
+      } catch {
+        addToast('Échec du téléversement', 'error');
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -303,9 +313,7 @@ export function Profile() {
                   <div>
                     <label className="q-label">Pièce d&apos;identité (max 1 Mo)</label>
                     <input type="file" accept="image/*,.pdf" onChange={handleDocumentUpload} className="q-field" style={{ padding: 8 }} />
-                    {formData.licenseDocument && (
-                      <p className="body-f muted2" style={{ fontSize: 12, marginTop: 8 }}>Document sélectionné — enregistrez pour soumettre.</p>
-                    )}
+                    <p className="body-f muted2" style={{ fontSize: 12, marginTop: 8 }}>Téléversement immédiat — vérification par l&apos;équipe sous 48 h.</p>
                   </div>
                 ) : profile.licenseDocument ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'rgba(127,176,105,0.12)', borderRadius: 8 }}>

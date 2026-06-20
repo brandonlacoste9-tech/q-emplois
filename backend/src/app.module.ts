@@ -20,6 +20,9 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ProfileModule } from './profile/profile.module';
 import { HealthModule } from './health/health.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { EmailModule } from './common/email/email.module';
+import { StorageModule } from './common/storage/storage.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -31,6 +34,8 @@ import { ReviewsModule } from './reviews/reviews.module';
     PrismaModule,
     RedisModule,
     AuditModule,
+    EmailModule,
+    StorageModule,
     AuthModule,
     UsersModule,
     ServicesModule,
@@ -47,6 +52,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     ProfileModule,
     HealthModule,
     ReviewsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

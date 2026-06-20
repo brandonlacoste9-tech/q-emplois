@@ -9,6 +9,21 @@ const SERVICE_TYPES = ['menage', 'demenagement', 'montage_meubles', 'nettoyage',
 async function main() {
   const passwordHash = await bcrypt.hash('Demo2026!', 10);
 
+  await prisma.user.upsert({
+    where: { email: 'admin@qemplois.ca' },
+    update: { role: UserRole.admin },
+    create: {
+      email: 'admin@qemplois.ca',
+      firstName: 'Admin',
+      lastName: 'Q-Emplois',
+      phone: '5145550000',
+      passwordHash,
+      role: UserRole.admin,
+      consentGiven: true,
+      consentDate: new Date(),
+    },
+  });
+
   const clients = await Promise.all(
     [
       { email: 'demo.client1@qemplois.ca', firstName: 'Marie', lastName: 'Tremblay', phone: '5145550101' },

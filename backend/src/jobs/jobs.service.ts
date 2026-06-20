@@ -8,6 +8,8 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { AuditService } from '../common/audit/audit.service';
 import { CreditsService } from '../credits/credits.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../common/email/email.service';
+import { ConfigService } from '@nestjs/config';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { publicPostalSector, sanitizePublicDescription } from '../common/utils/privacy';
 import { CreateTaskDto, DeclineTaskDto, ApplyTaskDto } from './dto/job.dto';
@@ -21,6 +23,8 @@ export class JobsService {
     private readonly auditService: AuditService,
     private readonly creditsService: CreditsService,
     private readonly notificationsService: NotificationsService,
+    private readonly emailService: EmailService,
+    private readonly configService: ConfigService,
   ) {}
 
   private haversineKm(
@@ -432,6 +436,25 @@ export class JobsService {
       `${tasker?.firstName ?? 'Un travailleur'} a postulé pour « ${task.title} ».`,
       { taskId, taskerId },
     );
+
+    const client = await this.prisma.user.findUnique({
+      where: { id: task.clientId },
+      select: { email: true },
+    });
+    const pendingCount = await this.prisma.taskApplication.count({
+      where: { taskId, status: TaskApplicationStatus.pending },
+    });
+    const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
+    if (client?.email) {
+      const taskerName = [tasker?.firstName, tasker?.lastName].filter(Boolean).join(' ') || 'Un travailleur';
+      await this.emailService.sendNewApplication(
+        client.email,
+        task.title,
+        taskerName,
+        `${frontendUrl}/jobs/${taskId}`,
+        pendingCount,
+      );
+    }
 
     await this.auditService.log({
       userId: taskerId,

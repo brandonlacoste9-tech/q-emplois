@@ -15,6 +15,7 @@ import { Jobs } from './pages/Jobs'
 import { Profile } from './pages/Profile'
 import { PostJob } from './pages/PostJob'
 import { GarantiePage } from './pages/GarantiePage'
+import { AdminPage } from './pages/AdminPage'
 import { JobDetail } from './pages/JobDetail'
 import { Credits } from './pages/Credits'
 import { Messages } from './pages/Messages'
@@ -124,6 +125,16 @@ function App() {
                 <Profile />
               </AppShell>
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <RoleRoute allowedRoles={['admin']} fallback="/dashboard">
+              <AppShell>
+                <AdminPage />
+              </AppShell>
+            </RoleRoute>
           }
         />
         <Route

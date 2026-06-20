@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreditsService } from '../credits/credits.service';
+import { StorageService } from '../common/storage/storage.service';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 
 export interface UpsertProviderDto {
@@ -19,6 +20,7 @@ export class ProvidersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly creditsService: CreditsService,
+    private readonly storageService: StorageService,
   ) {}
 
   async upsertForUser(userId: string, dto: UpsertProviderDto) {
@@ -127,5 +129,48 @@ export class ProvidersService {
       city: provider.locationAddress,
       memberSince: provider.user.createdAt.toISOString(),
     };
+  }
+
+  async uploadLicenseDocument(
+    userId: string,
+    dto: { data: string; filename: string; contentType: string },
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Utilisateur non trouvé.');
+
+    let buffer: Buffer;
+    let contentType = dto.contentType || 'application/octet-stream';
+    if (dto.data.startsWith('data:')) {
+      const match = dto.data.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) throw new BadRequestException('Format de fichier invalide.');
+      contentType = match[1];
+      buffer = Buffer.from(match[2], 'base64');
+    } else {
+      buffer = Buffer.from(dto.data, 'base64');
+    }
+
+    const url = await this.storageService.uploadProviderDocument(
+      userId,
+      buffer,
+      dto.filename || 'document',
+      contentType,
+    );
+
+    await this.prisma.provider.upsert({
+      where: { userId },
+      create: {
+        userId,
+        serviceTypes: [],
+        licenseDocumentUrl: url,
+        isVerified: false,
+      },
+      update: {
+        licenseDocumentUrl: url,
+        isVerified: false,
+        verifiedAt: null,
+      },
+    });
+
+    return { licenseDocumentUrl: url };
   }
 }

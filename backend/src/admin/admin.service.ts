@@ -1,0 +1,165 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../common/prisma/prisma.service';
+import { EmailService } from '../common/email/email.service';
+import { AuditService } from '../common/audit/audit.service';
+
+@Injectable()
+export class AdminService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+    private readonly auditService: AuditService,
+  ) {}
+
+  async getBetaMetrics(days = 30) {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const [
+      tasksPosted,
+      applicationsTotal,
+      pendingApplications,
+      tasksClaimed,
+      tasksCompleted,
+      tasksOpen,
+      refundTransactions,
+      pendingVerifications,
+      applyTransactions,
+    ] = await Promise.all([
+      this.prisma.task.count({ where: { createdAt: { gte: since } } }),
+      this.prisma.taskApplication.count({ where: { createdAt: { gte: since } } }),
+      this.prisma.taskApplication.count({ where: { status: 'pending' } }),
+      this.prisma.task.count({
+        where: { createdAt: { gte: since }, status: { in: ['claimed', 'in_progress', 'completed'] } },
+      }),
+      this.prisma.task.count({ where: { createdAt: { gte: since }, status: 'completed' } }),
+      this.prisma.task.count({ where: { status: 'open' } }),
+      this.prisma.creditTransaction.count({ where: { type: 'refund', createdAt: { gte: since } } }),
+      this.prisma.provider.count({
+        where: { licenseDocumentUrl: { not: null }, isVerified: false },
+      }),
+      this.prisma.creditTransaction.count({ where: { type: 'apply', createdAt: { gte: since } } }),
+    ]);
+
+    const openWithApps = await this.prisma.task.findMany({
+      where: { status: 'open', applications: { some: { status: 'pending' } } },
+      include: {
+        applications: { where: { status: 'pending' }, select: { id: true } },
+      },
+    });
+
+    const avgApplicationsPerOpenJob =
+      openWithApps.length > 0
+        ? openWithApps.reduce((s, t) => s + t.applications.length, 0) / openWithApps.length
+        : 0;
+
+    const selectionRate = tasksPosted > 0 ? Math.round((tasksClaimed / tasksPosted) * 100) : 0;
+    const completionRate = tasksClaimed > 0 ? Math.round((tasksCompleted / tasksClaimed) * 100) : 0;
+
+    const recentTasks = await this.prisma.task.findMany({
+      where: { createdAt: { gte: since } },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        createdAt: true,
+        _count: { select: { applications: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    return {
+      periodDays: days,
+      tasksPosted,
+      tasksOpen,
+      applicationsTotal,
+      pendingApplications,
+      applyCreditsSpent: applyTransactions,
+      refundTransactions,
+      avgApplicationsPerOpenJob: Math.round(avgApplicationsPerOpenJob * 10) / 10,
+      selectionRatePercent: selectionRate,
+      completionRatePercent: completionRate,
+      pendingVerifications,
+      recentTasks: recentTasks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        status: t.status,
+        applications: t._count.applications,
+        createdAt: t.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  async listPendingVerifications() {
+    const providers = await this.prisma.provider.findMany({
+      where: {
+        licenseDocumentUrl: { not: null },
+        isVerified: false,
+      },
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true, phone: true },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    return providers.map((p) => ({
+      id: p.id,
+      userId: p.userId,
+      email: p.user.email,
+      firstName: p.user.firstName,
+      lastName: p.user.lastName,
+      phone: p.user.phone,
+      serviceTypes: p.serviceTypes,
+      licenseDocumentUrl: p.licenseDocumentUrl,
+      licenseNumber: p.licenseNumber,
+      updatedAt: p.updatedAt.toISOString(),
+    }));
+  }
+
+  async verifyProvider(providerId: string, adminUserId: string) {
+    const provider = await this.prisma.provider.findUnique({
+      where: { id: providerId },
+      include: { user: { select: { email: true, firstName: true } } },
+    });
+    if (!provider) throw new NotFoundException('Prestataire non trouvé.');
+
+    const updated = await this.prisma.provider.update({
+      where: { id: providerId },
+      data: { isVerified: true, verifiedAt: new Date() },
+    });
+
+    await this.auditService.log({
+      userId: adminUserId,
+      action: 'provider_verified',
+      resource: 'provider',
+      resourceId: providerId,
+    });
+
+    if (provider.user.email) {
+      await this.emailService.sendTaskerVerified(provider.user.email, provider.user.firstName);
+    }
+
+    return updated;
+  }
+
+  async rejectVerification(providerId: string, adminUserId: string) {
+    const provider = await this.prisma.provider.findUnique({ where: { id: providerId } });
+    if (!provider) throw new NotFoundException('Prestataire non trouvé.');
+
+    await this.prisma.provider.update({
+      where: { id: providerId },
+      data: { licenseDocumentUrl: null, isVerified: false, verifiedAt: null },
+    });
+
+    await this.auditService.log({
+      userId: adminUserId,
+      action: 'provider_verification_rejected',
+      resource: 'provider',
+      resourceId: providerId,
+    });
+
+    return { success: true };
+  }
+}

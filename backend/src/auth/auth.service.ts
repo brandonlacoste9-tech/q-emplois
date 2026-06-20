@@ -9,6 +9,7 @@ import { DataRetentionService } from '../common/services/data-retention.service'
 import { RegisterDto, LoginDto, AuthResponseDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 import { UserRole, LanguagePreference } from '@prisma/client';
 import { ProvidersService } from '../providers/providers.service';
+import { EmailService } from '../common/email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
     private readonly auditService: AuditService,
     private readonly dataRetentionService: DataRetentionService,
     private readonly providersService: ProvidersService,
+    private readonly emailService: EmailService,
   ) {}
 
   async register(dto: RegisterDto, ipAddress?: string, userAgent?: string): Promise<AuthResponseDto> {
@@ -191,7 +193,8 @@ export class AuthService {
     const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
 
-    this.logger.log(`Password reset for ${user.email}: ${resetUrl}`);
+    await this.emailService.sendPasswordReset(user.email, resetUrl);
+    this.logger.log(`Password reset requested for ${user.email}`);
 
     await this.auditService.log({
       userId: user.id,

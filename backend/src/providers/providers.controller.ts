@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ProvidersService, UpsertProviderDto } from './providers.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -35,5 +35,16 @@ export class ProvidersController {
   @ApiOperation({ summary: 'Mettre à jour mon profil prestataire' })
   upsert(@CurrentUser('userId') userId: string, @Body() dto: UpsertProviderDto) {
     return this.providersService.upsertForUser(userId, dto);
+  }
+
+  @Post('me/license-document')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Téléverser une pièce d\'identité' })
+  uploadLicense(
+    @CurrentUser('userId') userId: string,
+    @Body() dto: { data: string; filename: string; contentType: string },
+  ) {
+    return this.providersService.uploadLicenseDocument(userId, dto);
   }
 }
