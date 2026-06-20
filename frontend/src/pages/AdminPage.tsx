@@ -55,6 +55,14 @@ export function AdminPage() {
   const [rejecting, setRejecting] = useState<PendingVerification | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejectConfirm, setRejectConfirm] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditPage, setAuditPage] = useState(1);
+  const [auditTotal, setAuditTotal] = useState(0);
+  const [auditAction, setAuditAction] = useState("");
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [lastAuditUpdate, setLastAuditUpdate] = useState<Date | null>(null);
+  const [newLogsCount, setNewLogsCount] = useState(0);
 
   const load = async () => {
     setLoading(true);
@@ -70,6 +78,40 @@ export function AdminPage() {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Auto-refresh audit logs every 30 seconds when tab is open
+  useEffect(() => {
+    if (!showAudit) return;
+    const interval = setInterval(() => {
+      loadAudit();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [showAudit]);
+
+  // Auto-refresh metrics every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      load();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadAudit = async () => {
+    setAuditLoading(true);
+    try {
+      const data = await api.getAuditLogs({ page: auditPage, action: auditAction || undefined });
+      setAuditLogs(data.logs || []);
+      setAuditTotal(data.total || 0);
+      setLastAuditUpdate(new Date());
+      if (data.logs && data.logs.length > auditLogs.length) {
+        setNewLogsCount(data.logs.length - auditLogs.length);
+      }
+    } catch {
+      setAuditLogs([]);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
 
   const approve = async (providerId: string) => {
     setProcessing(providerId);
@@ -153,6 +195,80 @@ export function AdminPage() {
                 <p className="serif cream-hi" style={{ fontSize: 24, fontWeight: 900 }}>{s.value}</p>
               </div>
             ))}
+          </div>
+        )}
+
+                {/* Tabs */}
+        <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
+          <button onClick={() => setShowAudit(false)} className={!showAudit ? "gold-btn" : "ghost-btn"} style={{ padding: "10px 20px" }}>Vérifications</button>
+          <button onClick={() => { setShowAudit(true); loadAudit(); }} className={showAudit ? "gold-btn" : "ghost-btn"} style={{ padding: "10px 20px" }}>Audit (Loi 25)</button>
+        </div>
+
+        {/* Audit Section */}
+        {showAudit && (
+          <div className="stitch-box" style={{ ...card, marginBottom: 28 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
+                <Shield className="w-5 h-5" style={{ color: gold }} /> Logs d'audit ({auditTotal})
+              </h2>
+              {newLogsCount > 0 && (
+                <span className="body-f" style={{ fontSize: 11, color: "#7FB069", marginRight: 8 }}>
+                  +{newLogsCount} new
+                </span>
+              )}
+              <button onClick={loadAudit} className="ghost-btn" style={{ padding: "6px 14px", fontSize: 12 }}>Refresh</button>
+            </div>
+
+            <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+              <select className="q-field" style={{ maxWidth: 220 }} value={auditAction} onChange={(e) => { setAuditAction(e.target.value); loadAudit(); }}>
+                <option value="">Toutes les actions</option>
+                <option value="provider_verified">Vérification approuvée</option>
+                <option value="provider_verification_rejected">Vérification rejetée</option>
+                <option value="deletion_requested">Suppression demandée</option>
+                <option value="login">Connexion</option>
+                <option value="data_access">Accès données</option>
+              </select>
+
+              {lastAuditUpdate && (
+                <span className="body-f muted2" style={{ fontSize: 11, marginRight: 12 }}>
+                  Updated {lastAuditUpdate.toLocaleTimeString("fr-CA")}
+                </span>
+              )}
+              <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+                <button disabled={auditPage <= 1} onClick={() => { setAuditPage(auditPage - 1); loadAudit(); }} className="ghost-btn">←</button>
+                <span className="body-f cream-hi" style={{ fontSize: 13 }}>{auditPage} / {Math.ceil(auditTotal / 50) || 1}</span>
+                <button disabled={auditPage >= Math.ceil(auditTotal / 50)} onClick={() => { setAuditPage(auditPage + 1); loadAudit(); }} className="ghost-btn">→</button>
+              </div>
+            </div>
+
+            {auditLoading ? (
+          <div className="body-f muted" style={{ padding: 24, textAlign: "center" }}>Loading...</div>
+        ) : (
+          <table className="body-f" style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+            <thead>
+                <tr style={{ color: "#D9A441", borderBottom: "1px solid rgba(217,179,140,0.2)" }}>
+                  <th style={{ padding: 8, textAlign: "left" }}>Date</th>
+                  <th style={{ padding: 8, textAlign: "left" }}>Action</th>
+                  <th style={{ padding: 8, textAlign: "left" }}>Ressource</th>
+                  <th style={{ padding: 8, textAlign: "left" }}>Utilisateur</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogs.length === 0 ? (
+                  <tr><td colSpan={4} className="muted2" style={{ padding: 16, textAlign: "center" }}>Aucun log</td></tr>
+                ) : (
+                  auditLogs.map((log) => (
+                    <tr key={log.id} style={{ borderBottom: "1px solid rgba(217,179,140,0.06)" }}>
+                      <td className="muted2" style={{ padding: 8 }}>{new Date(log.createdAt).toLocaleString("fr-CA")}</td>
+                      <td className="cream-hi" style={{ padding: 8 }}>{log.action}</td>
+                      <td className="muted2" style={{ padding: 8 }}>{log.resource}</td>
+                      <td className="muted2" style={{ padding: 8 }}>{log.userId?.slice(0, 8) || "—"}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
           </div>
         )}
 
