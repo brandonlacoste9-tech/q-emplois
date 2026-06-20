@@ -5,7 +5,6 @@ import { CreditsService } from '../credits/credits.service';
 import { StorageService } from '../common/storage/storage.service';
 import { EmailService } from '../common/email/email.service';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
-import { phoneToWhatsappId } from '../common/utils/phone';
 import { validateRBQLicense } from '../common/utils/rbq-validation';
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -70,7 +69,6 @@ export interface UpsertProviderDto {
   locationAddress?: string;
   locationLat?: number;
   locationLng?: number;
-  whatsappNotifyEnabled?: boolean;
 }
 
 @Injectable()
@@ -113,7 +111,6 @@ export class ProvidersService {
         locationAddress: dto.locationAddress,
         locationLat,
         locationLng,
-        whatsappNotifyEnabled: dto.whatsappNotifyEnabled ?? false,
       },
       update: {
         serviceTypes: dto.serviceTypes,
@@ -124,22 +121,8 @@ export class ProvidersService {
         locationAddress: dto.locationAddress,
         locationLat,
         locationLng,
-        ...(dto.whatsappNotifyEnabled !== undefined
-          ? { whatsappNotifyEnabled: dto.whatsappNotifyEnabled }
-          : {}),
       },
     });
-
-    if (dto.whatsappNotifyEnabled && user.phone) {
-      try {
-        await this.prisma.user.update({
-          where: { id: userId },
-          data: { whatsappId: phoneToWhatsappId(user.phone) },
-        });
-      } catch {
-        // invalid phone — opt-in stays on profile but alerts need valid phone
-      }
-    }
 
     await this.creditsService.maybeGrantFoundingTaskerBonus(userId);
 

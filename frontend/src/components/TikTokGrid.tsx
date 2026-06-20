@@ -13,7 +13,7 @@ export function TikTokGrid() {
     const videos: TikTokCardProps[] = [
         { id: '1', thumbnail: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=400&q=80', caption: 'Comment j\'ai trouvé ma première job de livraison en 2 min 👋', views: '12.4K' },
         { id: '2', thumbnail: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=400&q=80', caption: 'L\'Atelier change tout pour les pros du Québec 🛠️', views: '45.2K' },
-        { id: '3', thumbnail: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=400&q=80', caption: 'Parlons de l\'IA Max sur WhatsApp 📱', views: '8.9K' },
+        { id: '3', thumbnail: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=400&q=80', caption: 'Parlons de l\'IA Max sur Telegram 📱', views: '8.9K' },
         { id: '4', thumbnail: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=400&q=80', caption: 'Libération des fonds sécurisée ! 🔒', views: '21.5K' }
     ];
 

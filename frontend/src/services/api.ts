@@ -117,7 +117,6 @@ class ApiService {
     locationAddress?: string;
     locationLat?: number;
     locationLng?: number;
-    whatsappNotifyEnabled?: boolean;
   }) {
     const response = await this.client.put('/providers/me', data);
     return response.data;
@@ -363,6 +362,14 @@ class ApiService {
   async getNotifications(): Promise<Notification[]> {
     const response = await this.client.get('/notifications');
     return response.data;
+  }
+
+  async updateTelegramId(telegramId: string) {
+    return this.client.put('/profile/notifications', { telegramId });
+  }
+
+  async disconnectTelegram() {
+    return this.client.put('/profile/notifications', { telegramId: null });
   }
 
   async markNotificationAsRead(id: string): Promise<void> {

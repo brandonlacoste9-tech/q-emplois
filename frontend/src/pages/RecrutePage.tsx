@@ -27,7 +27,7 @@ const T = {
     perksTitle: 'Pourquoi Québec Emplois',
     perks: [
       { ic: '🛡️', t: 'Vie privée', d: 'Adresse masquée jusqu\'au démarrage du job.' },
-      { ic: '📱', t: 'Alertes WhatsApp', d: 'Soyez avisé quand une tâche correspond à vos services — postulez par message.' },
+      { ic: '📱', t: 'Alertes Telegram', d: 'Soyez avisé quand une tâche correspond à vos services — postulez par message.' },
       { ic: '💰', t: 'Crédits simples', d: 'Pas de commission cachée en bêta — vous gardez ce que vous négociez avec le client.' },
       { ic: '⭐', t: 'Badge vérifié', d: 'Téléversez votre ID; les clients voient votre réputation.' },
       { ic: '📍', t: 'Local', d: 'Jobs filtrés par votre rayon de service.' },
@@ -89,7 +89,7 @@ Inscription: https://q-emplois.vercel.app/register/tasker`,
     perksTitle: 'Why Québec Emplois',
     perks: [
       { ic: '🛡️', t: 'Privacy', d: 'Address hidden until job start.' },
-      { ic: '📱', t: 'WhatsApp alerts', d: 'Get notified when a matching task is posted — apply by reply.' },
+      { ic: '📱', t: 'Telegram alerts', d: 'Get notified when a matching task is posted — apply by reply.' },
       { ic: '💰', t: 'Simple credits', d: 'No hidden commission in beta — you keep what you agree with the client.' },
       { ic: '⭐', t: 'Verified badge', d: 'Upload ID; clients see your reputation.' },
       { ic: '📍', t: 'Local', d: 'Jobs filtered by your service radius.' },

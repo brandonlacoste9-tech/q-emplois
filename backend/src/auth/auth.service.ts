@@ -258,29 +258,6 @@ export class AuthService {
     });
   }
 
-  async linkWhatsapp(userId: string, whatsappId: string): Promise<void> {
-    // Check if whatsapp ID already linked
-    const existing = await this.prisma.user.findUnique({
-      where: { whatsappId },
-    });
-
-    if (existing && existing.id !== userId) {
-      throw new ConflictException('Ce compte WhatsApp est déjà lié à un autre utilisateur.');
-    }
-
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { whatsappId },
-    });
-
-    await this.auditService.log({
-      userId,
-      action: 'whatsapp_linked',
-      resource: 'user',
-      details: { whatsappId },
-    });
-  }
-
   private generateTokens(user: any): AuthResponseDto {
     const payload = {
       sub: user.id,

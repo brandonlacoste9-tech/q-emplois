@@ -48,7 +48,6 @@ export class ProfileService {
       phone: user.phone ?? '',
       avatar: user.avatarUrl ?? undefined,
       telegramId: user.telegramId ?? undefined,
-      whatsappId: user.whatsappId ?? undefined,
       telegramBotLink: this.configService.get('TELEGRAM_BOT_USERNAME')
         ? `https://t.me/${this.configService.get('TELEGRAM_BOT_USERNAME')}?start=link_${user.id}`
         : undefined,
@@ -77,7 +76,6 @@ export class ProfileService {
         : undefined,
       availability,
       isTaskerEnabled: (provider?.serviceTypes?.length ?? 0) > 0,
-      whatsappNotifyEnabled: provider?.whatsappNotifyEnabled ?? false,
     };
   }
 
@@ -85,8 +83,6 @@ export class ProfileService {
     userId: string,
     body: {
       telegramId?: string | null;
-      whatsappId?: string | null;
-      whatsappNotifyEnabled?: boolean;
     },
   ) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -94,20 +90,9 @@ export class ProfileService {
 
     const updateData: Record<string, unknown> = {};
     if (body.telegramId !== undefined) updateData.telegramId = body.telegramId || null;
-    if (body.whatsappId !== undefined) updateData.whatsappId = body.whatsappId || null;
 
     if (Object.keys(updateData).length > 0) {
       await this.prisma.user.update({ where: { id: userId }, data: updateData });
-    }
-
-    if (body.whatsappNotifyEnabled !== undefined) {
-      const provider = await this.prisma.provider.findUnique({ where: { userId } });
-      if (provider) {
-        await this.prisma.provider.update({
-          where: { userId },
-          data: { whatsappNotifyEnabled: body.whatsappNotifyEnabled },
-        });
-      }
     }
 
     return { success: true };

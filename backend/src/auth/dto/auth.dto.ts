@@ -80,12 +80,6 @@ export class LinkTelegramDto {
   telegramId: string;
 }
 
-export class LinkWhatsappDto {
-  @ApiProperty()
-  @IsString()
-  whatsappId: string;
-}
-
 export class ForgotPasswordDto {
   @ApiProperty({ example: 'jean.dupont@email.com' })
   @IsEmail({}, { message: 'Veuillez fournir une adresse email valide.' })

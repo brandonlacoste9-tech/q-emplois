@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TelegramWebhookController } from './telegram-webhook.controller';
-import { TelegramService } from '../common/services/telegram.service';
+// TelegramService is provided globally by CommonModule — no need to re-provide it here.
 
 @Module({
   controllers: [TelegramWebhookController],
-  providers: [TelegramService],
 })
 export class WebhooksModule {}

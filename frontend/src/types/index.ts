@@ -17,7 +17,6 @@ export interface User {
 export interface TradesmanProfile extends User {
   role?: 'client' | 'provider' | 'admin';
   isTaskerEnabled?: boolean;
-  whatsappNotifyEnabled?: boolean;
   telegramId?: string;
   telegramBotLink?: string;
   serviceTypes: ServiceType[];
@@ -167,6 +166,8 @@ export interface Job {
   clientName: string;
   clientAvatar?: string;
   clientPhone?: string;
+  clientRating?: number;
+  clientReviewCount?: number;
   serviceType: ServiceType;
   title: string;
   description: string;

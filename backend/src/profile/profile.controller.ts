@@ -3,20 +3,12 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ProfileService } from './profile.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/user.decorator';
-import { IsOptional, IsString, IsBoolean } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 class UpdateNotificationsDto {
   @IsOptional()
   @IsString()
-  telegramId?: string;
-
-  @IsOptional()
-  @IsString()
-  whatsappId?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  whatsappNotifyEnabled?: boolean;
+  telegramId?: string | null;
 }
 
 @ApiTags('profile')

@@ -3,7 +3,6 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-  Optional,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
@@ -13,7 +12,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { EmailService } from '../common/email/email.service';
 import { ConfigService } from '@nestjs/config';
 import { NotificationService as ExternalNotificationService } from '../common/services/notification.service';
-import { WhatsappTaskAlertsService } from '../whatsapp/whatsapp-task-alerts.service';
+
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { publicPostalSector, sanitizePublicDescription } from '../common/utils/privacy';
 import { CreateTaskDto, DeclineTaskDto, ApplyTaskDto } from './dto/job.dto';
@@ -32,7 +31,6 @@ export class JobsService {
     private readonly externalNotifications: ExternalNotificationService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
-    @Optional() private readonly whatsappAlerts?: WhatsappTaskAlertsService,
   ) {}
 
   private haversineKm(
@@ -140,12 +138,20 @@ export class JobsService {
       (a: { taskerId: string }) => a.taskerId === viewerUserId,
     );
 
+    const clientReviews = task.client?.taskReviewsReceived ?? [];
+    const clientReviewCount = clientReviews.length;
+    const clientRating = clientReviewCount > 0
+      ? clientReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / clientReviewCount
+      : 0;
+
     return {
       id: task.id,
       clientId: task.clientId,
       clientName,
       clientAvatar: task.client?.avatarUrl ?? undefined,
       clientPhone: revealContact ? task.client?.phone ?? undefined : undefined,
+      clientRating,
+      clientReviewCount,
       serviceType: task.serviceType,
       title: task.title,
       description: revealContact
@@ -230,7 +236,12 @@ export class JobsService {
             ],
           },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        client: { 
+          select: { 
+            firstName: true, lastName: true, phone: true, avatarUrl: true,
+            taskReviewsReceived: { select: { rating: true } }
+          } 
+        },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -278,7 +289,12 @@ export class JobsService {
     const task = await this.prisma.task.findUnique({
       where: { id },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        client: { 
+          select: { 
+            firstName: true, lastName: true, phone: true, avatarUrl: true,
+            taskReviewsReceived: { select: { rating: true } }
+          } 
+        },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -323,7 +339,12 @@ export class JobsService {
         photoUrls: dto.photoUrls ?? [],
       },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        client: { 
+          select: { 
+            firstName: true, lastName: true, phone: true, avatarUrl: true,
+            taskReviewsReceived: { select: { rating: true } }
+          } 
+        },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -336,12 +357,6 @@ export class JobsService {
       resource: 'task',
       resourceId: task.id,
     });
-
-    if (this.whatsappAlerts) {
-      void this.whatsappAlerts.notifyNewTask(task).catch((err) => {
-        this.logger.warn(`WhatsApp task alerts failed: ${(err as Error).message}`);
-      });
-    }
 
     // Notify eligible taskers using the external notification service
     try {
@@ -405,7 +420,12 @@ export class JobsService {
         claimedAt: new Date(),
       },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        client: { 
+          select: { 
+            firstName: true, lastName: true, phone: true, avatarUrl: true,
+            taskReviewsReceived: { select: { rating: true } }
+          } 
+        },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -721,7 +741,12 @@ export class JobsService {
         cancelledAt: new Date(),
       },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        client: { 
+          select: { 
+            firstName: true, lastName: true, phone: true, avatarUrl: true,
+            taskReviewsReceived: { select: { rating: true } }
+          } 
+        },
         applications: { select: { id: true, status: true, taskerId: true } },
       },
     });
@@ -767,7 +792,12 @@ export class JobsService {
         claimedAt: null,
       },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        client: { 
+          select: { 
+            firstName: true, lastName: true, phone: true, avatarUrl: true,
+            taskReviewsReceived: { select: { rating: true } }
+          } 
+        },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -791,7 +821,12 @@ export class JobsService {
         completedAt: new Date(),
       },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        client: { 
+          select: { 
+            firstName: true, lastName: true, phone: true, avatarUrl: true,
+            taskReviewsReceived: { select: { rating: true } }
+          } 
+        },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },
@@ -821,7 +856,12 @@ export class JobsService {
       where: { id: taskId },
       data: { status: TaskStatus.in_progress },
       include: {
-        client: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        client: { 
+          select: { 
+            firstName: true, lastName: true, phone: true, avatarUrl: true,
+            taskReviewsReceived: { select: { rating: true } }
+          } 
+        },
         applications: {
           select: { id: true, status: true, taskerId: true },
         },

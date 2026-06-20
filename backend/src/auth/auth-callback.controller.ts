@@ -70,12 +70,7 @@ export class AuthCallbackController {
 
     await this.storePlatformLink(dto);
 
-    if (dto.platform === 'whatsapp') {
-      await this.prisma.user.update({
-        where: { id: dto.userId },
-        data: { whatsappId: dto.platformUserId },
-      });
-    } else if (dto.platform === 'telegram') {
+    if (dto.platform === 'telegram') {
       await this.prisma.user.update({
         where: { id: dto.userId },
         data: { telegramId: dto.platformUserId },

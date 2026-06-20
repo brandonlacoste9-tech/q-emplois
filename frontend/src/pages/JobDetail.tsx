@@ -53,7 +53,8 @@ export function JobDetail() {
       setJob(data);
       if (data.status === 'completed') {
         const reviews = await api.getReviewsForTask(id);
-        setHasReview(Array.isArray(reviews) && reviews.length > 0);
+        const myReview = Array.isArray(reviews) ? reviews.find((r: any) => r.reviewerId === profile?.id) : null;
+        setHasReview(!!myReview);
       }
       if (data.clientId === profile?.id && data.status === 'pending') {
         const apps = await api.getJobApplications(id);
@@ -253,15 +254,27 @@ export function JobDetail() {
             </p>
           )}
 
-          {showTaskerActions && job.clientName && !job.contactRedacted && (
+          {showTaskerActions && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'rgba(15,25,36,0.5)', borderRadius: 8, marginBottom: 20 }}>
               <UserAvatar name={job.clientName} avatarUrl={job.clientAvatar} size={40} />
               <div>
-                <p className="body-f cream-hi" style={{ fontWeight: 600 }}>{job.clientName}</p>
+                <p className="body-f cream-hi" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {job.clientName}
+                  {job.clientReviewCount ? (
+                    <span style={{ fontSize: 13, color: gold, display: 'flex', alignItems: 'center', gap: 2, fontWeight: 500 }}>
+                      <Star className="w-3 h-3" style={{ fill: gold }} />
+                      {job.clientRating?.toFixed(1)} <span className="muted2">({job.clientReviewCount})</span>
+                    </span>
+                  ) : (
+                    <span className="body-f muted2" style={{ fontSize: 12, fontWeight: 400 }}>Nouveau</span>
+                  )}
+                </p>
                 {job.clientPhone && (
                   <p className="body-f muted2" style={{ fontSize: 13 }}>{job.clientPhone}</p>
                 )}
-                <p className="body-f muted2" style={{ fontSize: 13 }}>Client</p>
+                {!job.clientPhone && job.contactRedacted && (
+                  <p className="body-f muted2" style={{ fontSize: 13 }}>Contact masqué (Postulez pour voir)</p>
+                )}
               </div>
             </div>
           )}

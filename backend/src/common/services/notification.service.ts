@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { WhatsAppService } from '../../whatsapp/whatsapp.service';
 import { TelegramService } from './telegram.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -8,49 +7,45 @@ export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
   constructor(
-    private readonly whatsappService: WhatsAppService,
     private readonly telegramService: TelegramService,
     private readonly prisma: PrismaService,
   ) {}
 
+  /** Notify an eligible tasker that a new job matching their services was posted. */
   async notifyTaskerNewJob(taskerId: string, job: any) {
     const provider = await this.prisma.provider.findUnique({
       where: { userId: taskerId },
       include: { user: true },
     });
 
-    if (!provider) return;
+    if (!provider?.user.telegramId) return;
 
-    const message = `Nouvelle offre disponible!\n\n${job.title}\n${job.description?.slice(0, 120)}...\n\nLieu: ${job.city || 'Non spécifié'}`;
+    // Use rich job alert with inline keyboard action buttons
+    await this.telegramService.sendJobAlert(provider.user.telegramId, job).catch((err) => {
+      this.logger.warn(`Telegram job alert failed for ${taskerId}: ${(err as Error).message}`);
+    });
 
-    // Try WhatsApp first
-    if (provider.user.whatsappId) {
-      await this.whatsappService.sendMessage(provider.user.whatsappId, message);
-      this.logger.log(`WhatsApp notification sent to ${taskerId}`);
-      return;
-    }
-
-    // Fallback to Telegram
-    if (provider.user.telegramId) {
-      await this.telegramService.sendMessage(provider.user.telegramId, message);
-      this.logger.log(`Telegram notification sent to ${taskerId}`);
-    }
+    this.logger.log(`Telegram job alert sent to tasker ${taskerId}`);
   }
 
+  /** Notify a tasker that they have been selected by the client. */
   async notifyTaskerSelected(taskerId: string, job: any) {
     const provider = await this.prisma.provider.findUnique({
       where: { userId: taskerId },
       include: { user: true },
     });
 
-    if (!provider) return;
+    if (!provider?.user.telegramId) return;
 
-    const message = `Félicitations! Vous avez été sélectionné pour:\n${job.title}\n\nLe client va vous contacter.`;
+    const frontendUrl = process.env.FRONTEND_URL ?? 'https://q-emplois.vercel.app';
+    const message =
+      `🎉 <b>Félicitations ! Tu as été sélectionné.</b>\n\n` +
+      `Le client t'a choisi pour :\n<b>${job.title}</b>\n\n` +
+      `Son nom et numéro de téléphone sont maintenant visibles dans la tâche.\n\n` +
+      `<a href="${frontendUrl}/jobs/${job.id}">Voir la tâche →</a>`;
 
-    if (provider.user.whatsappId) {
-      await this.whatsappService.sendMessage(provider.user.whatsappId, message);
-    } else if (provider.user.telegramId) {
-      await this.telegramService.sendMessage(provider.user.telegramId, message);
-    }
+    await this.telegramService.sendMessage(provider.user.telegramId, message).catch((err) => {
+      this.logger.warn(`Telegram selection notification failed for ${taskerId}: ${(err as Error).message}`);
+    });
   }
 }

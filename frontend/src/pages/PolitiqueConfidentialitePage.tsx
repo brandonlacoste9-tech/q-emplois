@@ -36,7 +36,7 @@ export function PolitiqueConfidentialitePage() {
             <li>Profil travailleur : services, zone, pièce d&apos;identité (vérification)</li>
             <li>Tâches : description, ville, secteur — adresse exacte révélée seulement au démarrage du travail</li>
             <li>Messages in-app entre client et travailleur choisi</li>
-            <li>Alertes WhatsApp (opt-in explicite pour les travailleurs)</li>
+            <li>Alertes Telegram (opt-in explicite pour les travailleurs)</li>
           </ul>
         </section>
 
@@ -44,7 +44,7 @@ export function PolitiqueConfidentialitePage() {
           <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Finalités</h2>
           <ul className="body-f muted" style={{ fontSize: 15, lineHeight: 1.8, paddingLeft: 20 }}>
             <li>Publication et candidature aux tâches</li>
-            <li>Notifications (courriel, WhatsApp si activé)</li>
+            <li>Notifications (courriel, Telegram si activé)</li>
             <li>Vérification d&apos;identité et confiance</li>
             <li>Support client et conformité légale</li>
           </ul>
@@ -55,7 +55,7 @@ export function PolitiqueConfidentialitePage() {
           <p className="body-f muted" style={{ fontSize: 15, lineHeight: 1.75 }}>
             Vous pouvez accéder à vos données, les corriger ou demander leur suppression en écrivant à{' '}
             <a href="mailto:support@qemplois.ca" className="nav-link">support@qemplois.ca</a>.
-            Les travailleurs peuvent désactiver les alertes WhatsApp en répondant STOP ou dans leur profil.
+            Les travailleurs peuvent désactiver les alertes Telegram en répondant STOP ou dans leur profil.
           </p>
         </section>
 

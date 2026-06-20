@@ -97,7 +97,6 @@ export function Profile() {
           licenseNumber: formData.licenseNumber,
           licenseDocumentUrl: formData.licenseDocument,
           locationAddress: formData.address?.street,
-          whatsappNotifyEnabled: formData.whatsappNotifyEnabled,
         });
       }
       await refreshProfile();
@@ -344,62 +343,89 @@ export function Profile() {
               )}
             </div>
 
-            {/* Notifications alerts */}
+            {/* Telegram Notifications */}
             {canTask && (
               <div style={{ marginBottom: 20 }}>
                 <h4 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
-                  Alertes de nouvelles tâches
+                  Alertes Telegram
                 </h4>
-                <div className="stitch-box" style={{ padding: 16, background: 'rgba(21,35,50,0.55)', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {/* WhatsApp Option */}
-                  <div>
-                    {isEditing ? (
-                      <label className="body-f" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', fontSize: 14, lineHeight: 1.6 }}>
-                        <input
-                          type="checkbox"
-                          checked={!!formData.whatsappNotifyEnabled}
-                          onChange={(e) => setFormData({ ...formData, whatsappNotifyEnabled: e.target.checked })}
-                          style={{ marginTop: 4, accentColor: gold }}
-                        />
-                        <span>
-                          <strong>WhatsApp / SMS :</strong> Recevoir une alerte quand une tâche correspond à mes services (Loi 25 — consentement explicite).
-                          {!formData.phone && formData.whatsappNotifyEnabled && (
-                            <span style={{ display: 'block', color: '#E8A87C', marginTop: 6, fontSize: 13 }}>
-                              Ajoutez votre numéro de téléphone ci-dessus pour activer les alertes.
-                            </span>
-                          )}
-                        </span>
-                      </label>
-                    ) : (
-                      <p className="body-f muted" style={{ fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-                        {profile.whatsappNotifyEnabled
-                          ? '✅ WhatsApp activé — répondez POSTULER ou PASSER aux messages. STOP pour désactiver.'
-                          : '💬 WhatsApp désactivé — modifiez le profil pour activer.'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="divider" style={{ margin: '4px 0', borderColor: 'rgba(217,179,140,0.1)' }} />
-
-                  {/* Telegram Option */}
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <div className="stitch-box" style={{ padding: 16, background: 'rgba(21,35,50,0.55)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {/* Telegram logo icon */}
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#229ED9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                          <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 6.612l-1.685 7.94c-.127.565-.46.703-.93.437l-2.57-1.893-1.24 1.194c-.137.137-.252.252-.516.252l.184-2.61 4.75-4.29c.207-.183-.045-.285-.32-.102L7.63 14.71l-2.53-.79c-.55-.172-.56-.55.115-.814l9.88-3.81c.458-.165.86.112.835.516z"/>
+                        </svg>
+                      </div>
                       <div>
-                        <p className="body-f muted" style={{ fontSize: 14, margin: 0 }}>
-                          {profile.telegramId ? '✅ Telegram connecté' : '✈️ Telegram non connecté'}
+                        <p className="body-f cream-hi" style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
+                          {profile.telegramId ? 'Telegram connecté' : 'Telegram non connecté'}
+                        </p>
+                        <p className="body-f muted2" style={{ fontSize: 12, margin: 0, marginTop: 2 }}>
+                          {profile.telegramId
+                            ? 'Alertes en temps réel + bouton Postuler directement dans le chat'
+                            : 'Reçois les nouvelles tâches instantanément'}
                         </p>
                       </div>
-                      {(!isEditing && profile.telegramBotLink && !profile.telegramId) && (
-                        <a href={profile.telegramBotLink} target="_blank" rel="noopener noreferrer" className="gold-btn" style={{ padding: '6px 12px', fontSize: 13, textDecoration: 'none', display: 'inline-block' }}>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+                      {profile.telegramId ? (
+                        <>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(127,176,105,0.18)', color: '#7FB069', border: '1px solid rgba(127,176,105,0.3)' }}>
+                            ✓ Connecté
+                          </span>
+                          <button
+                            id="btn-telegram-disconnect"
+                            onClick={async () => {
+                              try {
+                                await api.disconnectTelegram();
+                                await refreshProfile();
+                                addToast('Telegram déconnecté', 'success');
+                              } catch {
+                                addToast('Erreur lors de la déconnexion', 'error');
+                              }
+                            }}
+                            className="ghost-btn"
+                            style={{ padding: '5px 12px', fontSize: 12 }}
+                          >
+                            Déconnecter
+                          </button>
+                        </>
+                      ) : profile.telegramBotLink ? (
+                        <a
+                          id="btn-telegram-connect"
+                          href={profile.telegramBotLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="gold-btn"
+                          style={{ padding: '7px 16px', fontSize: 13, textDecoration: 'none', display: 'inline-block', whiteSpace: 'nowrap' }}
+                        >
                           Connecter Telegram
                         </a>
+                      ) : (
+                        <span className="body-f muted2" style={{ fontSize: 12 }}>Bot non configuré</span>
                       )}
                     </div>
                   </div>
 
-                  <p className="body-f muted2" style={{ fontSize: 12, marginTop: 4, marginBottom: 0 }}>
-                    Répondez *POSTULER* depuis votre messagerie pour candidater (1 crédit).
-                  </p>
+                  {!profile.telegramId && (
+                    <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(34,158,217,0.08)', borderRadius: 8, border: '1px solid rgba(34,158,217,0.2)' }}>
+                      <p className="body-f muted" style={{ fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+                        <strong style={{ color: '#E8CDB0' }}>Comment ça marche ?</strong><br />
+                        1. Clique sur <strong>Connecter Telegram</strong><br />
+                        2. Notre bot s'ouvre — clique <strong>Démarrer</strong><br />
+                        3. C'est tout ! Tu recevras des alertes avec un bouton <strong>Postuler</strong> intégré.
+                      </p>
+                    </div>
+                  )}
+
+                  {profile.telegramId && (
+                    <p className="body-f muted2" style={{ fontSize: 12, marginTop: 12, margin: '12px 0 0' }}>
+                      💡 Quand une tâche correspond à tes services, tu reçois un message Telegram avec les boutons <strong>Postuler</strong> (1 crédit) et <strong>Passer</strong> directement dans le chat.
+                    </p>
+                  )}
                 </div>
               </div>
             )}

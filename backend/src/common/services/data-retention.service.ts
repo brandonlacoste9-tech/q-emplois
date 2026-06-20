@@ -69,7 +69,6 @@ export class DataRetentionService {
           lastName: 'Supprimé',
           deletedAt: new Date(),
           telegramId: null,
-          whatsappId: null,
         },
       }),
       // Log the deletion

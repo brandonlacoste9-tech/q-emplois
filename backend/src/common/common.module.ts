@@ -9,7 +9,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { DataRetentionService } from './services/data-retention.service';
 import { NotificationService } from './services/notification.service';
 import { TelegramService } from './services/telegram.service';
-import { WhatsAppModule } from '../whatsapp/whatsapp.module';
+import { CreditsModule } from '../credits/credits.module';
 
 @Global()
 @Module({
@@ -17,7 +17,7 @@ import { WhatsAppModule } from '../whatsapp/whatsapp.module';
     PrismaModule,
     RedisModule,
     AuditModule,
-    forwardRef(() => WhatsAppModule),
+    forwardRef(() => CreditsModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

@@ -10,7 +10,6 @@ import { BookingsModule } from './bookings/bookings.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ProvidersModule } from './providers/providers.module';
 import { ChatModule } from './chat/chat.module';
-import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { CommonModule } from './common/common.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { RedisModule } from './common/redis/redis.module';
@@ -52,7 +51,6 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     PaymentsModule,
     ProvidersModule,
     ChatModule,
-    WhatsAppModule,
     CommonModule,
     JobsModule,
     CreditsModule,

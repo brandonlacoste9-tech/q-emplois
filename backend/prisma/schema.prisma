@@ -82,7 +82,6 @@ model User {
   
   // Bot integrations
   telegramId          String?            @unique
-  whatsappId          String?            @unique
 
   @@index([email])
   @@index([role])
@@ -119,7 +118,6 @@ model Provider {
   // Pricing
   hourlyRate         Decimal? @db.Decimal(10, 2)
   serviceRadiusKm    Int      @default(25)
-  whatsappNotifyEnabled Boolean @default(false)
   
   // Availability (JSON for flexible schedule)
   availabilityJson   String?  // JSON: {"monday": [{"start": "09:00", "end": "17:00"}], ...}

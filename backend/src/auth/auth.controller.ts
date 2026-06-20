@@ -9,7 +9,6 @@ import {
   LoginDto,
   RefreshTokenDto,
   LinkTelegramDto,
-  LinkWhatsappDto,
   ForgotPasswordDto,
   ResetPasswordDto,
   AuthResponseDto,
@@ -99,21 +98,6 @@ export class AuthController {
   ): Promise<{ message: string }> {
     await this.authService.linkTelegram(userId, dto.telegramId);
     return { message: 'Compte Telegram lié avec succès' };
-  }
-
-  @Post('whatsapp/link')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Lier un compte WhatsApp' })
-  @ApiResponse({ status: 200, description: 'Compte WhatsApp lié avec succès' })
-  @ApiResponse({ status: 409, description: 'Ce compte WhatsApp est déjà lié' })
-  async linkWhatsapp(
-    @CurrentUser('userId') userId: string,
-    @Body() dto: LinkWhatsappDto,
-  ): Promise<{ message: string }> {
-    await this.authService.linkWhatsapp(userId, dto.whatsappId);
-    return { message: 'Compte WhatsApp lié avec succès' };
   }
 
   @Get('me')
