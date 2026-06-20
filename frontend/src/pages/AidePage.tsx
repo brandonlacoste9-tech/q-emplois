@@ -43,7 +43,7 @@ const T = {
     shareTitle: 'Textes prêts à publier',
     shareHint: 'Partagez dans vos groupes Facebook, Nextdoor ou Kijiji pour trouver des voisins qui ont besoin d\'aide — ou postez vous-même si vous cherchez.',
     posts: {
-      fb: `🏠 BESOIN D'AIDE? Q-Emplois — bêta gratuite (Montréal / Rive-Sud)
+      fb: `🏠 BESOIN D'AIDE? Québec Emplois — bêta gratuite (Montréal / Rive-Sud)
 
 Ménage, déménagement, montage de meubles, jardinage… Publiez votre tâche en 3 minutes.
 
@@ -58,7 +58,7 @@ Ménage, déménagement, montage de meubles, jardinage… Publiez votre tâche e
       kijiji: `Titre: Trouvez de l'aide locale — ménage, déménagement, montage (GRATUIT bêta)
 
 Description:
-Q-Emplois est un marché de services québécois en bêta à Montréal et sur la Rive-Sud.
+Québec Emplois est un marché de services québécois en bêta à Montréal et sur la Rive-Sud.
 
 Pour les clients:
 1. Créez un compte gratuit

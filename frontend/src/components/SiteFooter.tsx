@@ -7,7 +7,7 @@ const FOOT = {
   fr: {
     tag: "Le marché de services local du Québec.",
     legal: "Conforme à la Loi 96 (langue) et à la Loi 25 (vie privée).",
-    copy: "© 2026 Q-emplois. Tous droits réservés.",
+    copy: "© 2026 Québec emplois. Tous droits réservés.",
     find: "Trouver de l'aide",
     aide: "Publier une tâche (bêta)",
     become: "Offrir mes services",
@@ -20,7 +20,7 @@ const FOOT = {
   en: {
     tag: "Québec's local services marketplace.",
     legal: "Compliant with Bill 96 (language) and Law 25 (privacy).",
-    copy: "© 2026 Q-emplois. All rights reserved.",
+    copy: "© 2026 Québec emplois. All rights reserved.",
     find: "Find help",
     aide: "Post a task (beta)",
     become: "Offer my services",

@@ -6,7 +6,7 @@ type Lang = 'fr' | 'en';
 
 const T = {
   fr: {
-    title: 'Rejoindre Q-emplois',
+    title: 'Rejoindre Québec emplois',
     sub: 'Comment voulez-vous utiliser la plateforme ?',
     client: {
       emoji: '🏠',
@@ -24,7 +24,7 @@ const T = {
     login: 'Se connecter',
   },
   en: {
-    title: 'Join Q-emplois',
+    title: 'Join Québec emplois',
     sub: 'How do you want to use the platform?',
     client: {
       emoji: '🏠',

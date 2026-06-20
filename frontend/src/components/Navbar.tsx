@@ -30,10 +30,10 @@ export function Navbar() {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-quebec-gold rounded-lg flex items-center justify-center">
-              <span className="text-quebec-blue font-bold text-sm">Q</span>
+            <div className="w-8 h-8 bg-quebec-gold rounded-lg flex items-center justify-center px-0.5">
+              <span className="text-quebec-blue font-bold text-[10px] leading-none text-center">Qc</span>
             </div>
-            <span className="font-bold text-lg hidden sm:block">Q-Emplois</span>
+            <span className="font-bold text-lg hidden sm:block">Québec emplois</span>
           </Link>
 
           {/* Desktop Nav */}

@@ -12,7 +12,7 @@ const T = {
   fr: {
     badge: 'Bêta Montréal & Rive-Sud',
     h1: 'Gagnez de l\'argent près de chez vous',
-    sub: 'Inscrivez-vous comme travailleur sur Q-Emplois — le marché local québécois. Vous postulez aux jobs qui vous conviennent; le client vous choisit. Pas de course pour « accepter en premier ».',
+    sub: 'Inscrivez-vous comme travailleur sur Québec Emplois — le marché local québécois. Vous postulez aux jobs qui vous conviennent; le client vous choisit. Pas de course pour « accepter en premier ».',
     cta: 'Devenir travailleur — gratuit',
     login: 'Déjà inscrit? Connexion',
     founding: 'Offre Founding Tasker',
@@ -25,7 +25,7 @@ const T = {
       { t: 'Le client vous choisit', d: 'Contact débloqué; vous coordonnez la date.' },
       { t: 'Faites le travail', d: 'Adresse exacte visible au démarrage — vie privée respectée.' },
     ],
-    perksTitle: 'Pourquoi Q-Emplois',
+    perksTitle: 'Pourquoi Québec Emplois',
     perks: [
       { ic: '🛡️', t: 'Vie privée', d: 'Adresse masquée jusqu\'au démarrage du job.' },
       { ic: '💰', t: 'Crédits simples', d: 'Pas de commission cachée en bêta — vous gardez ce que vous négociez avec le client.' },
@@ -37,7 +37,7 @@ const T = {
     shareTitle: 'Textes prêts à publier',
     shareHint: 'Copiez-collez sur Facebook, Kijiji ou dans un groupe de quartier.',
     posts: {
-      fb: `🔧 BÊTA Q-Emplois — travailleurs recherchés (Montréal / Rive-Sud)
+      fb: `🔧 BÊTA Québec Emplois — travailleurs recherchés (Montréal / Rive-Sud)
 
 Tu cherches des jobs flexibles près de chez toi? Ménage, déménagement, montage de meubles, jardinage…
 
@@ -51,7 +51,7 @@ Inscription gratuite 👉 https://q-emplois.vercel.app/recrute
       kijiji: `Titre: Travailleur autonome — jobs locaux (ménage, déménagement, montage)
 
 Description:
-Q-Emplois recrute des travailleurs pour sa bêta à Montréal et sur la Rive-Sud.
+Québec Emplois recrute des travailleurs pour sa bêta à Montréal et sur la Rive-Sud.
 
 Comment ça marche:
 - Vous créez un profil (services + secteur)
@@ -73,7 +73,7 @@ Inscription: https://q-emplois.vercel.app/register/tasker`,
   en: {
     badge: 'Montreal & South Shore beta',
     h1: 'Earn near where you live',
-    sub: 'Join Q-Emplois as a tasker — Québec\'s local marketplace. You apply to jobs you want; the client picks you. No race to accept first.',
+    sub: 'Join Québec Emplois as a tasker — Québec\'s local marketplace. You apply to jobs you want; the client picks you. No race to accept first.',
     cta: 'Become a tasker — free',
     login: 'Already signed up? Log in',
     founding: 'Founding Tasker offer',
@@ -86,7 +86,7 @@ Inscription: https://q-emplois.vercel.app/register/tasker`,
       { t: 'Client chooses you', d: 'Contact unlocked; you schedule together.' },
       { t: 'Do the work', d: 'Full address shown when you start — privacy built in.' },
     ],
-    perksTitle: 'Why Q-Emplois',
+    perksTitle: 'Why Québec Emplois',
     perks: [
       { ic: '🛡️', t: 'Privacy', d: 'Address hidden until job start.' },
       { ic: '💰', t: 'Simple credits', d: 'No hidden commission in beta — you keep what you agree with the client.' },

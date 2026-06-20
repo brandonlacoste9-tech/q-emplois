@@ -15,7 +15,7 @@ export function GarantiePage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
           <Shield className="w-8 h-8" style={{ color: gold }} />
           <h1 className="serif cream-hi" style={{ fontSize: 'clamp(1.8rem, 4vw, 2.4rem)', fontWeight: 900 }}>
-            Garantie satisfaction Q-Emplois
+            Garantie satisfaction Québec Emplois
           </h1>
         </div>
 

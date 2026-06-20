@@ -20,7 +20,7 @@ const T = {
     noAccount: "Pas encore de compte ?",
     create: "Créer un compte",
     err: "Courriel ou mot de passe incorrect.",
-    copy: "© 2026 Q-emplois. Tous droits réservés.",
+    copy: "© 2026 Québec emplois. Tous droits réservés.",
   },
   en: {
     tag: "Québec's local services marketplace",
@@ -35,7 +35,7 @@ const T = {
     noAccount: "No account yet?",
     create: "Create an account",
     err: "Incorrect email or password.",
-    copy: "© 2026 Q-emplois. All rights reserved.",
+    copy: "© 2026 Québec emplois. All rights reserved.",
   },
 };
 

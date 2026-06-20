@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SEOHead } from "../components/SEOHead";
+import { BrandLogo } from "../components/BrandLogo";
 
 /* --- TRANSLATIONS --- */
 const T = {
@@ -20,7 +21,7 @@ const T = {
         { ic: "✓", t: "Travailleurs vérifiés", d: "Identité confirmée, avis réels et secteur desservi affichés." },
         { ic: "🔒", t: "Vie privée par étapes", d: "Contact après votre choix; adresse exacte seulement au démarrage du travail." },
         { ic: "🧾", t: "Prix clair d'avance", d: "Fourchettes typiques et budget affichés avant de publier — aucune surprise." },
-        { ic: "📄", t: "Garantie satisfaction", d: "Processus d'accompagnement et support dédié via notre garantie Q-Emplois." },
+        { ic: "📄", t: "Garantie satisfaction", d: "Processus d'accompagnement et support dédié via notre garantie Québec Emplois." },
       ],
     },
     cats: {
@@ -72,7 +73,7 @@ const T = {
     foot: {
       tag: "Le marché de services local du Québec.",
       legal: "Conforme à la Loi 96 (langue) et à la Loi 25 (vie privée).",
-      copy: "© 2026 Q-emplois. Tous droits réservés.",
+      copy: "© 2026 Québec emplois. Tous droits réservés.",
     },
   },
   en: {
@@ -91,7 +92,7 @@ const T = {
         { ic: "✓", t: "Verified workers", d: "Confirmed identity, real reviews and service area shown." },
         { ic: "🔒", t: "Staged privacy", d: "Contact after you choose; exact address only when work starts." },
         { ic: "🧾", t: "Clear price upfront", d: "Typical ranges and budget shown before you post — no surprises." },
-        { ic: "📄", t: "Happiness pledge", d: "Support process and dedicated help via our Q-Emplois pledge." },
+        { ic: "📄", t: "Happiness pledge", d: "Support process and dedicated help via our Québec Emplois pledge." },
       ],
     },
     cats: {
@@ -143,21 +144,9 @@ const T = {
     foot: {
       tag: "Québec's local services marketplace.",
       legal: "Compliant with Bill 96 (language) and Law 25 (privacy).",
-      copy: "© 2026 Q-emplois. All rights reserved.",
+      copy: "© 2026 Québec emplois. All rights reserved.",
     },
   },
-};
-
-/* --- LOGO COMPONENT --- */
-const Logo = ({ size = "md" }: { size?: "lg" | "md" | "sm" }) => {
-  const sz = { lg: "text-3xl", md: "text-xl", sm: "text-base" }[size];
-  return (
-    <span className={`${sz} tracking-wide`} style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-      <span style={{ color: "#D9B38C", fontWeight: 700 }}>Q</span>
-      <span style={{ color: "#B87B44", fontSize: "0.75em", verticalAlign: "middle" }}>⚜</span>
-      <span style={{ color: "#D9B38C", fontStyle: "italic", fontWeight: 400 }}>emplois</span>
-    </span>
-  );
 };
 
 /* --- WHATSAPP ICON --- */
@@ -191,12 +180,12 @@ export function LandingPage() {
   // SEO content based on language
   const seoContent = {
     fr: {
-      title: "Q-emplois | Déneigement, déménagement & aide à domicile au Québec",
+      title: "Québec emplois | Déneigement, déménagement & aide à domicile au Québec",
       description: "Trouvez de l'aide près de chez vous : déneigement, déménagement, montage de meubles, ménage. Travailleurs vérifiés, prix clair et paiement sécurisé. Pointe-Claire, Montréal, Rive-Sud.",
       keywords: "déneigement montréal, déneigement pointe-claire, aide déménagement québec, montage meubles, ménage résidentiel, nettoyage de cour, débarras, aide à domicile, services à domicile québec, travailleurs vérifiés, taskrabbit québec, marché de services local, manutention, aide aînés"
     },
     en: {
-      title: "Q-emplois | Snow removal, moving & home help in Québec",
+      title: "Québec emplois | Snow removal, moving & home help in Québec",
       description: "Find trusted local help: snow removal, moving, furniture assembly, cleaning. Verified workers, clear pricing and secure payment. Pointe-Claire, Montreal, South Shore.",
       keywords: "snow removal montreal, snow removal pointe-claire, moving help quebec, furniture assembly, home cleaning, yard cleanup, junk removal, home services quebec, verified workers, taskrabbit quebec, local services marketplace, heavy lifting, senior help"
     }
@@ -382,7 +371,7 @@ export function LandingPage() {
           }}
         >
           <Link to="/">
-            <Logo size="md" />
+            <BrandLogo size="md" />
           </Link>
           {/* Desktop links */}
           <div className="body-f nav-hide-sm" style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14 }}>
@@ -758,7 +747,7 @@ export function LandingPage() {
           >
             <div>
               <Link to="/">
-                <Logo size="sm" />
+                <BrandLogo size="sm" />
               </Link>
               <p className="body-f muted2" style={{ fontSize: 12, marginTop: 6 }}>
                 {t.foot.tag}

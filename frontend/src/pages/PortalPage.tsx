@@ -6,7 +6,7 @@ type Lang = 'fr' | 'en';
 
 const T = {
   fr: {
-    title: "Bienvenue chez Q-emplois",
+    title: "Bienvenue chez Québec emplois",
     sub: "Choisissez votre espace",
     client: {
       kicker: "Client",
@@ -25,7 +25,7 @@ const T = {
     legal: "Conforme à la Loi 96 (langue) et à la Loi 25 (vie privée).",
   },
   en: {
-    title: "Welcome to Q-emplois",
+    title: "Welcome to Québec emplois",
     sub: "Choose your path",
     client: {
       kicker: "Client",
