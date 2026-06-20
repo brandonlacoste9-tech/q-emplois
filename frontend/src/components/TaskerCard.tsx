@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Star, BadgeCheck, MapPin } from 'lucide-react';
 import type { TaskerCardData } from '../types';
 import { SERVICE_TYPE_LABELS } from '../types';
@@ -8,9 +9,10 @@ interface TaskerCardProps {
   tasker: TaskerCardData;
   action?: React.ReactNode;
   compact?: boolean;
+  linkProfile?: boolean;
 }
 
-export function TaskerCard({ tasker, action, compact }: TaskerCardProps) {
+export function TaskerCard({ tasker, action, compact, linkProfile = true }: TaskerCardProps) {
   const name = [tasker.firstName, tasker.lastName].filter(Boolean).join(' ') || 'Travailleur';
   const initials = name.charAt(0).toUpperCase();
 
@@ -45,7 +47,13 @@ export function TaskerCard({ tasker, action, compact }: TaskerCardProps) {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <p className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700 }}>{name}</p>
+            {linkProfile && tasker.id ? (
+              <Link to={`/tasker/${tasker.id}`} className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>
+                {name}
+              </Link>
+            ) : (
+              <p className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700 }}>{name}</p>
+            )}
             {tasker.isVerified && (
               <span
                 className="body-f"

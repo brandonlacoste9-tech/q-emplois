@@ -18,6 +18,7 @@ import { GarantiePage } from './pages/GarantiePage'
 import { RecrutePage } from './pages/RecrutePage'
 import { AidePage } from './pages/AidePage'
 import { PolitiqueConfidentialitePage } from './pages/PolitiqueConfidentialitePage'
+import { TaskerPublicPage } from './pages/TaskerPublicPage'
 import { AdminPage } from './pages/AdminPage'
 import { JobDetail } from './pages/JobDetail'
 import { Credits } from './pages/Credits'
@@ -49,6 +50,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/garantie" element={<GarantiePage />} />
         <Route path="/politique-confidentialite" element={<PolitiqueConfidentialitePage />} />
+        <Route path="/tasker/:userId" element={<TaskerPublicPage />} />
         <Route path="/recrute" element={<RecrutePage />} />
         <Route path="/aide" element={<AidePage />} />
         <Route path="/register" element={<RegisterChoose />} />
