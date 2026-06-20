@@ -9,7 +9,7 @@ export function buildClientBookingHref(opts: {
   if (opts.need?.trim()) params.set('need', opts.need.trim());
   if (opts.service) params.set('service', opts.service);
   const query = params.toString();
-  const base = opts.authenticated ? '/post-job' : '/register/client';
+  const base = opts.authenticated ? '/post-job' : '/book';
   return query ? `${base}?${query}` : base;
 }
 

@@ -14,6 +14,7 @@ import { Dashboard } from './pages/Dashboard'
 import { Jobs } from './pages/Jobs'
 import { Profile } from './pages/Profile'
 import { PostJob } from './pages/PostJob'
+import { BookPage } from './pages/BookPage'
 import { GarantiePage } from './pages/GarantiePage'
 import { RecrutePage } from './pages/RecrutePage'
 import { AidePage } from './pages/AidePage'
@@ -27,13 +28,15 @@ import { CookieConsent } from './components/CookieConsent'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { RoleRoute } from './components/RoleRoute'
 import { AppNav } from './components/AppNav'
+import { MobileBottomNav } from './components/MobileBottomNav'
 import './styles/cuir-quebecois.css'
 
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="leather" style={{ minHeight: '100vh' }}>
+    <div className="leather app-shell-with-bottom-nav" style={{ minHeight: '100vh' }}>
       <AppNav />
       {children}
+      <MobileBottomNav />
     </div>
   )
 }
@@ -56,6 +59,7 @@ function App() {
         <Route path="/register" element={<RegisterChoose />} />
         <Route path="/register/client" element={<RegisterClient />} />
         <Route path="/register/tasker" element={<Register />} />
+        <Route path="/book" element={<BookPage />} />
         <Route
           path="/dashboard"
           element={

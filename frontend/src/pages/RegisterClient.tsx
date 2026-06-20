@@ -5,12 +5,16 @@ import { normalizeCanadianPhone } from '../utils/phone';
 import { getApiErrorMessage } from '../utils/apiError';
 import { BrandLogo } from '../components/BrandLogo';
 import { buildClientBookingHref } from '../utils/booking';
+import { buildJobPayload } from '../components/JobBookingWizard';
+import { clearBookingDraft, loadBookingDraft } from '../utils/bookingDraft';
+import { api } from '../services/api';
 
 type Lang = 'fr' | 'en';
 
 const T = {
   fr: {
     tag: 'Publiez des tâches, trouvez de l\'aide locale',
+    tagBook: 'Dernière étape — créez votre compte pour publier',
     steps: ['Vos informations', 'Mot de passe'],
     subs: ['Parlez-nous un peu de vous', 'Sécurisez votre compte'],
     firstName: 'Prénom',
@@ -36,6 +40,7 @@ const T = {
   },
   en: {
     tag: 'Post tasks, find local help',
+    tagBook: 'Last step — create your account to publish',
     steps: ['Your information', 'Password'],
     subs: ['Tell us a bit about you', 'Secure your account'],
     firstName: 'First name',
@@ -79,6 +84,7 @@ export function RegisterClient() {
   const [searchParams] = useSearchParams();
   const need = searchParams.get('need');
   const service = searchParams.get('service');
+  const fromBook = searchParams.get('from') === 'book';
   const t = T[lang];
 
   const validateStep1 = () => {
@@ -123,6 +129,15 @@ export function RegisterClient() {
         lastName: formData.lastName,
         phone: normalizeCanadianPhone(formData.phone),
       });
+
+      const draft = fromBook ? loadBookingDraft() : null;
+      if (draft?.serviceType) {
+        const job = await api.createJob(buildJobPayload(draft));
+        clearBookingDraft();
+        navigate(`/jobs/${job.id}`);
+        return;
+      }
+
       navigate(buildClientBookingHref({ need: need ?? undefined, service: service ?? undefined, authenticated: true }));
     } catch (err) {
       setError(getApiErrorMessage(err, t.errGeneric));
@@ -167,7 +182,7 @@ export function RegisterClient() {
             <BrandLogo size="lg" />
           </Link>
           <p className="body-f muted2" style={{ fontSize: 13, marginTop: 8 }}>
-            {t.tag}
+            {fromBook ? t.tagBook : t.tag}
           </p>
         </div>
 

@@ -212,14 +212,13 @@
 a.nav-link { color: #D9B38C; text-decoration: none; transition: color 0.2s; }
 a.nav-link:hover { color: #B87B44; }
 
-/* Hide secondary nav links on small screens */
+.mobile-bottom-nav { display: none; }
 @media (max-width: 640px) {
   .nav-hide-sm { display: none !important; }
-  /* hamburger button */
   button.nav-show-sm { display: inline-flex !important; }
-  /* dropdown panel */
   div.nav-show-sm { display: flex !important; }
-  /* hero shrinks and uses cover on phones so the full image is framed */
+  .app-shell-with-bottom-nav { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  .mobile-bottom-nav { display: flex !important; }
   .hero-fit {
     aspect-ratio: auto !important;
     max-width: 100% !important;
@@ -229,9 +228,12 @@ a.nav-link:hover { color: #B87B44; }
     background-position: center 42% !important;
     padding-bottom: 20px !important;
   }
-  /* stack search bar so the button isn't clipped on phones */
   .search-bar { flex-direction: column !important; gap: 8px; }
   .search-bar > a { width: 100% !important; text-align: center; }
+}
+
+@media (min-width: 641px) {
+  .mobile-bottom-nav { display: none !important; }
 }
 
 /* --- EMPIRE SPLIT (portal split band) --- */
