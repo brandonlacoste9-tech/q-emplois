@@ -11,11 +11,16 @@ export class WhatsAppService {
   constructor(private configService: ConfigService) {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
     const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    const apiKeySid = this.configService.get<string>('TWILIO_API_KEY_SID');
+    const apiKeySecret = this.configService.get<string>('TWILIO_API_KEY_SECRET');
     this.fromNumber =
       this.configService.get<string>('TWILIO_WHATSAPP_NUMBER') ||
       'whatsapp:+14155238886';
 
-    if (accountSid && authToken) {
+    if (accountSid && apiKeySid && apiKeySecret) {
+      this.twilioClient = Twilio(apiKeySid, apiKeySecret, { accountSid });
+      this.logger.log('Twilio WhatsApp client initialized (API key)');
+    } else if (accountSid && authToken) {
       this.twilioClient = Twilio(accountSid, authToken);
       this.logger.log('Twilio WhatsApp client initialized');
     } else {

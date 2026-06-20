@@ -19,9 +19,17 @@ Taskers opt in via **Profile → Alertes WhatsApp**. When a client posts a task,
 
 ```
 TWILIO_ACCOUNT_SID=AC...
-TWILIO_AUTH_TOKEN=...
 TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
 FRONTEND_URL=https://q-emplois.vercel.app
+```
+
+Use **either** primary auth token **or** API key:
+
+```
+TWILIO_AUTH_TOKEN=...
+# or
+TWILIO_API_KEY_SID=SK...
+TWILIO_API_KEY_SECRET=...
 ```
 
 ### Webhook
