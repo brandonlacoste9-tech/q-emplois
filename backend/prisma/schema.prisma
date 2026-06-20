@@ -339,6 +339,9 @@ model Task {
   cancelledAt       DateTime?
   declineReason     String?
 
+  paymentStatus           String   @default("unpaid") // unpaid, pending, paid
+  stripeCheckoutSessionId String?
+
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 

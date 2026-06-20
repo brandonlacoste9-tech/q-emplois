@@ -77,6 +77,70 @@ export class PaymentsService {
     return { checkoutUrl: session.url, sessionId: session.id };
   }
 
+  isConfigured(): boolean {
+    return this.stripe != null;
+  }
+
+  getPublicConfig() {
+    return {
+      configured: this.stripe != null,
+      publishableKey: this.configService.get<string>('STRIPE_PUBLISHABLE_KEY') ?? null,
+    };
+  }
+
+  async createTaskPaymentCheckout(taskId: string, clientId: string) {
+    const stripe = this.requireStripe();
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) throw new NotFoundException('Tâche non trouvée.');
+    if (task.clientId !== clientId) {
+      throw new BadRequestException('Seul le client peut payer cette tâche.');
+    }
+    if (task.paymentStatus === 'paid') {
+      throw new BadRequestException('Cette tâche est déjà payée.');
+    }
+    if (!['claimed', 'in_progress', 'completed'].includes(task.status)) {
+      throw new BadRequestException('Paiement disponible après sélection du travailleur.');
+    }
+
+    const amountCad = Number(task.estimatedPrice);
+    const frontend = this.configService.get('FRONTEND_URL', 'http://localhost:5173');
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'cad',
+            product_data: {
+              name: `Québec emplois — ${task.title}`,
+              description: 'Paiement sécurisé pour votre tâche locale',
+            },
+            unit_amount: Math.round(amountCad * 100),
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        type: 'task_payment',
+        taskId: task.id,
+        clientId,
+      },
+      success_url: `${frontend}/jobs/${task.id}?paid=1`,
+      cancel_url: `${frontend}/jobs/${task.id}?cancelled=1`,
+    });
+
+    await this.prisma.task.update({
+      where: { id: taskId },
+      data: {
+        paymentStatus: 'pending',
+        stripeCheckoutSessionId: session.id,
+      },
+    });
+
+    return { checkoutUrl: session.url, sessionId: session.id };
+  }
+
   async handleWebhook(rawBody: Buffer, signature: string) {
     const stripe = this.requireStripe();
     const secret = this.configService.get('STRIPE_WEBHOOK_SECRET');
@@ -99,6 +163,17 @@ export class PaymentsService {
           packKey,
           paymentIntentId ?? session.id,
         );
+      } else if (session.metadata?.type === 'task_payment') {
+        const taskId = session.metadata.taskId;
+        if (taskId) {
+          await this.prisma.task.update({
+            where: { id: taskId },
+            data: {
+              paymentStatus: 'paid',
+              stripeCheckoutSessionId: session.id,
+            },
+          });
+        }
       }
     }
 

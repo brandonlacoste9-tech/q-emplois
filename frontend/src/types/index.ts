@@ -179,6 +179,7 @@ export interface Job {
   addressRedacted?: boolean;
   pendingApplicationCount?: number;
   myApplicationStatus?: string | null;
+  paymentStatus?: 'unpaid' | 'pending' | 'paid';
 }
 
 export interface TaskApplication {
@@ -201,6 +202,7 @@ export interface TaskerCardData {
   hourlyRate?: number;
   city?: string;
   message?: string | null;
+  distanceKm?: number;
 }
 
 export interface PriceGuideRange {

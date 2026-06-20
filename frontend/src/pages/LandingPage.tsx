@@ -10,7 +10,7 @@ import { buildClientBookingHref, formatPriceGuideShort } from "../utils/booking"
 /* --- TRANSLATIONS --- */
 const T = {
   fr: {
-    nav: { find: "Trouver de l'aide", become: "Offrir mes services", login: "Connexion", signup: "S'inscrire" },
+    nav: { find: "Trouver de l'aide", taskers: "Voir les travailleurs", become: "Offrir mes services", login: "Connexion", signup: "S'inscrire" },
     hero: {
       badge: "Le marché de services local du Québec",
       h1: "De l'aide près de chez vous, en quelques clics.",
@@ -82,7 +82,7 @@ const T = {
     },
   },
   en: {
-    nav: { find: "Find help", become: "Offer my services", login: "Log in", signup: "Sign up" },
+    nav: { find: "Find help", taskers: "Browse taskers", become: "Offer my services", login: "Log in", signup: "Sign up" },
     hero: {
       badge: "Québec's local services marketplace",
       h1: "Trusted local help, just a few clicks away.",
@@ -387,6 +387,7 @@ export function LandingPage() {
           {/* Desktop links */}
           <div className="body-f nav-hide-sm" style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14 }}>
             <Link to="/aide" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.find}</Link>
+            <Link to="/taskers" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.taskers}</Link>
             <Link to="/recrute" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.become}</Link>
             <Link to="/login" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.login}</Link>
             <button
@@ -441,6 +442,7 @@ export function LandingPage() {
             }}
           >
             <Link to="/aide" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.find}</Link>
+            <Link to="/taskers" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.taskers}</Link>
             <Link to="/recrute" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.become}</Link>
             <Link to="/login" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.login}</Link>
             <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
@@ -571,9 +573,14 @@ export function LandingPage() {
       {/* === SERVICES === */}
       <section id="services" className="leather" style={{ padding: "80px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h2 className="serif cream-hi" style={{ textAlign: "center", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, marginBottom: 50 }}>
+          <h2 className="serif cream-hi" style={{ textAlign: "center", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, marginBottom: 16 }}>
             {t.cats.title}
           </h2>
+          <p style={{ textAlign: "center", marginBottom: 40 }}>
+            <Link to="/taskers" className="nav-link" style={{ fontSize: 14 }}>
+              {lang === "fr" ? "Ou parcourez les travailleurs disponibles →" : "Or browse available taskers →"}
+            </Link>
+          </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 36 }}>
             {t.cats.items.map((c, i) => {
               const guide = priceGuides[c.service] ?? priceGuides.autre;

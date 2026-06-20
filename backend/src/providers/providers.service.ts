@@ -5,6 +5,48 @@ import { StorageService } from '../common/storage/storage.service';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { phoneToWhatsappId } from '../common/utils/phone';
 
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function mapBrowseResult(
+  provider: {
+    userId: string;
+    serviceTypes: string[];
+    rating: number;
+    reviewCount: number;
+    isVerified: boolean;
+    hourlyRate: unknown;
+    locationAddress: string | null;
+    locationLat: unknown;
+    locationLng: unknown;
+    user: { id: string; firstName: string | null; lastName: string | null; createdAt: Date };
+  },
+  distanceKm?: number,
+) {
+  return {
+    id: provider.user.id,
+    firstName: provider.user.firstName,
+    lastName: provider.user.lastName,
+    serviceTypes: provider.serviceTypes,
+    rating: provider.rating,
+    reviewCount: provider.reviewCount,
+    isVerified: provider.isVerified,
+    hourlyRate: provider.hourlyRate ? Number(provider.hourlyRate) : undefined,
+    city: provider.locationAddress,
+    memberSince: provider.user.createdAt.toISOString(),
+    distanceKm: distanceKm != null ? Math.round(distanceKm * 10) / 10 : undefined,
+  };
+}
+
 export interface UpsertProviderDto {
   serviceTypes: string[];
   hourlyRate?: number;
@@ -103,19 +145,57 @@ export class ProvidersService {
     return provider;
   }
 
-  async search(serviceType?: string) {
-    return this.prisma.provider.findMany({
+  async search(serviceType?: string, city?: string, postalCode?: string) {
+    const providers = await this.prisma.provider.findMany({
       where: {
+        NOT: { serviceTypes: { isEmpty: true } },
         ...(serviceType ? { serviceTypes: { has: serviceType } } : {}),
-        isVerified: true,
+        ...(city
+          ? {
+              locationAddress: { contains: city, mode: 'insensitive' as const },
+            }
+          : {}),
       },
       include: {
         user: {
-          select: { firstName: true, lastName: true, phone: true },
+          select: { id: true, firstName: true, lastName: true, createdAt: true },
         },
       },
-      take: 20,
+      take: 50,
     });
+
+    const origin = geocodeQuebecAddress(city, postalCode);
+    const withDistance = providers.map((p) => {
+      let distanceKm: number | undefined;
+      if (
+        origin &&
+        p.locationLat != null &&
+        p.locationLng != null
+      ) {
+        distanceKm = haversineKm(
+          origin.lat,
+          origin.lng,
+          Number(p.locationLat),
+          Number(p.locationLng),
+        );
+      }
+      return { provider: p, distanceKm };
+    });
+
+    withDistance.sort((a, b) => {
+      if (a.provider.isVerified !== b.provider.isVerified) {
+        return a.provider.isVerified ? -1 : 1;
+      }
+      if (a.provider.rating !== b.provider.rating) return b.provider.rating - a.provider.rating;
+      if (a.distanceKm != null && b.distanceKm != null) return a.distanceKm - b.distanceKm;
+      return b.provider.reviewCount - a.provider.reviewCount;
+    });
+
+    const radius = 50;
+    return withDistance
+      .filter((row) => row.distanceKm == null || row.distanceKm <= radius)
+      .slice(0, 24)
+      .map((row) => mapBrowseResult(row.provider, row.distanceKm));
   }
 
   async getPublicProfile(userId: string) {

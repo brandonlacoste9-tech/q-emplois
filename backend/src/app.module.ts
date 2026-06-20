@@ -23,6 +23,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { EmailModule } from './common/email/email.module';
 import { StorageModule } from './common/storage/storage.module';
 import { AdminModule } from './admin/admin.module';
+import { GeoModule } from './geo/geo.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { AdminModule } from './admin/admin.module';
     HealthModule,
     ReviewsModule,
     AdminModule,
+    GeoModule,
   ],
 })
 export class AppModule {}

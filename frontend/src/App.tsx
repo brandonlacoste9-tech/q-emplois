@@ -15,6 +15,7 @@ import { Jobs } from './pages/Jobs'
 import { Profile } from './pages/Profile'
 import { PostJob } from './pages/PostJob'
 import { BookPage } from './pages/BookPage'
+import { TaskersPage } from './pages/TaskersPage'
 import { GarantiePage } from './pages/GarantiePage'
 import { RecrutePage } from './pages/RecrutePage'
 import { AidePage } from './pages/AidePage'
@@ -60,6 +61,7 @@ function App() {
         <Route path="/register/client" element={<RegisterClient />} />
         <Route path="/register/tasker" element={<Register />} />
         <Route path="/book" element={<BookPage />} />
+        <Route path="/taskers" element={<TaskersPage />} />
         <Route
           path="/dashboard"
           element={

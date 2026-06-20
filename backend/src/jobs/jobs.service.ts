@@ -140,6 +140,7 @@ export class JobsService {
       addressRedacted: !revealAddress,
       pendingApplicationCount,
       myApplicationStatus: myApplication?.status ?? null,
+      paymentStatus: (task as { paymentStatus?: string }).paymentStatus ?? 'unpaid',
     };
   }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -10,13 +10,14 @@ import type { Job, JobStatus, TaskApplication } from '../types';
 import { JOB_STATUS_LABELS, SERVICE_TYPE_LABELS } from '../types';
 import {
   ArrowLeft, Briefcase, Calendar, Check, Clock, DollarSign,
-  Loader2, MapPin, MessageSquare, Play, Star, Trash2, X,
+  Loader2, MapPin, MessageSquare, Play, Star, Trash2, X, CreditCard,
 } from 'lucide-react';
 import { formatDate, formatDistance, formatDuration, formatPrice, formatJobLocation } from '../utils';
 import { gold } from '../styles/design-tokens';
 
 export function JobDetail() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { profile, canTask, isClientMode } = useAuth();
   const { addToast } = useToast();
@@ -29,6 +30,12 @@ export function JobDetail() {
   const [hasReview, setHasReview] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [applyMessage, setApplyMessage] = useState('');
+  const [paying, setPaying] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('paid')) addToast('Paiement reçu — merci!', 'success');
+    else if (searchParams.get('cancelled')) addToast('Paiement annulé', 'info');
+  }, [searchParams, addToast]);
 
   const load = async () => {
     if (!id) return;
@@ -116,6 +123,20 @@ export function JobDetail() {
       addToast(errMsg ?? 'Impossible d\'annuler', 'error');
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handlePay = async () => {
+    if (!job) return;
+    setPaying(true);
+    try {
+      const { checkoutUrl } = await api.createTaskPaymentCheckout(job.id);
+      if (checkoutUrl) window.location.href = checkoutUrl;
+      else addToast('Stripe non configuré', 'error');
+    } catch {
+      addToast('Impossible de démarrer le paiement', 'error');
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -263,6 +284,25 @@ export function JobDetail() {
             {showTaskerActions && job.status === 'in_progress' && (
               <button onClick={() => runAction(() => api.completeJob(job.id).then(), 'Job terminé!')} disabled={processing} className="gold-btn" style={{ padding: '10px 16px', fontSize: 14 }}>
                 Terminer le job
+              </button>
+            )}
+
+            {isJobOwner && job.paymentStatus === 'paid' && (
+              <span className="body-f" style={{ fontSize: 13, color: '#7FB069', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Check className="w-4 h-4" /> Payé
+              </span>
+            )}
+
+            {isJobOwner && job.paymentStatus !== 'paid' && ['accepted', 'in_progress', 'completed'].includes(job.status) && (
+              <button
+                type="button"
+                onClick={handlePay}
+                disabled={paying}
+                className="gold-btn"
+                style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+              >
+                <CreditCard className="w-4 h-4" />
+                {paying ? 'Redirection…' : `Payer ${formatPrice(job.estimatedPrice)}`}
               </button>
             )}
 

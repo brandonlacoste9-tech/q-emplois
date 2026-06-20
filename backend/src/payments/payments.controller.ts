@@ -13,6 +13,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/user.decorator';
 import { IsString, IsNumber, IsArray, ValidateNested, Min } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -58,6 +59,24 @@ export class PaymentsController {
       req.rawBody as Buffer,
       signature,
     );
+  }
+
+  @Public()
+  @Get('config')
+  @ApiOperation({ summary: 'Configuration Stripe publique' })
+  getConfig() {
+    return this.paymentsService.getPublicConfig();
+  }
+
+  @Post('task/:taskId/checkout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Payer une tâche via Stripe Checkout' })
+  createTaskCheckout(
+    @Param('taskId') taskId: string,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.paymentsService.createTaskPaymentCheckout(taskId, userId);
   }
 
   @Post('escrow')

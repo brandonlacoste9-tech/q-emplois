@@ -5,6 +5,7 @@ import { SERVICE_TYPE_LABELS, type ServiceType, type PriceGuideRange } from '../
 import { geocodeQuebecAddress } from '../utils/geocode';
 import { parseServiceParam } from '../utils/booking';
 import { BrandLogo } from './BrandLogo';
+import { AddressAutocomplete } from './AddressAutocomplete';
 
 const SERVICE_TYPES: { type: ServiceType; emoji: string }[] = [
   { type: 'menage', emoji: '🧹' },
@@ -349,6 +350,17 @@ export function JobBookingWizard({ mode, searchParams, onPublished, onGuestCompl
 
             {step === 2 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <AddressAutocomplete
+                  lang={lang}
+                  onSelect={(addr) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      street: addr.street || prev.street,
+                      city: addr.city || prev.city,
+                      postalCode: addr.postalCode || prev.postalCode,
+                    }))
+                  }
+                />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
                     <label className="q-label">{t.city}</label>

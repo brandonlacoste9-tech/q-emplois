@@ -89,6 +89,7 @@ export function TaskerCard({ tasker, action, compact, linkProfile = true }: Task
           {tasker.city && (
             <p className="body-f muted2" style={{ fontSize: 12, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
               <MapPin className="w-3 h-3" /> {tasker.city}
+              {tasker.distanceKm != null && <> · {tasker.distanceKm} km</>}
             </p>
           )}
           {tasker.serviceTypes && tasker.serviceTypes.length > 0 && (

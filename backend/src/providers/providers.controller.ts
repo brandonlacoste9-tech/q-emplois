@@ -2,6 +2,7 @@ import { Controller, Get, Put, Post, Body, Param, Query, UseGuards } from '@nest
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ProvidersService, UpsertProviderDto } from './providers.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/user.decorator';
 
 @ApiTags('providers')
@@ -9,10 +10,15 @@ import { CurrentUser } from '../common/decorators/user.decorator';
 export class ProvidersController {
   constructor(private readonly providersService: ProvidersService) {}
 
+  @Public()
   @Get()
-  @ApiOperation({ summary: 'Rechercher des prestataires' })
-  search(@Query('serviceType') serviceType?: string) {
-    return this.providersService.search(serviceType);
+  @ApiOperation({ summary: 'Parcourir les travailleurs' })
+  search(
+    @Query('serviceType') serviceType?: string,
+    @Query('city') city?: string,
+    @Query('postalCode') postalCode?: string,
+  ) {
+    return this.providersService.search(serviceType, city, postalCode);
   }
 
   @Get('me')
@@ -24,6 +30,7 @@ export class ProvidersController {
   }
 
   @Get(':userId/public')
+  @Public()
   @ApiOperation({ summary: 'Profil public d\'un travailleur' })
   getPublic(@Param('userId') userId: string) {
     return this.providersService.getPublicProfile(userId);

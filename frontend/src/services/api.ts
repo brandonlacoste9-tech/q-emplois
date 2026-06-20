@@ -217,6 +217,30 @@ class ApiService {
     return response.data;
   }
 
+  async searchTaskers(params: {
+    serviceType?: string;
+    city?: string;
+    postalCode?: string;
+  }): Promise<import('../types').TaskerCardData[]> {
+    const response = await this.client.get('/providers', { params });
+    return response.data;
+  }
+
+  async searchAddresses(q: string): Promise<Array<{ label: string; street: string; city: string; postalCode: string }>> {
+    const response = await this.client.get('/geo/search', { params: { q } });
+    return response.data;
+  }
+
+  async getPaymentConfig(): Promise<{ configured: boolean; publishableKey: string | null }> {
+    const response = await this.client.get('/payments/config');
+    return response.data;
+  }
+
+  async createTaskPaymentCheckout(taskId: string): Promise<{ checkoutUrl: string }> {
+    const response = await this.client.post(`/payments/task/${taskId}/checkout`);
+    return response.data;
+  }
+
   async declineJob(id: string, reason?: string): Promise<Job> {
     const response = await this.client.post(`/jobs/${id}/decline`, { reason });
     return response.data;
