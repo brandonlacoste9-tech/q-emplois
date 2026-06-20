@@ -9,6 +9,7 @@ const FOOT = {
     legal: "Conforme à la Loi 96 (langue) et à la Loi 25 (vie privée).",
     copy: "© 2026 Q-emplois. Tous droits réservés.",
     find: "Trouver de l'aide",
+    aide: "Publier une tâche (bêta)",
     become: "Offrir mes services",
     recrute: "Recrutement bêta",
     login: "Connexion",
@@ -21,6 +22,7 @@ const FOOT = {
     legal: "Compliant with Bill 96 (language) and Law 25 (privacy).",
     copy: "© 2026 Q-emplois. All rights reserved.",
     find: "Find help",
+    aide: "Post a task (beta)",
     become: "Offer my services",
     recrute: "Beta recruitment",
     login: "Log in",
@@ -51,7 +53,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
           <p className="body-f muted2" style={{ fontSize: 13, marginTop: 10, lineHeight: 1.6 }}>{t.tag}</p>
         </div>
         <div className="body-f" style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14 }}>
-          <Link to="/contrats" className="nav-link">{t.find}</Link>
+          <Link to="/aide" className="nav-link">{t.aide}</Link>
           <Link to="/pro" className="nav-link">{t.become}</Link>
           <Link to="/recrute" className="nav-link">{t.recrute}</Link>
           <Link to="/login" className="nav-link">{t.login}</Link>

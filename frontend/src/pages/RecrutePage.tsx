@@ -239,7 +239,7 @@ export function RecrutePage() {
           {t.cta}
         </Link>
         <p style={{ marginTop: 16 }}>
-          <Link to="/register/client" className="body-f muted2" style={{ fontSize: 14 }}>{t.clientLink} →</Link>
+          <Link to="/aide" className="body-f muted2" style={{ fontSize: 14 }}>{t.clientLink} →</Link>
         </p>
         <p className="body-f muted2" style={{ fontSize: 12, marginTop: 24, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <Shield className="w-4 h-4" /> Conforme Loi 25 · Vie privée par étapes
