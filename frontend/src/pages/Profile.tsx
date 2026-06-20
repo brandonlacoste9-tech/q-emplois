@@ -76,14 +76,15 @@ export function Profile() {
         email: formData.email,
         phone: formData.phone,
       });
-      if ((formData.serviceTypes || []).length > 0) {
+      if (canTask) {
         await api.updateProvider({
-          serviceTypes: formData.serviceTypes || [],
+          serviceTypes: formData.serviceTypes || profile?.serviceTypes || [],
           hourlyRate: formData.hourlyRate,
           serviceRadiusKm: formData.serviceRadius,
           licenseNumber: formData.licenseNumber,
           licenseDocumentUrl: formData.licenseDocument,
           locationAddress: formData.address?.street,
+          whatsappNotifyEnabled: formData.whatsappNotifyEnabled,
         });
       }
       await refreshProfile();
@@ -288,6 +289,44 @@ export function Profile() {
                 </div>
               )}
             </div>
+
+            {/* WhatsApp alerts */}
+            {canTask && (
+              <div style={{ marginBottom: 20 }}>
+                <h4 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+                  Alertes WhatsApp
+                </h4>
+                <div className="stitch-box" style={{ padding: 16, background: 'rgba(21,35,50,0.55)' }}>
+                  {isEditing ? (
+                    <label className="body-f" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', fontSize: 14, lineHeight: 1.6 }}>
+                      <input
+                        type="checkbox"
+                        checked={!!formData.whatsappNotifyEnabled}
+                        onChange={(e) => setFormData({ ...formData, whatsappNotifyEnabled: e.target.checked })}
+                        style={{ marginTop: 4, accentColor: gold }}
+                      />
+                      <span>
+                        Recevoir une alerte WhatsApp quand une tâche correspond à mes services (Loi 25 — consentement explicite).
+                        {!formData.phone && formData.whatsappNotifyEnabled && (
+                          <span style={{ display: 'block', color: '#E8A87C', marginTop: 6, fontSize: 13 }}>
+                            Ajoutez votre numéro de téléphone ci-dessus pour activer les alertes.
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  ) : (
+                    <p className="body-f muted" style={{ fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                      {profile.whatsappNotifyEnabled
+                        ? '✅ Alertes activées — répondez POSTULER ou PASSER aux messages. STOP pour désactiver.'
+                        : 'Alertes désactivées — modifiez le profil pour les activer.'}
+                    </p>
+                  )}
+                  <p className="body-f muted2" style={{ fontSize: 12, marginTop: 12, marginBottom: 0 }}>
+                    Répondez *POSTULER* pour candidater (1 crédit). Le client choisit parmi les candidats.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Pricing & radius */}
             <div style={{ marginBottom: 20 }}>

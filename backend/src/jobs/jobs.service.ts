@@ -3,6 +3,8 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Optional,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AuditService } from '../common/audit/audit.service';
@@ -10,6 +12,7 @@ import { CreditsService } from '../credits/credits.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { EmailService } from '../common/email/email.service';
 import { ConfigService } from '@nestjs/config';
+import { WhatsappTaskAlertsService } from '../whatsapp/whatsapp-task-alerts.service';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { publicPostalSector, sanitizePublicDescription } from '../common/utils/privacy';
 import { CreateTaskDto, DeclineTaskDto, ApplyTaskDto } from './dto/job.dto';
@@ -18,6 +21,8 @@ import { getPriceGuide, getAllPriceGuides } from '../common/constants/price-guid
 
 @Injectable()
 export class JobsService {
+  private readonly logger = new Logger(JobsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
@@ -25,6 +30,7 @@ export class JobsService {
     private readonly notificationsService: NotificationsService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
+    @Optional() private readonly whatsappAlerts?: WhatsappTaskAlertsService,
   ) {}
 
   private haversineKm(
@@ -295,6 +301,12 @@ export class JobsService {
       resource: 'task',
       resourceId: task.id,
     });
+
+    if (this.whatsappAlerts) {
+      void this.whatsappAlerts.notifyNewTask(task).catch((err) => {
+        this.logger.warn(`WhatsApp task alerts failed: ${(err as Error).message}`);
+      });
+    }
 
     return this.mapTask(task, undefined, clientId);
   }

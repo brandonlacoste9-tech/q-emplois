@@ -67,6 +67,7 @@ export class ProfileService {
         : undefined,
       availability,
       isTaskerEnabled: (provider?.serviceTypes?.length ?? 0) > 0,
+      whatsappNotifyEnabled: provider?.whatsappNotifyEnabled ?? false,
     };
   }
 }

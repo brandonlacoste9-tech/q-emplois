@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Headers, UnauthorizedException, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WhatsAppService } from './whatsapp.service';
+import { WhatsappTaskAlertsService } from './whatsapp-task-alerts.service';
 import { ConfigService } from '@nestjs/config';
 
 @ApiTags('whatsapp')
@@ -10,6 +11,7 @@ export class WhatsAppController {
 
   constructor(
     private readonly whatsAppService: WhatsAppService,
+    private readonly taskAlerts: WhatsappTaskAlertsService,
     private configService: ConfigService,
   ) {}
 
@@ -19,12 +21,17 @@ export class WhatsAppController {
   @Post('webhook')
   @ApiOperation({ summary: 'Receive WhatsApp messages from Twilio' })
   @ApiResponse({ status: 200, description: 'Message processed' })
-  async receiveMessage(@Body() body: any): Promise<string> {
-    this.logger.debug('Received WhatsApp message:', body);
-    
-    const response = await this.whatsAppService.handleIncomingMessage(body);
-    
-    // Return TwiML response
+  async receiveMessage(@Body() body: Record<string, string>): Promise<string> {
+    const from = body.From;
+    const messageBody = body.Body ?? '';
+    const profileName = body.ProfileName || 'Utilisateur';
+
+    this.logger.debug(`Received WhatsApp message from ${from}`);
+
+    const taskReply = await this.taskAlerts.handleTaskerReply(from, messageBody, profileName);
+    const response =
+      taskReply ?? this.whatsAppService.processGeneralMessage(messageBody, profileName);
+
     return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
 <Message>${this.escapeXml(response)}</Message>

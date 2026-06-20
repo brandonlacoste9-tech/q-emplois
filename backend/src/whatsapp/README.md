@@ -1,77 +1,49 @@
-# WhatsApp Integration - QWORKS
+# WhatsApp tasker alerts — Québec emplois
 
-## Twilio WhatsApp Setup
+Taskers opt in via **Profile → Alertes WhatsApp**. When a client posts a task, matching providers receive a WhatsApp message and can reply **POSTULER** (apply) or **PASSER** (skip).
 
-### 1. Create Twilio Account
-- Sign up at https://www.twilio.com/try-twilio
-- Get your Account SID and Auth Token from the console
+## Flow
 
-### 2. Get WhatsApp Sandbox Number
-- Go to Messaging → Try it out → Send a WhatsApp message
-- Your sandbox number: `+1 (415) 523-8886` (or similar)
-- Join code: `join soap-warm` (changes periodically)
+1. Client posts task on web → `JobsService.create`
+2. `WhatsappTaskAlertsService.notifyNewTask` finds providers where:
+   - `whatsappNotifyEnabled = true`
+   - `serviceTypes` includes task type
+   - within `serviceRadiusKm` (when lat/lng known)
+3. Twilio sends alert with job summary + link
+4. Tasker replies **POSTULER** → `JobsService.apply` (1 credit, same rules as web)
+5. **STOP** disables alerts; **PASSER** dismisses without applying
 
-### 3. Environment Variables
-Add to your `.env` file:
+## Twilio setup
+
+### Environment
+
 ```
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_ACCOUNT_SID=AC...
+TWILIO_AUTH_TOKEN=...
 TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
+FRONTEND_URL=https://q-emplois.vercel.app
 ```
 
-### 4. Configure Webhook URL
-In Twilio Console:
-- Go to Messaging → Settings → WhatsApp Sandbox Settings
-- Set "When a message comes in" webhook to:
-  ```
-  https://your-domain.com/api/v1/whatsapp/webhook
-  ```
-- Method: HTTP POST
+### Webhook
 
-### 5. Test the Integration
-1. Save the Twilio sandbox number in your phone contacts
-2. Send WhatsApp message: `join soap-warm`
-3. You should receive a confirmation
-4. Send: `/start` or "Bonjour"
-5. The bot should respond!
+`POST https://YOUR-RAILWAY-URL.up.railway.app/api/v1/whatsapp/webhook`
 
-## WhatsApp Business API (Production)
+### Sandbox test
 
-For production with your own WhatsApp Business number:
+1. Join Twilio WhatsApp sandbox (`join …` code in Twilio console)
+2. Register as tasker with the **same phone number**
+3. Enable alerts in Profile
+4. Post a task as client (matching service + area)
+5. Reply **POSTULER** on WhatsApp
 
-1. Apply for WhatsApp Business API at https://business.whatsapp.com/products/business-platform
-2. Complete Meta business verification
-3. Get a Twilio WhatsApp Business number or use direct Meta API
-4. Update `TWILIO_WHATSAPP_NUMBER` to your verified number
+## API
 
-## Bot Commands
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /api/v1/whatsapp/webhook` | Twilio inbound |
+| `GET /api/v1/whatsapp/setup` | Sandbox instructions |
+| `PUT /api/v1/providers/me` | `{ whatsappNotifyEnabled: true }` |
 
-| Command | Description |
-|---------|-------------|
-| `/start` | Welcome message |
-| `/aide` | Help information |
-| `/services` | List available services |
-| Service name | Start booking (e.g., "plombier") |
+## Loi 25
 
-## API Endpoints
-
-- `POST /api/v1/whatsapp/webhook` - Receive messages from Twilio
-- `POST /api/v1/whatsapp/send` - Send test message (authenticated)
-- `GET /api/v1/whatsapp/setup` - Get sandbox instructions
-- `GET /api/v1/whatsapp/health` - Health check
-
-## Natural Language Examples
-
-Users can book by simply messaging:
-- "J'ai besoin d'un plombier demain"
-- "Électricien urgent ce soir"
-- "Déménagement samedi matin"
-- "Nettoyage pour Airbnb cette semaine"
-
-## Law 25 Compliance
-
-WhatsApp messages respect Quebec privacy law:
-- No PII stored in message logs
-- Consent obtained before storing data
-- 30-day data retention policy
-- Users can request data deletion via /profil
+Explicit opt-in checkbox in Profile. **STOP** disables alerts. No client PII in alert body (city/sector only).

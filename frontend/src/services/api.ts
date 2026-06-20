@@ -117,6 +117,7 @@ class ApiService {
     locationAddress?: string;
     locationLat?: number;
     locationLng?: number;
+    whatsappNotifyEnabled?: boolean;
   }) {
     const response = await this.client.put('/providers/me', data);
     return response.data;

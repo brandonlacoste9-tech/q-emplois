@@ -34,11 +34,13 @@ Set `VITE_API_URL=https://YOUR-RAILWAY-URL.up.railway.app/api/v1` in Vercel env 
 
 Point Stripe to: `https://YOUR-RAILWAY-URL.up.railway.app/api/v1/payments/webhook`
 
-## Twilio WhatsApp
+## Twilio WhatsApp (tasker alerts)
 
 Set webhook to Railway WhatsApp endpoint; configure `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_NUMBER`.
 
-Set bot env: `QEMPLOIS_API_URL=https://YOUR-RAILWAY-URL.up.railway.app/api/v1`
+When a client posts a task, matching taskers with **WhatsApp alerts enabled** receive a message. They reply **POSTULER** to apply (same credit rules as the web) or **PASSER** to skip. **STOP** disables alerts.
+
+Taskers enable alerts in **Profile** (requires phone on file). See `backend/src/whatsapp/README.md`.
 
 ## Beta smoke test
 
