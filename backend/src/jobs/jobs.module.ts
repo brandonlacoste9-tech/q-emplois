@@ -8,7 +8,7 @@ import { WhatsAppModule } from '../whatsapp/whatsapp.module';
 @Module({
   imports: [CreditsModule, NotificationsModule, forwardRef(() => WhatsAppModule)],
   controllers: [JobsController],
-  providers: [JobsService, NotificationService],
+  providers: [JobsService],
   exports: [JobsService],
 })
 export class JobsModule {}
