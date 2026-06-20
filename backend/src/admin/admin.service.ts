@@ -241,6 +241,37 @@ export class AdminService {
     return { code: invite.code, maxRedemptions: invite.maxRedemptions, rewardCredits: invite.rewardCredits };
   }
 
+  async getAuditLogs(page = 1, action?: string, userId?: string) {
+    const where: Record<string, unknown> = {};
+    if (action) where.action = action;
+    if (userId) where.userId = userId;
+    const take = 50;
+    const [logs, total] = await Promise.all([
+      this.prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * take,
+        take,
+      }),
+      this.prisma.auditLog.count({ where }),
+    ]);
+    return {
+      logs: logs.map((l) => ({
+        id: l.id,
+        userId: l.userId,
+        action: l.action,
+        resource: l.resource,
+        resourceId: l.resourceId,
+        details: l.details,
+        ipAddress: l.ipAddress,
+        createdAt: l.createdAt.toISOString(),
+      })),
+      total,
+      page,
+      pages: Math.ceil(total / take),
+    };
+  }
+
   async searchProviders(q?: string, status?: string) {
     const where: Record<string, unknown> = {};
     if (status === 'verified') where.isVerified = true;

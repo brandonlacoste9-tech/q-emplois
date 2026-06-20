@@ -6,6 +6,7 @@ import { StorageService } from '../common/storage/storage.service';
 import { EmailService } from '../common/email/email.service';
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { phoneToWhatsappId } from '../common/utils/phone';
+import { validateRBQLicense } from '../common/utils/rbq-validation';
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
@@ -86,6 +87,10 @@ export class ProvidersService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Utilisateur non trouvé.');
 
+    if (dto.licenseNumber && !validateRBQLicense(dto.licenseNumber)) {
+      throw new BadRequestException('Numéro de licence RBQ invalide. Format accepté : 1234-5678-90 ou 12345.');
+    }
+
     let locationLat = dto.locationLat;
     let locationLng = dto.locationLng;
     if ((locationLat == null || locationLng == null) && dto.locationAddress) {
@@ -164,7 +169,7 @@ export class ProvidersService {
     };
   }
 
-  async search(serviceType?: string, city?: string, postalCode?: string) {
+  async search(serviceType?: string, city?: string, postalCode?: string, verifiedOnly?: boolean) {
     const providers = await this.prisma.provider.findMany({
       where: {
         // Include all providers except those with expired verification
@@ -172,6 +177,7 @@ export class ProvidersService {
           isVerified: true,
           verificationExpiresAt: { lte: new Date() },
         },
+        ...(verifiedOnly ? { isVerified: true } : {}),
         serviceTypes: { isEmpty: false },
         ...(serviceType ? { serviceTypes: { has: serviceType } } : {}),
         ...(city

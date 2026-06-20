@@ -222,6 +222,7 @@ class ApiService {
     serviceType?: string;
     city?: string;
     postalCode?: string;
+    verifiedOnly?: boolean;
   }): Promise<import('../types').TaskerCardData[]> {
     const response = await this.client.get('/providers', { params });
     return response.data;

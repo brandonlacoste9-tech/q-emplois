@@ -147,4 +147,52 @@ export class UsersService {
   async getUserAuditLogs(userId: string) {
     return this.auditService.getUserLogs(userId, 100);
   }
+
+  async exportUserData(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        provider: true,
+        creditWallet: { include: { transactions: { take: 500, orderBy: { createdAt: 'desc' } } } },
+        postedTasks: { take: 100, orderBy: { createdAt: 'desc' } },
+        platformNotifications: { take: 200, orderBy: { createdAt: 'desc' } },
+        sentMessages: { take: 200, orderBy: { createdAt: 'desc' } },
+      },
+    });
+    if (!user) throw new NotFoundException('Utilisateur non trouvé.');
+
+    return {
+      profile: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        role: user.role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      provider: user.provider ? {
+        serviceTypes: user.provider.serviceTypes,
+        isVerified: user.provider.isVerified,
+        rating: user.provider.rating,
+      } : null,
+      wallet: user.creditWallet ? {
+        balance: user.creditWallet.balance,
+        transactions: user.creditWallet.transactions.map((t) => ({
+          amount: t.amount,
+          type: t.type,
+          description: t.description,
+          createdAt: t.createdAt,
+        })),
+      } : null,
+      tasks: user.postedTasks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        status: t.status,
+        createdAt: t.createdAt,
+      })),
+      exportedAt: new Date().toISOString(),
+    };
+  }
 }

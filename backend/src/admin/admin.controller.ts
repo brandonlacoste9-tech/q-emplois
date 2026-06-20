@@ -55,4 +55,14 @@ export class AdminController {
   ) {
     return this.adminService.generateInvite(adminId, body);
   }
+
+  @Get('audit-logs')
+  @ApiOperation({ summary: 'Parcourir les logs d\'audit' })
+  auditLogs(
+    @Query('page') page?: string,
+    @Query('action') action?: string,
+    @Query('userId') userId?: string,
+  ) {
+    return this.adminService.getAuditLogs(page ? parseInt(page, 10) : 1, action, userId);
+  }
 }

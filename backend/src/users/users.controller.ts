@@ -69,4 +69,12 @@ export class UsersController {
   async getAuditLogs(@CurrentUser('userId') userId: string) {
     return this.usersService.getUserAuditLogs(userId);
   }
+
+  @Get('me/export')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Exporter mes données (Loi 25)' })
+  async exportData(@CurrentUser('userId') userId: string) {
+    return this.usersService.exportUserData(userId);
+  }
 }

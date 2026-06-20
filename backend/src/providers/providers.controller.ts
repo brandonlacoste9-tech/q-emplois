@@ -19,8 +19,9 @@ export class ProvidersController {
     @Query('serviceType') serviceType?: string,
     @Query('city') city?: string,
     @Query('postalCode') postalCode?: string,
+    @Query('verifiedOnly') verifiedOnly?: string,
   ) {
-    return this.providersService.search(serviceType, city, postalCode);
+    return this.providersService.search(serviceType, city, postalCode, verifiedOnly === 'true');
   }
 
   @Get('me')

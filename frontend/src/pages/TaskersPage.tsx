@@ -25,6 +25,7 @@ export function TaskersPage() {
   const [loading, setLoading] = useState(true);
   const [city, setCity] = useState(searchParams.get('city') ?? 'Montréal');
   const [postalCode, setPostalCode] = useState(searchParams.get('postalCode') ?? '');
+  const [verifiedOnly, setVerifiedOnly] = useState(searchParams.get('verifiedOnly') === 'true');
   const service = (searchParams.get('service') as ServiceType) || 'menage';
 
   const load = async () => {
@@ -34,6 +35,7 @@ export function TaskersPage() {
         serviceType: service,
         city: city || undefined,
         postalCode: postalCode || undefined,
+        verifiedOnly: verifiedOnly || undefined,
       });
       setTaskers(data);
     } catch {
@@ -45,7 +47,7 @@ export function TaskersPage() {
 
   useEffect(() => {
     load();
-  }, [service, city, postalCode]);
+  }, [service, city, postalCode, verifiedOnly]);
 
   const applyFilters = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +112,12 @@ export function TaskersPage() {
           <div>
             <label className="q-label">{lang === 'fr' ? 'Code postal' : 'Postal code'}</label>
             <input className="q-field" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="H2X 1Y6" />
+          </div>
+          <div>
+            <label className="q-label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={verifiedOnly} onChange={(e) => setVerifiedOnly(e.target.checked)} />
+              {lang === 'fr' ? 'Vérifiés seulement' : 'Verified only'}
+            </label>
           </div>
           <button type="submit" className="gold-btn" style={{ padding: '12px 16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <Search className="w-4 h-4" /> {lang === 'fr' ? 'Rechercher' : 'Search'}
