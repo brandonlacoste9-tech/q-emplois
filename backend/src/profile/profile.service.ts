@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
 
 const DEFAULT_AVAILABILITY = {
   monday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
@@ -13,7 +14,10 @@ const DEFAULT_AVAILABILITY = {
 
 @Injectable()
 export class ProfileService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async getTradesmanProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -43,6 +47,11 @@ export class ProfileService {
       lastName: user.lastName ?? '',
       phone: user.phone ?? '',
       avatar: user.avatarUrl ?? undefined,
+      telegramId: user.telegramId ?? undefined,
+      whatsappId: user.whatsappId ?? undefined,
+      telegramBotLink: this.configService.get('TELEGRAM_BOT_USERNAME')
+        ? `https://t.me/${this.configService.get('TELEGRAM_BOT_USERNAME')}?start=link_${user.id}`
+        : undefined,
       isVerified: provider?.isVerified ?? false,
       rating: provider?.rating ?? 0,
       reviewCount: provider?.reviewCount ?? 0,
@@ -70,5 +79,37 @@ export class ProfileService {
       isTaskerEnabled: (provider?.serviceTypes?.length ?? 0) > 0,
       whatsappNotifyEnabled: provider?.whatsappNotifyEnabled ?? false,
     };
+  }
+
+  async updateNotifications(
+    userId: string,
+    body: {
+      telegramId?: string | null;
+      whatsappId?: string | null;
+      whatsappNotifyEnabled?: boolean;
+    },
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Utilisateur non trouvé.');
+
+    const updateData: Record<string, unknown> = {};
+    if (body.telegramId !== undefined) updateData.telegramId = body.telegramId || null;
+    if (body.whatsappId !== undefined) updateData.whatsappId = body.whatsappId || null;
+
+    if (Object.keys(updateData).length > 0) {
+      await this.prisma.user.update({ where: { id: userId }, data: updateData });
+    }
+
+    if (body.whatsappNotifyEnabled !== undefined) {
+      const provider = await this.prisma.provider.findUnique({ where: { userId } });
+      if (provider) {
+        await this.prisma.provider.update({
+          where: { userId },
+          data: { whatsappNotifyEnabled: body.whatsappNotifyEnabled },
+        });
+      }
+    }
+
+    return { success: true };
   }
 }

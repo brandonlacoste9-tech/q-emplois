@@ -1,10 +1,37 @@
 import { Link } from 'react-router-dom';
-import { Star, BadgeCheck, MapPin } from 'lucide-react';
+import { Star, BadgeCheck, MapPin, AlertTriangle, Clock, XCircle } from 'lucide-react';
 import type { TaskerCardData } from '../types';
 import { SERVICE_TYPE_LABELS } from '../types';
 import { formatPrice } from '../utils';
 import { gold } from '../styles/design-tokens';
 import { UserAvatar } from './UserAvatar';
+
+const VERIFICATION_BADGES: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
+  verified: {
+    label: 'Vérifié',
+    color: '#7FB069',
+    bg: 'rgba(127,176,105,0.15)',
+    icon: <BadgeCheck className="w-3 h-3" />,
+  },
+  pending: {
+    label: 'En revue',
+    color: '#D9A441',
+    bg: 'rgba(217,164,65,0.15)',
+    icon: <Clock className="w-3 h-3" />,
+  },
+  unverified: {
+    label: 'Non vérifié',
+    color: '#C46B6B',
+    bg: 'rgba(196,107,107,0.15)',
+    icon: <AlertTriangle className="w-3 h-3" />,
+  },
+  expired: {
+    label: 'Expiré',
+    color: '#C46B6B',
+    bg: 'rgba(196,107,107,0.15)',
+    icon: <XCircle className="w-3 h-3" />,
+  },
+};
 
 interface TaskerCardProps {
   tasker: TaskerCardData;
@@ -43,23 +70,28 @@ export function TaskerCard({ tasker, action, compact, linkProfile = true }: Task
             ) : (
               <p className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700 }}>{name}</p>
             )}
-            {tasker.isVerified && (
-              <span
-                className="body-f"
-                style={{
-                  fontSize: 11,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  color: '#7FB069',
-                  background: 'rgba(127,176,105,0.15)',
-                  padding: '2px 8px',
-                  borderRadius: 999,
-                }}
-              >
-                <BadgeCheck className="w-3 h-3" /> Vérifié
-              </span>
-            )}
+            {tasker.verificationStatus && VERIFICATION_BADGES[tasker.verificationStatus] ? (
+              (() => {
+                const badge = VERIFICATION_BADGES[tasker.verificationStatus];
+                return (
+                  <span
+                    className="body-f"
+                    style={{
+                      fontSize: 11,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      color: badge.color,
+                      background: badge.bg,
+                      padding: '2px 8px',
+                      borderRadius: 999,
+                    }}
+                  >
+                    {badge.icon} {badge.label}
+                  </span>
+                );
+              })()
+            ) : null}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
             <Star className="w-4 h-4" style={{ color: gold, fill: gold }} />

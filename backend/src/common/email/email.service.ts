@@ -99,6 +99,7 @@ export class EmailService {
         <p>Bonjour ${firstName ?? ''},</p>
         <p>Votre pièce d'identité a été vérifiée. Le badge <strong>Vérifié</strong> apparaît sur votre profil.</p>
         <p>— L'équipe Q-Emplois</p>
+        ${this.channelLinksSection()}
       `,
     });
   }
@@ -119,6 +120,7 @@ export class EmailService {
         <p>Votre pièce d'identité n'a pas pu être vérifiée. Vous pouvez téléverser un nouveau document sur votre profil pour relancer la vérification.</p>
         ${reasonBlock}
         <p>— L'équipe Q-Emplois</p>
+        ${this.channelLinksSection()}
       `,
     });
   }
@@ -135,6 +137,7 @@ export class EmailService {
         <p>Votre pièce d'identité est toujours en cours de vérification. Notre équipe revient vers vous sous 48 heures ouvrables.</p>
         <p>Si vous n'avez rien reçu d'ici là, contactez-nous et nous prioriserons votre dossier.</p>
         <p>— L'équipe Q-Emplois</p>
+        ${this.channelLinksSection()}
       `,
     });
   }
@@ -179,6 +182,7 @@ export class EmailService {
         <p>Votre vérification Q-Emplois a expiré (validité de 12 mois). Pour continuer à postuler aux tâches, téléversez une nouvelle pièce d'identité sur votre profil.</p>
         <p><a href="${frontendUrl}/profile">Mettre à jour mon profil</a></p>
         <p>— L'équipe Q-Emplois</p>
+        ${this.channelLinksSection()}
       `,
     });
   }
@@ -200,5 +204,19 @@ export class EmailService {
       `,
       text: `${taskerName} (${taskerEmail}) attend une vérification. ${adminUrl}`,
     });
+  }
+
+  private channelLinksSection(): string {
+    const botUsername = process.env.TELEGRAM_BOT_USERNAME;
+    const whatsappNumber = process.env.WHATSAPP_CONTACT_NUMBER;
+    let html = '';
+    if (botUsername) {
+      html += `<p style="margin-top:16px;font-size:13px;color:#999;">🔔 <a href="https://t.me/${botUsername}" style="color:#7FB069;text-decoration:none;">Connecter Telegram</a> pour recevoir vos notifications en temps réel.</p>`;
+    }
+    if (whatsappNumber) {
+      const clean = whatsappNumber.replace(/[^0-9]/g, '');
+      html += `<p style="margin-top:4px;font-size:13px;color:#999;">💬 <a href="https://wa.me/${clean}" style="color:#7FB069;text-decoration:none;">WhatsApp</a> — notifications instantanées.</p>`;
+    }
+    return html;
   }
 }

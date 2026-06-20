@@ -201,6 +201,7 @@ export interface TaskerCardData {
   rating?: number;
   reviewCount?: number;
   isVerified?: boolean;
+  verificationStatus?: 'verified' | 'pending' | 'unverified' | 'expired';
   hourlyRate?: number;
   city?: string;
   message?: string | null;

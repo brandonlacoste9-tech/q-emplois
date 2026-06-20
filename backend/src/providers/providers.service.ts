@@ -26,14 +26,23 @@ function mapBrowseResult(
     rating: number;
     reviewCount: number;
     isVerified: boolean;
+    licenseDocumentUrl: string | null;
     hourlyRate: unknown;
     locationAddress: string | null;
     locationLat: unknown;
     locationLng: unknown;
+    verificationExpiresAt: Date | null;
     user: { id: string; firstName: string | null; lastName: string | null; avatarUrl: string | null; createdAt: Date };
   },
   distanceKm?: number,
 ) {
+  const status = provider.isVerified && provider.verificationExpiresAt && provider.verificationExpiresAt < new Date()
+    ? 'expired'
+    : provider.isVerified
+    ? 'verified'
+    : provider.licenseDocumentUrl
+    ? 'pending'
+    : 'unverified';
   return {
     id: provider.user.id,
     firstName: provider.user.firstName,
@@ -43,6 +52,7 @@ function mapBrowseResult(
     rating: provider.rating,
     reviewCount: provider.reviewCount,
     isVerified: provider.isVerified,
+    verificationStatus: status,
     hourlyRate: provider.hourlyRate ? Number(provider.hourlyRate) : undefined,
     city: provider.locationAddress,
     memberSince: provider.user.createdAt.toISOString(),
@@ -157,12 +167,12 @@ export class ProvidersService {
   async search(serviceType?: string, city?: string, postalCode?: string) {
     const providers = await this.prisma.provider.findMany({
       where: {
-        isVerified: true,
-        OR: [
-          { verificationExpiresAt: null },
-          { verificationExpiresAt: { gt: new Date() } },
-        ],
-        NOT: { serviceTypes: { isEmpty: true } },
+        // Include all providers except those with expired verification
+        NOT: {
+          isVerified: true,
+          verificationExpiresAt: { lte: new Date() },
+        },
+        serviceTypes: { isEmpty: false },
         ...(serviceType ? { serviceTypes: { has: serviceType } } : {}),
         ...(city
           ? {
@@ -197,9 +207,10 @@ export class ProvidersService {
     });
 
     withDistance.sort((a, b) => {
-      if (a.provider.isVerified !== b.provider.isVerified) {
-        return a.provider.isVerified ? -1 : 1;
-      }
+      const statusOrder: Record<string, number> = { verified: 0, pending: 1, unverified: 2, expired: 3 };
+      const aStatus = a.provider.isVerified ? 'verified' : a.provider.licenseDocumentUrl ? 'pending' : 'unverified';
+      const bStatus = b.provider.isVerified ? 'verified' : b.provider.licenseDocumentUrl ? 'pending' : 'unverified';
+      if (aStatus !== bStatus) return (statusOrder[aStatus] ?? 0) - (statusOrder[bStatus] ?? 0);
       if (a.provider.rating !== b.provider.rating) return b.provider.rating - a.provider.rating;
       if (a.distanceKm != null && b.distanceKm != null) return a.distanceKm - b.distanceKm;
       return b.provider.reviewCount - a.provider.reviewCount;
