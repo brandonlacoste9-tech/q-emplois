@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Camera, Loader2, X } from 'lucide-react';
 import { api } from '../services/api';
 import { gold } from '../styles/design-tokens';
+import { getApiErrorMessage } from '../utils/apiError';
 
 const MAX_BYTES = 2 * 1024 * 1024;
 
@@ -148,8 +149,8 @@ export function ImageUpload({
         }
       }
       onChange(next);
-    } catch {
-      setError('Échec du téléversement.');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Échec du téléversement.'));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
