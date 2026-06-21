@@ -27,7 +27,8 @@ export function UserAvatar({
     .toUpperCase();
 
   if (avatarUrl) {
-    const isExternal = avatarUrl.includes('googleusercontent.com') || avatarUrl.includes('facebook.com') || avatarUrl.includes('?');
+    const isDataUrl = avatarUrl.startsWith('data:');
+    const isExternal = isDataUrl || avatarUrl.includes('googleusercontent.com') || avatarUrl.includes('facebook.com') || avatarUrl.includes('?');
     const displayUrl = isExternal ? avatarUrl : `${avatarUrl}?t=${Date.now()}`;
     return (
       <img
