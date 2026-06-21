@@ -21,11 +21,14 @@ import {
 } from '../utils/taskerVerification';
 
 const deleteBtnStyle: React.CSSProperties = {
-  padding: 4,
-  minWidth: 0,
-  lineHeight: 0,
+  padding: '8px 12px',
+  fontSize: 13,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 6,
   color: '#C46B6B',
-  borderColor: 'rgba(196,107,107,0.35)',
+  borderColor: 'rgba(196,107,107,0.45)',
   flexShrink: 0,
 };
 
@@ -296,7 +299,7 @@ export function Jobs() {
                 canApply={!isClient && taskerCanApply && (creditBalance ?? 0) > 0 && job.myApplicationStatus !== 'pending'}
                 verificationBlocked={!isClient && canTask && !taskerCanApply}
                 priceGuide={priceGuides[job.serviceType] ?? priceGuides.autre}
-                canDelete={isClient && job.status === 'pending' && job.clientId === profile?.id}
+                canDelete={isClient && job.status === 'pending'}
               />
             ))}
           </div>
@@ -350,9 +353,24 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onRev
             <h3 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.title}</h3>
           </div>
         </div>
-        <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: statusColors[job.status], padding: '2px 8px', borderRadius: 999, fontWeight: 700, whiteSpace: 'nowrap' }}>
-          {JOB_STATUS_LABELS[job.status]}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: statusColors[job.status], padding: '2px 8px', borderRadius: 999, fontWeight: 700, whiteSpace: 'nowrap' }}>
+            {JOB_STATUS_LABELS[job.status]}
+          </span>
+          {canDelete && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(job.id); }}
+              disabled={isProcessing}
+              className="ghost-btn"
+              title="Supprimer la tâche"
+              aria-label="Supprimer la tâche"
+              style={{ ...deleteBtnStyle, padding: '4px 8px' }}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="body-f muted" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14, fontSize: 14 }}>
@@ -444,32 +462,23 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onRev
             Laisser une évaluation
           </button>
         )}
-        {canDelete && (
-          <>
-            <span className="body-f muted2" style={{ fontSize: 12, flex: 1, textAlign: 'center' }}>
-              {(job.pendingApplicationCount ?? 0) > 0
-                ? `${job.pendingApplicationCount} candidature(s) en attente`
-                : 'En attente de candidatures'}
-            </span>
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(job.id); }}
-              disabled={isProcessing}
-              className="ghost-btn"
-              title="Supprimer"
-              aria-label="Supprimer"
-              style={deleteBtnStyle}
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
-          </>
-        )}
-        {isClient && job.status === 'pending' && !canDelete && (
+        {isClient && job.status === 'pending' && (
           <span className="body-f muted2" style={{ fontSize: 12, width: '100%', textAlign: 'center' }}>
             {(job.pendingApplicationCount ?? 0) > 0
               ? `${job.pendingApplicationCount} candidature(s) en attente`
               : 'En attente de candidatures'}
           </span>
+        )}
+        {canDelete && (
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(job.id); }}
+            disabled={isProcessing}
+            className="ghost-btn"
+            style={{ ...deleteBtnStyle, width: '100%' }}
+          >
+            <Trash2 className="w-4 h-4" /> Supprimer
+          </button>
         )}
       </div>
     </div>
