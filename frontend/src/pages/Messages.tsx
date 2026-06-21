@@ -6,6 +6,7 @@ import { useToast } from '../components/Toast';
 import type { Conversation, Message } from '../types';
 import { MessageSquare, Send, Loader2 } from 'lucide-react';
 import { gold } from '../styles/design-tokens';
+import { socketService } from '../services/socket';
 
 export function Messages() {
   const { user } = useAuth();
@@ -58,6 +59,40 @@ export function Messages() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    const socket = socketService.getSocket();
+    if (!socket) return;
+
+    const handleNewMessage = (msg: Message) => {
+      if (msg.conversationId === activeId) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+        api.markAsRead(activeId).catch(() => undefined);
+      }
+      
+      setConversations((prev) => {
+        const idx = prev.findIndex((c) => c.id === msg.conversationId);
+        if (idx === -1) {
+          // If conversation is new, refresh list
+          api.getConversations().then(setConversations).catch(() => undefined);
+          return prev;
+        }
+        const updated = [...prev];
+        const conv = { ...updated[idx], lastMessage: msg, updatedAt: new Date().toISOString() };
+        updated.splice(idx, 1);
+        updated.unshift(conv);
+        return updated;
+      });
+    };
+
+    socket.on('newMessage', handleNewMessage);
+    return () => {
+      socket.off('newMessage', handleNewMessage);
+    };
+  }, [activeId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { User, TradesmanProfile, ServiceType } from '../types';
 import { api } from '../services/api';
+import { socketService } from '../services/socket';
 
 export type AppMode = 'client' | 'tasker';
 const MODE_STORAGE_KEY = 'qemplois_mode';
@@ -84,6 +85,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profileData = await api.getProfile();
       setProfile(profileData);
       setUser(profileData);
+      
+      const token = localStorage.getItem('token');
+      if (token) {
+        socketService.connect(token, import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1');
+      }
     } catch (error) {
       console.error('Failed to load user:', error);
       localStorage.removeItem('token');
@@ -129,6 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('token');
     setUser(null);
     setProfile(null);
+    socketService.disconnect();
   }, []);
 
   const forgotPassword = useCallback(async (email: string) => {
