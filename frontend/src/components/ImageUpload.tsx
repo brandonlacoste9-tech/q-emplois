@@ -144,7 +144,7 @@ export function ImageUpload({
         </div>
       )}
 
-      {value.length < maxFiles && (
+      {(value.length < maxFiles || purpose === 'avatar') && (
         <button
           type="button"
           disabled={uploading}
