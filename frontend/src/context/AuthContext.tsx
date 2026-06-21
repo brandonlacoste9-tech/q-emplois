@@ -79,22 +79,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const loadUser = async () => {
+  const loadUser = async (background = false) => {
     try {
-      setIsLoading(true);
+      if (!background) setIsLoading(true);
       const profileData = await api.getProfile();
       setProfile(profileData);
       setUser(profileData);
       
       const token = localStorage.getItem('token');
-      if (token) {
+      if (token && !background) {
         socketService.connect(token, 'https://q-emplois-api-production-f1a6.up.railway.app/api/v1');
       }
     } catch (error) {
       console.error('Failed to load user:', error);
       localStorage.removeItem('token');
     } finally {
-      setIsLoading(false);
+      if (!background) setIsLoading(false);
     }
   };
 
@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { user: userData, token } = await api.login(email, password);
     localStorage.setItem('token', token);
     setUser(userData);
-    await loadUser();
+    await loadUser(false);
   }, []);
 
   const register = useCallback(async (data: RegisterData) => {
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setModeState('tasker');
     setUser(userData as unknown as TradesmanProfile);
     try {
-      await loadUser();
+      await loadUser(false);
     } catch {
       // Account created; profile fetch can retry on next page
     }
@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setModeState('client');
     setUser(userData as unknown as TradesmanProfile);
     try {
-      await loadUser();
+      await loadUser(false);
     } catch {
       // Account created; profile fetch can retry on next page
     }
@@ -143,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    await loadUser();
+    await loadUser(true);
   }, []);
 
   const value: AuthContextType = {

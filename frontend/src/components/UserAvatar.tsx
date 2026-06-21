@@ -27,9 +27,11 @@ export function UserAvatar({
     .toUpperCase();
 
   if (avatarUrl) {
+    const isExternal = avatarUrl.includes('googleusercontent.com') || avatarUrl.includes('facebook.com') || avatarUrl.includes('?');
+    const displayUrl = isExternal ? avatarUrl : `${avatarUrl}?t=${Date.now()}`;
     return (
       <img
-        src={avatarUrl}
+        src={displayUrl}
         alt=""
         style={{
           width: size,
