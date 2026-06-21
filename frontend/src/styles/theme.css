@@ -216,7 +216,7 @@ a.nav-link:hover { color: #B87B44; }
 @media (max-width: 640px) {
   .nav-hide-sm { display: none !important; }
   button.nav-show-sm { display: inline-flex !important; }
-  div.nav-show-sm { display: flex !important; }
+  div.nav-show-sm { display: flex !important; flex-direction: column !important; }
   .app-shell-with-bottom-nav { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
   .mobile-bottom-nav { display: flex !important; }
   .hero-fit {
