@@ -16,8 +16,8 @@ async function bootstrap() {
     }
   };
 
-  app.use(json({ verify: rawBodyBuffer, limit: '10mb' }));
-  app.use(urlencoded({ verify: rawBodyBuffer, extended: true, limit: '10mb' }));
+  app.use(json({ verify: rawBodyBuffer, limit: '20mb' }));
+  app.use(urlencoded({ verify: rawBodyBuffer, extended: true, limit: '20mb' }));
 
   const configService = app.get(ConfigService);
 

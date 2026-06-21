@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { gold } from '../styles/design-tokens';
 import { getApiErrorMessage } from '../utils/apiError';
 
-const MAX_BYTES = 2 * 1024 * 1024;
+const MAX_BYTES = 10 * 1024 * 1024;
 
 interface ImageUploadProps {
   purpose: 'avatar' | 'task';
