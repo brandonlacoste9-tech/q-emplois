@@ -421,12 +421,41 @@ class ApiService {
 
   async uploadImage(data: {
     purpose: 'avatar' | 'task';
-    data: string;
+    data: string;          // still accepted as base64 data URL from ImageUpload
     filename: string;
     contentType: string;
   }) {
-    const response = await this.client.post('/media/upload', data);
-    return response.data as { url: string; purpose: string };
+    // Convert base64 data URL → Blob → FormData so we send raw binary (no base64 inflation)
+    const base64 = data.data.split(',')[1] ?? data.data;
+    const byteChars = atob(base64);
+    const byteArr = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArr], { type: data.contentType });
+
+    const form = new FormData();
+    form.append('file', blob, data.filename);
+
+    const token = localStorage.getItem('token');
+    const res = await fetch(
+      `${API_BASE_URL}/media/upload-file?purpose=${encodeURIComponent(data.purpose)}`,
+      {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: form,
+      },
+    );
+
+    if (!res.ok) {
+      const errText = await res.text();
+      let message = 'Échec du téléversement.';
+      try {
+        const parsed = JSON.parse(errText);
+        message = parsed.message ?? message;
+      } catch { /* ignore */ }
+      throw new Error(message);
+    }
+
+    return res.json() as Promise<{ url: string; purpose: string }>;
   }
 
   async getAdminMetrics(days = 30) {

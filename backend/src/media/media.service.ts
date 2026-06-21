@@ -25,4 +25,29 @@ export class MediaService {
     const url = await this.storageService.uploadTaskPhoto(userId, buffer, dto.filename, contentType);
     return { url, purpose: 'task' };
   }
+
+  /** Multipart upload — buffer comes directly from Multer, no base64 overhead */
+  async uploadFile(userId: string, file: Express.Multer.File, purpose: 'avatar' | 'task') {
+    if (purpose === 'avatar') {
+      const url = await this.storageService.uploadAvatar(
+        userId,
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+      );
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { avatarUrl: url },
+      });
+      return { url, purpose: 'avatar' };
+    }
+
+    const url = await this.storageService.uploadTaskPhoto(
+      userId,
+      file.buffer,
+      file.originalname,
+      file.mimetype,
+    );
+    return { url, purpose: 'task' };
+  }
 }
