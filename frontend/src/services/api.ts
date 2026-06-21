@@ -12,10 +12,7 @@ import type {
   PriceGuideRange,
 } from '../types';
 
-const RAILWAY_URL = 'https://q-emplois-api-production-f1a6.up.railway.app/api/v1';
-// Ignore the old Render env var if it was left pointing to the deleted server
-const envUrl = import.meta.env.VITE_API_URL as string | undefined;
-const API_BASE_URL = (envUrl && !envUrl.includes('onrender.com')) ? envUrl : RAILWAY_URL;
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) || 'https://q-emplois-api-production-f1a6.up.railway.app/api/v1';
 
 class ApiService {
   private client: AxiosInstance;
