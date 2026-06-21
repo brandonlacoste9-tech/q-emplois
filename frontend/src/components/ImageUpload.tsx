@@ -21,7 +21,6 @@ async function compressImage(
   file: File,
   maxWidth = 1024,
   maxHeight = 1024,
-  quality = 0.85
 ): Promise<{ dataUrl: string; size: number; type: string }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -53,13 +52,20 @@ async function compressImage(
         }
 
         ctx.drawImage(img, 0, 0, width, height);
+        
+        // Multi-pass: reduce quality until output ≤ TARGET_KB
         const type = 'image/jpeg';
-        const dataUrl = canvas.toDataURL(type, quality);
+        let quality = 0.85;
+        let dataUrl = canvas.toDataURL(type, quality);
+        let size = Math.round(dataUrl.split(',')[1].length * 0.75);
+
+        while (size > MAX_BYTES && quality > 0.2) {
+          quality = Math.max(0.2, quality - 0.1);
+          dataUrl = canvas.toDataURL(type, quality);
+          size = Math.round(dataUrl.split(',')[1].length * 0.75);
+        }
         
-        const base64Length = dataUrl.split(',')[1].length;
-        const sizeInBytes = Math.round(base64Length * 0.75);
-        
-        resolve({ dataUrl, size: sizeInBytes, type });
+        resolve({ dataUrl, size, type });
       };
       img.onerror = () => reject(new Error('Failed to load image'));
       img.src = e.target?.result as string;

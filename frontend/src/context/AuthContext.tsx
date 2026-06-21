@@ -88,7 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const token = localStorage.getItem('token');
       if (token && !background) {
-        socketService.connect(token, import.meta.env.VITE_API_URL || 'https://q-emplois-api-production-f1a6.up.railway.app/api/v1');
+        const apiUrl = (() => { const u = import.meta.env.VITE_API_URL as string | undefined; return (u && !u.includes('onrender.com')) ? u : 'https://q-emplois-api-production-f1a6.up.railway.app/api/v1'; })();
+        socketService.connect(token, apiUrl);
       }
     } catch (error) {
       console.error('Failed to load user:', error);
