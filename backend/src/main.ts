@@ -7,11 +7,17 @@ import * as Sentry from '@sentry/node';
 import { json, urlencoded } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
 
-  // Increase payload limits for base64 image uploads
-  app.use(json({ limit: '10mb' }));
-  app.use(urlencoded({ extended: true, limit: '10mb' }));
+  // Custom body parser with increased limits and rawBody support (needed for webhooks)
+  const rawBodyBuffer = (req: any, res: any, buf: Buffer, encoding: BufferEncoding) => {
+    if (buf && buf.length) {
+      req.rawBody = buf;
+    }
+  };
+
+  app.use(json({ verify: rawBodyBuffer, limit: '10mb' }));
+  app.use(urlencoded({ verify: rawBodyBuffer, extended: true, limit: '10mb' }));
 
   const configService = app.get(ConfigService);
 
