@@ -126,7 +126,14 @@ export function TaskerPublicPage() {
               )}
             </div>
 
-            <p className="body-f muted2" style={{ fontSize: 13, marginTop: 24, textAlign: 'center' }}>
+            <div style={{ marginTop: 40 }}>
+              <h2 className="serif cream-hi" style={{ fontSize: 22, fontWeight: 700, marginBottom: 20 }}>
+                Avis et évaluations ({profile.reviewCount})
+              </h2>
+              <ReviewList userId={profile.id} lang={lang} />
+            </div>
+
+            <p className="body-f muted2" style={{ fontSize: 13, marginTop: 40, textAlign: 'center' }}>
               <Link to="/register/client" className="nav-link">Publier une tâche</Link>
               {' · '}
               <Link to="/recrute" className="nav-link">Devenir travailleur</Link>
@@ -136,6 +143,64 @@ export function TaskerPublicPage() {
       </section>
 
       <SiteFooter lang={lang} />
+    </div>
+  );
+}
+
+function ReviewList({ userId, lang }: { userId: string, lang: 'fr' | 'en' }) {
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getReviewsForUser(userId)
+      .then(setReviews)
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
+  }, [userId]);
+
+  if (loading) {
+    return <p className="body-f muted" style={{ fontSize: 14 }}>Chargement des avis…</p>;
+  }
+
+  if (reviews.length === 0) {
+    return (
+      <div className="stitch-box" style={{ padding: 24, textAlign: 'center', background: 'rgba(21,35,50,0.5)' }}>
+        <p className="body-f muted2" style={{ fontSize: 14 }}>Aucun avis pour le moment.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {reviews.map((r) => (
+        <div key={r.id} className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <div>
+              <p className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700 }}>
+                {[r.reviewer?.firstName, r.reviewer?.lastName].filter(Boolean).join(' ') || 'Utilisateur'}
+              </p>
+              {r.task && (
+                <p className="body-f muted2" style={{ fontSize: 12, marginTop: 2 }}>
+                  Tâche : {r.task.title}
+                </p>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Star key={n} className="w-4 h-4" style={{ color: gold, fill: n <= r.rating ? gold : 'transparent' }} />
+              ))}
+            </div>
+          </div>
+          {r.comment && (
+            <p className="body-f cream-hi" style={{ fontSize: 14, lineHeight: 1.5, marginTop: 8 }}>
+              "{r.comment}"
+            </p>
+          )}
+          <p className="body-f muted2" style={{ fontSize: 12, marginTop: 12 }}>
+            {new Date(r.createdAt).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-CA', { year: 'numeric', month: 'short', day: 'numeric' })}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
