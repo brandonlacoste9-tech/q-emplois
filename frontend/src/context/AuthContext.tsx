@@ -15,7 +15,7 @@ interface AuthContextType {
   isClientMode: boolean;
   canTask: boolean;
   setMode: (mode: AppMode) => void;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<TradesmanProfile>;
   register: (data: RegisterData) => Promise<void>;
   registerClient: (data: ClientRegisterData) => Promise<void>;
   logout: () => void;
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const loadUser = async (background = false) => {
+  const loadUser = async (background = false, clearTokenOnError = true) => {
     try {
       if (!background) setIsLoading(true);
       const profileData = await api.getProfile();
@@ -90,19 +90,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (token && !background) {
         socketService.connect(token, (import.meta.env.VITE_API_URL as string | undefined) || 'https://q-emplois-api-production-f1a6.up.railway.app/api/v1');
       }
+      return profileData;
     } catch (error) {
       console.error('Failed to load user:', error);
-      localStorage.removeItem('token');
+      if (clearTokenOnError) {
+        localStorage.removeItem('token');
+      }
+      throw error;
     } finally {
       if (!background) setIsLoading(false);
     }
   };
 
   const login = useCallback(async (email: string, password: string) => {
-    const { user: userData, token } = await api.login(email, password);
+    const { token } = await api.login(email, password);
     localStorage.setItem('token', token);
-    setUser(userData);
-    await loadUser(false);
+    return loadUser(false, false);
   }, []);
 
   const register = useCallback(async (data: RegisterData) => {

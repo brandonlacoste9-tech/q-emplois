@@ -12,9 +12,9 @@ services:
       - key: PORT
         value: 3000
       - key: CORS_ORIGIN
-        value: https://www.quebec-emplois.ca,https://quebec-emplois.ca,https://q-emplois-d9qo.vercel.app,http://localhost:5173
+        value: https://q-emplois.vercel.app,https://q-emplois-d9qo.vercel.app,https://www.quebec-emplois.ca,https://quebec-emplois.ca,https://www.q-emplois.com,https://q-emplois.com,http://localhost:5173
       - key: FRONTEND_URL
-        value: https://www.quebec-emplois.ca
+        value: https://q-emplois.vercel.app
       - key: DATABASE_URL
         sync: false # User must set this manually or we can provide it
       - key: JWT_SECRET

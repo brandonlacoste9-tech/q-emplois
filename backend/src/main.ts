@@ -32,22 +32,22 @@ async function bootstrap() {
     console.log('📡 Sentry initialized');
   }
   
-  // Enable CORS
+  // Enable CORS — always allow known production/staging origins; merge env extras
+  const defaultOrigins: (string | RegExp)[] = [
+    'http://localhost:5173',
+    'https://q-emplois.vercel.app',
+    'https://q-emplois-d9qo.vercel.app',
+    'https://www.quebec-emplois.ca',
+    'https://quebec-emplois.ca',
+    'https://www.q-emplois.com',
+    'https://q-emplois.com',
+    /\.vercel\.app$/,
+  ];
   const rawCorsOrigin = configService.get('CORS_ORIGIN');
-  let corsOrigin: any = '*';
-  if (rawCorsOrigin) {
-    corsOrigin = rawCorsOrigin.split(',');
-  } else {
-    corsOrigin = [
-      'http://localhost:5173',
-      'https://q-emplois-d9qo.vercel.app',
-      'https://www.quebec-emplois.ca',
-      'https://quebec-emplois.ca',
-      'https://www.q-emplois.com',
-      'https://q-emplois.com',
-      /\.vercel\.app$/ // Allows all Vercel preview branches dynamically
-    ];
-  }
+  const extraOrigins = rawCorsOrigin
+    ? rawCorsOrigin.split(',').map((origin: string) => origin.trim()).filter(Boolean)
+    : [];
+  const corsOrigin = [...defaultOrigins, ...extraOrigins];
 
   app.enableCors({
     origin: corsOrigin,

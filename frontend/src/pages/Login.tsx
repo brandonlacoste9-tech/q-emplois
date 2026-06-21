@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import { getApiErrorMessage } from '../utils/apiError';
 import { BrandLogo } from '../components/BrandLogo';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -70,8 +70,7 @@ export function Login() {
     setError('');
     setIsLoading(true);
     try {
-      await login(email, password);
-      const profileData = await api.getProfile();
+      const profileData = await login(email, password);
       
       if (rememberMe) {
         localStorage.setItem('qemplois_remember_me', 'true');
@@ -87,7 +86,7 @@ export function Login() {
       const taskerReady = (profileData.serviceTypes?.length ?? 0) > 0 || profileData.isTaskerEnabled;
       navigate(savedMode === 'tasker' && taskerReady ? '/jobs' : '/dashboard');
     } catch (err) {
-      setError(t.err);
+      setError(getApiErrorMessage(err, t.err));
     } finally {
       setIsLoading(false);
     }

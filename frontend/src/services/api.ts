@@ -37,9 +37,13 @@ class ApiService {
       (response) => response,
       (error: AxiosError) => {
         if (error.response?.status === 401) {
-          localStorage.removeItem('token');
-          if (!window.location.pathname.startsWith('/login')) {
-            window.location.href = '/login';
+          const isAuthAttempt = error.config?.url?.includes('/auth/login')
+            || error.config?.url?.includes('/auth/register');
+          if (!isAuthAttempt) {
+            localStorage.removeItem('token');
+            if (!window.location.pathname.startsWith('/login')) {
+              window.location.href = '/login';
+            }
           }
         }
         return Promise.reject(error);
