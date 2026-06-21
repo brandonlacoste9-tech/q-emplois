@@ -53,7 +53,7 @@ async function compressImage(
         }
 
         ctx.drawImage(img, 0, 0, width, height);
-        const type = file.type || 'image/jpeg';
+        const type = 'image/jpeg';
         const dataUrl = canvas.toDataURL(type, quality);
         
         const base64Length = dataUrl.split(',')[1].length;
