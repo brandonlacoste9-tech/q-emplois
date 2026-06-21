@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: q-emplois-api
+    env: node
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: node dist/main.js
+    autoDeploy: false # Auto deploy disabled initially to allow setting env vars
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: CORS_ORIGIN
+        value: https://www.quebec-emplois.ca,https://quebec-emplois.ca,https://q-emplois-d9qo.vercel.app,http://localhost:5173
+      - key: FRONTEND_URL
+        value: https://www.quebec-emplois.ca
+      - key: DATABASE_URL
+        sync: false # User must set this manually or we can provide it
+      - key: JWT_SECRET
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
