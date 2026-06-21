@@ -234,7 +234,11 @@ export function Profile() {
                 <ImageUpload
                   purpose="avatar"
                   value={profile.avatar ? [profile.avatar] : []}
-                  onChange={async () => {
+                  onChange={async (urls) => {
+                    // Optimistic update: show the new avatar immediately
+                    if (urls[0]) {
+                      setProfile((prev) => prev ? { ...prev, avatar: urls[0] } : prev);
+                    }
                     await refreshProfile();
                     addToast('Photo de profil mise à jour', 'success');
                   }}

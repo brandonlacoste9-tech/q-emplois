@@ -28,8 +28,11 @@ export function UserAvatar({
 
   if (avatarUrl) {
     const isDataUrl = avatarUrl.startsWith('data:');
-    const isExternal = isDataUrl || avatarUrl.includes('googleusercontent.com') || avatarUrl.includes('facebook.com') || avatarUrl.includes('?');
-    const displayUrl = isExternal ? avatarUrl : `${avatarUrl}?t=${Date.now()}`;
+    const isThirdParty = avatarUrl.includes('googleusercontent.com') || avatarUrl.includes('facebook.com');
+    // Always bust cache for our own storage URLs so the new photo shows immediately
+    const displayUrl = (isDataUrl || isThirdParty)
+      ? avatarUrl
+      : `${avatarUrl.split('?')[0]}?t=${Date.now()}`;
     return (
       <img
         src={displayUrl}
