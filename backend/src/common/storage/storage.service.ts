@@ -53,9 +53,19 @@ export class StorageService {
 
   parseUploadPayload(data: string, contentType: string): { buffer: Buffer; contentType: string } {
     if (data.startsWith('data:')) {
-      const match = data.match(/^data:([^;]+);base64,(.+)$/);
-      if (!match) throw new BadRequestException('Format de fichier invalide.');
-      return { buffer: Buffer.from(match[2], 'base64'), contentType: match[1] };
+      const parts = data.split(',');
+      if (parts.length < 2) throw new BadRequestException('Format de fichier invalide.');
+      
+      const meta = parts[0];
+      const base64Data = parts.slice(1).join(','); // in case data contains commas, though base64 shouldn't
+      
+      let mimeType = contentType;
+      const mimeMatch = meta.match(/^data:([^;]+)/);
+      if (mimeMatch && mimeMatch[1]) {
+        mimeType = mimeMatch[1];
+      }
+      
+      return { buffer: Buffer.from(base64Data, 'base64'), contentType: mimeType };
     }
     return { buffer: Buffer.from(data, 'base64'), contentType };
   }
