@@ -27,7 +27,7 @@ export class MediaService {
   }
 
   /** Multipart upload — buffer comes directly from Multer, no base64 overhead */
-  async uploadFile(userId: string, file: Express.Multer.File, purpose: 'avatar' | 'task') {
+  async uploadFile(userId: string, file: Express.Multer.File, purpose: 'avatar' | 'task' | 'document') {
     if (purpose === 'avatar') {
       const url = await this.storageService.uploadAvatar(
         userId,
@@ -40,6 +40,21 @@ export class MediaService {
         data: { avatarUrl: url },
       });
       return { url, purpose: 'avatar' };
+    }
+
+    if (purpose === 'document') {
+      const url = await this.storageService.uploadProviderDocument(
+        userId,
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+      );
+      await this.prisma.provider.upsert({
+        where: { userId },
+        create: { userId, serviceTypes: [], licenseDocumentUrl: url, isVerified: false },
+        update: { licenseDocumentUrl: url, isVerified: false, verifiedAt: null },
+      });
+      return { url, purpose: 'document' };
     }
 
     const url = await this.storageService.uploadTaskPhoto(

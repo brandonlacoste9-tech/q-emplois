@@ -17,6 +17,7 @@ import { CurrentUser } from '../common/decorators/user.decorator';
 import { memoryStorage } from 'multer';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_DOC_BYTES   =  5 * 1024 * 1024; //  5 MB
 
 @ApiTags('media')
 @Controller('media')
@@ -32,17 +33,18 @@ export class MediaController {
     return this.mediaService.upload(userId, dto);
   }
 
-  /** Native multipart/form-data upload — no base64 overhead */
+  /** Native multipart/form-data upload — images (avatar/task) or documents */
   @Post('upload-file')
-  @ApiOperation({ summary: 'Téléverser une photo (avatar ou tâche) — multipart' })
+  @ApiOperation({ summary: 'Téléverser un fichier (avatar, tâche, ou document) — multipart' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
-      limits: { fileSize: MAX_IMAGE_BYTES },
+      limits: { fileSize: MAX_IMAGE_BYTES }, // Multer checks max; per-purpose checked below
       fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
-          return cb(new BadRequestException('Seules les images sont acceptées.'), false);
+        const allowed = file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf';
+        if (!allowed) {
+          return cb(new BadRequestException('Type de fichier non accepté (image ou PDF).'), false);
         }
         cb(null, true);
       },
@@ -51,11 +53,14 @@ export class MediaController {
   uploadFile(
     @CurrentUser('userId') userId: string,
     @UploadedFile() file: Express.Multer.File,
-    @Query('purpose') purpose: 'avatar' | 'task',
+    @Query('purpose') purpose: 'avatar' | 'task' | 'document',
   ) {
     if (!file) throw new BadRequestException('Aucun fichier reçu.');
-    if (!['avatar', 'task'].includes(purpose)) {
-      throw new BadRequestException('purpose doit être "avatar" ou "task".');
+    if (!['avatar', 'task', 'document'].includes(purpose)) {
+      throw new BadRequestException('purpose doit être "avatar", "task" ou "document".');
+    }
+    if (purpose === 'document' && file.size > MAX_DOC_BYTES) {
+      throw new BadRequestException('Document trop volumineux (max 5 Mo).');
     }
     return this.mediaService.uploadFile(userId, file, purpose);
   }

@@ -113,25 +113,27 @@ export function Profile() {
   const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 1024 * 1024) {
-      addToast('Fichier trop volumineux (max 1 Mo)', 'error');
+    const MAX_DOC_BYTES = 5 * 1024 * 1024; // 5 MB
+    if (file.size > MAX_DOC_BYTES) {
+      addToast('Fichier trop volumineux (max 5 Mo)', 'error');
       return;
     }
     const reader = new FileReader();
     reader.onload = async () => {
       try {
-        const dataUrl = reader.result as string;
         await api.uploadLicenseDocument({
-          data: dataUrl,
+          data: reader.result as string,
           filename: file.name,
           contentType: file.type || 'application/octet-stream',
         });
         await refreshProfile();
         addToast('Document téléversé — en attente de vérification', 'success');
-      } catch {
-        addToast('Échec du téléversement', 'error');
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Échec du téléversement';
+        addToast(msg, 'error');
       }
     };
+    reader.onerror = () => addToast('Impossible de lire le fichier', 'error');
     reader.readAsDataURL(file);
   };
 
@@ -456,7 +458,7 @@ export function Profile() {
               <div style={{ marginTop: 14 }}>
                 {canTask && verificationStatus !== 'verified' && (
                   <div style={{ marginBottom: 12 }}>
-                    <label className="q-label">Pièce d&apos;identité (requis, max 1 Mo)</label>
+                    <label className="q-label">Pièce d&apos;identité (requis, max 5 Mo — image ou PDF)</label>
                     <input type="file" accept="image/*,.pdf" onChange={handleDocumentUpload} className="q-field" style={{ padding: 8 }} />
                     <p className="body-f muted2" style={{ fontSize: 12, marginTop: 8 }}>
                       Téléversement immédiat — vérification par l&apos;équipe sous 48 h.

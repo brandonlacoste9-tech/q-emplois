@@ -415,8 +415,37 @@ class ApiService {
   }
 
   async uploadLicenseDocument(data: { data: string; filename: string; contentType: string }) {
-    const response = await this.client.post('/providers/me/license-document', data);
-    return response.data;
+    const token = localStorage.getItem('token');
+    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+    // Convert base64 data URL → Blob → FormData (no base64 overhead)
+    const base64 = data.data.includes(',') ? data.data.split(',')[1] : data.data;
+    const byteChars = atob(base64);
+    const byteArr = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArr], { type: data.contentType });
+    const form = new FormData();
+    form.append('file', blob, data.filename);
+
+    const res = await fetch(
+      `${API_BASE_URL}/media/upload-file?purpose=document`,
+      { method: 'POST', headers: authHeaders, body: form },
+    );
+
+    // Fallback: if multipart doc route not available, use legacy JSON endpoint
+    if (res.status === 404 || res.status === 405) {
+      const response = await this.client.post('/providers/me/license-document', data);
+      return response.data;
+    }
+
+    if (!res.ok) {
+      const errText = await res.text();
+      let message = 'Échec du téléversement.';
+      try { message = JSON.parse(errText).message ?? message; } catch { /* noop */ }
+      throw new Error(message);
+    }
+
+    return res.json();
   }
 
   async uploadImage(data: {
