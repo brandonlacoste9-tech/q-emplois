@@ -1,13 +1,18 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationService as ExternalNotificationService } from '../common/services/notification.service';
 import { TaskStatus } from '@prisma/client';
+import { ChatGateway } from './chat.gateway';
 
 @Injectable()
 export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly externalNotifications: ExternalNotificationService,
+    @Inject(forwardRef(() => ChatGateway))
+    private readonly chatGateway: ChatGateway,
   ) {}
 
   private async assertMessagingAllowed(
@@ -87,6 +92,10 @@ export class ChatService {
   async sendMessage(userId: string, conversationId: string, content: string) {
     const conversation = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
+      include: {
+        client: true,
+        provider: true,
+      }
     });
     if (!conversation) throw new NotFoundException('Conversation introuvable.');
     if (conversation.clientId !== userId && conversation.providerId !== userId) {
@@ -103,8 +112,23 @@ export class ChatService {
       data: { updatedAt: new Date() },
     });
 
-    // Notify the recipient
-    const recipientId = conversation.clientId === userId ? conversation.providerId : conversation.clientId;
+    const isClient = conversation.clientId === userId;
+    const recipientId = isClient ? conversation.providerId : conversation.clientId;
+    const sender = isClient ? conversation.client : conversation.provider;
+    const senderName = [sender.firstName, sender.lastName].filter(Boolean).join(' ');
+
+    // Notify the recipient via real-time WebSocket
+    this.chatGateway.emitNewMessage(recipientId, {
+      id: message.id,
+      conversationId: message.conversationId,
+      senderId: message.senderId,
+      senderName: senderName,
+      content: message.content,
+      createdAt: message.createdAt.toISOString(),
+      isRead: message.isRead,
+    });
+
+    // Notify the recipient via in-app notifications
     await this.notificationsService.create(
       recipientId,
       'new_message',
@@ -112,6 +136,16 @@ export class ChatService {
       content.slice(0, 120),
       { conversationId, senderId: userId, content: content.slice(0, 500) },
     );
+
+    // If recipient is offline, send Email & Push notification
+    if (!this.chatGateway.isUserConnected(recipientId)) {
+      await this.externalNotifications.notifyOfflineMessage(
+        recipientId,
+        senderName || 'Un utilisateur',
+        content,
+        conversationId
+      );
+    }
 
     return message;
   }

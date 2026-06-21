@@ -9,6 +9,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { DataRetentionService } from './services/data-retention.service';
 import { NotificationService } from './services/notification.service';
 import { TelegramService } from './services/telegram.service';
+import { EmailService } from './services/email.service';
 import { CreditsModule } from '../credits/credits.module';
 
 @Global()
