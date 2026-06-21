@@ -89,9 +89,13 @@ export class JobsController {
   }
 
   @Post(':id/cancel')
-  @ApiOperation({ summary: 'Annuler une tâche (client)' })
-  cancel(@Param('id') id: string, @CurrentUser('userId') userId: string) {
-    return this.jobsService.cancel(id, userId);
+  @ApiOperation({ summary: 'Annuler une tâche (client ou admin)' })
+  cancel(
+    @Param('id') id: string,
+    @CurrentUser('userId') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.jobsService.cancel(id, userId, role);
   }
 
   /** @deprecated use POST /jobs/:id/apply */
@@ -120,8 +124,12 @@ export class JobsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Supprimer une tâche (client, en attente uniquement)' })
-  remove(@Param('id') id: string, @CurrentUser('userId') userId: string) {
-    return this.jobsService.remove(id, userId);
+  @ApiOperation({ summary: 'Supprimer une tâche (client ou admin, en attente uniquement)' })
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('userId') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.jobsService.remove(id, userId, role);
   }
 }

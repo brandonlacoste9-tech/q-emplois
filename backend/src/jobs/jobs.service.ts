@@ -708,15 +708,16 @@ export class JobsService {
     return (scheduledDate.getTime() - Date.now()) / (1000 * 60 * 60);
   }
 
-  async cancel(taskId: string, clientId: string) {
+  async cancel(taskId: string, userId: string, userRole?: string) {
     const task = await this.prisma.task.findUnique({ where: { id: taskId } });
     if (!task) throw new NotFoundException('Tâche non trouvée.');
-    if (task.clientId !== clientId) {
+    const isAdmin = userRole === 'admin';
+    if (task.clientId !== userId && !isAdmin) {
       throw new ForbiddenException('Seul le client peut annuler cette tâche.');
     }
 
     if (task.status === TaskStatus.open) {
-      return this.remove(taskId, clientId);
+      return this.remove(taskId, userId, userRole);
     }
 
     if (task.status !== TaskStatus.claimed && task.status !== TaskStatus.in_progress) {
@@ -764,14 +765,14 @@ export class JobsService {
     }
 
     await this.auditService.log({
-      userId: clientId,
+      userId,
       action: 'task_cancelled',
       resource: 'task',
       resourceId: taskId,
-      details: { refundCredit },
+      details: { refundCredit, admin: isAdmin },
     });
 
-    return this.mapTask(updated, undefined, clientId);
+    return this.mapTask(updated, undefined, userId);
   }
 
   async accept(taskId: string, taskerId: string) {
@@ -887,10 +888,11 @@ export class JobsService {
     return this.mapTask(updated, undefined, taskerId);
   }
 
-  async remove(taskId: string, userId: string) {
+  async remove(taskId: string, userId: string, userRole?: string) {
     const task = await this.prisma.task.findUnique({ where: { id: taskId } });
     if (!task) throw new NotFoundException('Tâche non trouvée.');
-    if (task.clientId !== userId) {
+    const isAdmin = userRole === 'admin';
+    if (task.clientId !== userId && !isAdmin) {
       throw new ForbiddenException('Seul le client peut supprimer cette tâche.');
     }
     if (task.status !== TaskStatus.open) {
@@ -925,6 +927,7 @@ export class JobsService {
       action: 'task_deleted',
       resource: 'task',
       resourceId: taskId,
+      details: { admin: isAdmin },
     });
 
     return { success: true };

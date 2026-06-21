@@ -20,17 +20,22 @@ import {
   VERIFICATION_LABELS,
 } from '../utils/taskerVerification';
 
+const CANCELLABLE_STATUSES = ['pending', 'accepted', 'in_progress'] as const;
+
 const deleteBtnStyle: React.CSSProperties = {
-  padding: '8px 12px',
-  fontSize: 13,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 6,
+  padding: 4,
+  minWidth: 0,
+  lineHeight: 0,
   color: '#C46B6B',
   borderColor: 'rgba(196,107,107,0.45)',
   flexShrink: 0,
 };
+
+function canManageJob(job: Job, profile: { id: string; role?: string } | null): boolean {
+  if (!profile) return false;
+  if (!CANCELLABLE_STATUSES.includes(job.status as (typeof CANCELLABLE_STATUSES)[number])) return false;
+  return profile.role === 'admin' || job.clientId === profile.id;
+}
 
 const TASKER_TABS: { value: JobStatus; label: string }[] = [
   { value: 'pending', label: 'Disponibles' },
@@ -304,7 +309,7 @@ export function Jobs() {
                 canApply={!isClient && taskerCanApply && (creditBalance ?? 0) > 0 && job.myApplicationStatus !== 'pending'}
                 verificationBlocked={!isClient && canTask && !taskerCanApply}
                 priceGuide={priceGuides[job.serviceType] ?? priceGuides.autre}
-                canCancel={isClient && ['pending', 'accepted', 'in_progress'].includes(job.status)}
+                canCancel={canManageJob(job, profile)}
               />
             ))}
           </div>
@@ -468,11 +473,34 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onCancelOrDelet
           </button>
         )}
         {isClient && job.status === 'pending' && (
-          <span className="body-f muted2" style={{ fontSize: 12, width: '100%', textAlign: 'center' }}>
+          <span className="body-f muted2" style={{ fontSize: 12, flex: 1, textAlign: 'center' }}>
             {(job.pendingApplicationCount ?? 0) > 0
               ? `${job.pendingApplicationCount} candidature(s) en attente`
               : 'En attente de candidatures'}
           </span>
+        )}
+        {canCancel && (
+          <button
+            type="button"
+            onClick={onCancelOrDelete}
+            disabled={isProcessing}
+            className="ghost-btn"
+            title={job.status === 'pending' ? 'Supprimer' : 'Annuler'}
+            aria-label={job.status === 'pending' ? 'Supprimer la tâche' : 'Annuler la tâche'}
+            style={{
+              padding: '6px 10px',
+              fontSize: 12,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              color: '#C46B6B',
+              borderColor: 'rgba(196,107,107,0.45)',
+              marginLeft: 'auto',
+            }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            {job.status === 'pending' ? 'Supprimer' : 'Annuler'}
+          </button>
         )}
       </div>
     </div>
