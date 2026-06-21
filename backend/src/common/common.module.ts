@@ -30,7 +30,7 @@ import { CreditsModule } from '../credits/credits.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [JwtAuthGuard, RolesGuard, DataRetentionService, NotificationService, TelegramService],
+  providers: [JwtAuthGuard, RolesGuard, DataRetentionService, NotificationService, TelegramService, EmailService],
   exports: [
     PrismaModule,
     RedisModule,
@@ -38,6 +38,7 @@ import { CreditsModule } from '../credits/credits.module';
     DataRetentionService,
     NotificationService,
     TelegramService,
+    EmailService,
     JwtModule,
     JwtAuthGuard,
     RolesGuard,
