@@ -108,7 +108,14 @@ export class StorageService {
     if (!uploadRes.ok) {
       const err = await uploadRes.text();
       this.logger.error(`Storage upload failed: ${err}`);
-      throw new BadRequestException('Impossible de téléverser le fichier.');
+      let message = 'Impossible de téléverser le fichier.';
+      try {
+        const parsed = JSON.parse(err);
+        if (parsed.message) {
+          message = `Erreur de stockage : ${parsed.message}`;
+        }
+      } catch {}
+      throw new BadRequestException(message);
     }
 
     return `${baseUrl}/storage/v1/object/public/${bucket}/${path}`;
@@ -118,7 +125,31 @@ export class StorageService {
     const check = await fetch(`${baseUrl}/storage/v1/bucket/${bucket}`, {
       headers: { Authorization: `Bearer ${key}` },
     });
-    if (check.ok) return;
+    
+    if (check.ok) {
+      try {
+        const info = await check.json();
+        if (info && info.file_size_limit !== maxBytes) {
+          this.logger.log(`Updating Supabase bucket "${bucket}" file_size_limit to ${maxBytes}`);
+          await fetch(`${baseUrl}/storage/v1/bucket/${bucket}`, {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${key}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: bucket,
+              name: bucket,
+              public: info.public ?? true,
+              file_size_limit: maxBytes,
+            }),
+          });
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to inspect/update bucket limit: ${err}`);
+      }
+      return;
+    }
 
     await fetch(`${baseUrl}/storage/v1/bucket`, {
       method: 'POST',

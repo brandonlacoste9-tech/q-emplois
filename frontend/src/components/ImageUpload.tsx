@@ -121,12 +121,12 @@ export function ImageUpload({
           finalType = compressed.type;
           
           if (compressed.size > MAX_BYTES) {
-            setError('Image trop volumineuse (max 2 Mo) après compression.');
+            setError('Image trop volumineuse (max 10 Mo) après compression.');
             continue;
           }
         } catch {
           if (file.size > MAX_BYTES) {
-            setError('Image trop volumineuse (max 2 Mo).');
+            setError('Image trop volumineuse (max 10 Mo).');
             continue;
           }
           dataUrl = await readFileAsDataUrl(file);
