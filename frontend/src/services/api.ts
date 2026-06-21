@@ -12,7 +12,7 @@ import type {
   PriceGuideRange,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const API_BASE_URL = 'https://q-emplois-api-production-f1a6.up.railway.app/api/v1';
 
 class ApiService {
   private client: AxiosInstance;

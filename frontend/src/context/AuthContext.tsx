@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const token = localStorage.getItem('token');
       if (token) {
-        socketService.connect(token, import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1');
+        socketService.connect(token, 'https://q-emplois-api-production-f1a6.up.railway.app/api/v1');
       }
     } catch (error) {
       console.error('Failed to load user:', error);
