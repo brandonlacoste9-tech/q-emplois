@@ -102,7 +102,7 @@ export function ImageUpload({
         </p>
       )}
 
-      {value.length > 0 && (
+      {value.length > 0 && purpose !== 'avatar' && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
           {value.map((url, index) => (
             <div key={`${url.slice(0, 32)}-${index}`} style={{ position: 'relative' }}>
