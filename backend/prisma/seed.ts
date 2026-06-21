@@ -114,12 +114,16 @@ async function main() {
     { title: 'Tonte de pelouse', description: 'Pelouse moyenne, équipement sur place.', serviceType: 'jardinage', address: '5600 Av. du Parc', city: 'Montréal', postalCode: 'H2V 4H1', price: 60 },
     { title: 'Livraison meubles Kijiji', description: 'Ramasser un canapé et livrer à Verdun.', serviceType: 'livraison', address: '3900 Rue Wellington', city: 'Verdun', postalCode: 'H4G 1V3', price: 75 },
     { title: 'Aide ménage hebdo', description: '2h de ménage régulier.', serviceType: 'menage', address: '1200 Rue Sherbrooke O', city: 'Montréal', postalCode: 'H3A 1H6', price: 70 },
-    { title: 'Déneigement entrée', description: 'Déblayer entrée et trottoir après tempête.', serviceType: 'autre', address: '880 Rue Rachel E', city: 'Montréal', postalCode: 'H2J 2J2', price: 45 },
     { title: 'Courses et livraison', description: 'Faire l\'épicerie et livrer chez une personne âgée.', serviceType: 'coursier', address: '1500 Boul. René-Lévesque', city: 'Montréal', postalCode: 'H3G 1T7', price: 35 },
   ];
 
-  for (let i = 0; i < demoTasks.length; i++) {
-    const t = demoTasks[i];
+  // Summer marketplace — skip winter-only listings (e.g. snow removal)
+  const activeDemoTasks = demoTasks.filter(
+    (t) => !/déneigement|deneigement|snow removal/i.test(t.title),
+  );
+
+  for (let i = 0; i < activeDemoTasks.length; i++) {
+    const t = activeDemoTasks[i];
     const client = clients[i % clients.length];
     const coords = geocodeQuebecAddress(t.city, t.postalCode);
     const existing = await prisma.task.findFirst({
@@ -154,7 +158,7 @@ async function main() {
   console.log('Seed complete:');
   console.log('  Clients:', clients.map((c) => c.email).join(', '));
   console.log('  Taskers:', taskers.map((t) => t.email).join(', '));
-  console.log('  Demo jobs:', demoTasks.length, '(with geocoded coordinates)');
+  console.log('  Demo jobs:', activeDemoTasks.length, '(summer set, geocoded)');
   console.log('  Password for all demo accounts: Demo2026!');
 }
 
