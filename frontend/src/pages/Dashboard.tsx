@@ -67,14 +67,19 @@ export function Dashboard() {
     loadDashboard();
   }, [isClientMode]);
 
-  const handleDeleteJob = async (jobId: string) => {
-    if (!window.confirm('Supprimer cette tâche? Cette action est irréversible.')) return;
+  const handleCancelOrDeleteJob = async (job: Job) => {
+    const isPending = job.status === 'pending';
+    const msg = isPending
+      ? 'Supprimer cette tâche? Les candidats seront remboursés.'
+      : 'Annuler cette tâche? Le travailleur sera notifié.';
+    if (!window.confirm(msg)) return;
     try {
-      await api.deleteJob(jobId);
-      addToast('Tâche supprimée', 'success');
-      setMyPostedJobs((prev) => prev.filter((j) => j.id !== jobId));
+      if (isPending) await api.deleteJob(job.id);
+      else await api.cancelJob(job.id);
+      addToast(isPending ? 'Tâche supprimée' : 'Tâche annulée', 'success');
+      setMyPostedJobs((prev) => prev.filter((j) => j.id !== job.id));
     } catch {
-      addToast('Impossible de supprimer la tâche', 'error');
+      addToast('Impossible d\'annuler la tâche', 'error');
     }
   };
 
@@ -186,30 +191,23 @@ export function Dashboard() {
                         )}
                       </p>
                     </Link>
-                    <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: gold, padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
-                      {JOB_STATUS_LABELS[job.status as JobStatus]}
-                    </span>
-                    {job.status === 'pending' && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteJob(job.id)}
-                        className="ghost-btn"
-                        title="Supprimer la tâche"
-                        aria-label="Supprimer la tâche"
-                        style={{
-                          padding: '6px 10px',
-                          fontSize: 12,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 5,
-                          color: '#C46B6B',
-                          borderColor: 'rgba(196,107,107,0.45)',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Supprimer
-                      </button>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                      <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: gold, padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
+                        {JOB_STATUS_LABELS[job.status as JobStatus]}
+                      </span>
+                      {['pending', 'accepted', 'in_progress'].includes(job.status) && (
+                        <button
+                          type="button"
+                          onClick={() => handleCancelOrDeleteJob(job)}
+                          className="ghost-btn"
+                          title={job.status === 'pending' ? 'Supprimer' : 'Annuler'}
+                          aria-label={job.status === 'pending' ? 'Supprimer la tâche' : 'Annuler la tâche'}
+                          style={{ padding: 4, minWidth: 0, lineHeight: 0, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)', flexShrink: 0 }}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

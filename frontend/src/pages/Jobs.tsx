@@ -176,18 +176,23 @@ export function Jobs() {
     }
   };
 
-  const handleDelete = async (jobId: string) => {
-    if (!window.confirm('Supprimer cette tâche? Cette action est irréversible.')) return;
-    setProcessingJob(jobId);
+  const handleCancelOrDelete = async (job: Job) => {
+    const isPending = job.status === 'pending';
+    const msg = isPending
+      ? 'Supprimer cette tâche? Les candidats seront remboursés.'
+      : 'Annuler cette tâche? Le travailleur sera notifié.';
+    if (!window.confirm(msg)) return;
+    setProcessingJob(job.id);
     try {
-      await api.deleteJob(jobId);
-      addToast('Tâche supprimée', 'success');
+      if (isPending) await api.deleteJob(job.id);
+      else await api.cancelJob(job.id);
+      addToast(isPending ? 'Tâche supprimée' : 'Tâche annulée', 'success');
       loadJobs();
     } catch (err) {
       const msg = axios.isAxiosError(err)
         ? (err.response?.data as { message?: string })?.message
         : undefined;
-      addToast(msg ?? 'Impossible de supprimer la tâche', 'error');
+      addToast(msg ?? 'Impossible d\'annuler la tâche', 'error');
     } finally {
       setProcessingJob(null);
     }
@@ -293,13 +298,13 @@ export function Jobs() {
                 onStart={handleStart}
                 onDecline={handleDecline}
                 onComplete={handleComplete}
-                onDelete={handleDelete}
+                onCancelOrDelete={() => handleCancelOrDelete(job)}
                 onReview={() => setReviewJob(job)}
                 isProcessing={processingJob === job.id}
                 canApply={!isClient && taskerCanApply && (creditBalance ?? 0) > 0 && job.myApplicationStatus !== 'pending'}
                 verificationBlocked={!isClient && canTask && !taskerCanApply}
                 priceGuide={priceGuides[job.serviceType] ?? priceGuides.autre}
-                canDelete={isClient && job.status === 'pending'}
+                canCancel={isClient && ['pending', 'accepted', 'in_progress'].includes(job.status)}
               />
             ))}
           </div>
@@ -325,16 +330,16 @@ interface JobCardProps {
   onStart: (id: string) => void;
   onDecline: (id: string) => void;
   onComplete: (id: string) => void;
-  onDelete: (id: string) => void;
+  onCancelOrDelete: () => void;
   onReview: () => void;
   isProcessing: boolean;
   canApply: boolean;
   verificationBlocked?: boolean;
-  canDelete: boolean;
+  canCancel: boolean;
   priceGuide?: PriceGuideRange;
 }
 
-function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onReview, isProcessing, canApply, verificationBlocked, canDelete, priceGuide }: JobCardProps) {
+function JobCard({ job, isClient, onAccept, onStart, onComplete, onCancelOrDelete, onReview, isProcessing, canApply, verificationBlocked, canCancel, priceGuide }: JobCardProps) {
   const statusColors: Record<JobStatus, string> = {
     pending: '#D9A441', accepted: '#7FB069', in_progress: '#6BA3C4',
     completed: '#9A8468', cancelled: '#C46B6B', declined: '#C46B6B',
@@ -342,9 +347,8 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onRev
 
   return (
     <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 18, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1, display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
           <div className="svc-icon" style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Briefcase className="w-5 h-5" style={{ color: gold }} />
           </div>
@@ -352,26 +356,27 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onRev
             <p className="body-f muted2" style={{ fontSize: 12 }}>{SERVICE_TYPE_LABELS[job.serviceType]}</p>
             <h3 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.title}</h3>
           </div>
-        </div>
+        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: statusColors[job.status], padding: '2px 8px', borderRadius: 999, fontWeight: 700, whiteSpace: 'nowrap' }}>
             {JOB_STATUS_LABELS[job.status]}
           </span>
-          {canDelete && (
+          {canCancel && (
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(job.id); }}
+              onClick={onCancelOrDelete}
               disabled={isProcessing}
               className="ghost-btn"
-              title="Supprimer la tâche"
-              aria-label="Supprimer la tâche"
-              style={{ ...deleteBtnStyle, padding: '4px 8px' }}
+              title={job.status === 'pending' ? 'Supprimer' : 'Annuler'}
+              aria-label={job.status === 'pending' ? 'Supprimer la tâche' : 'Annuler la tâche'}
+              style={deleteBtnStyle}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3 h-3" />
             </button>
           )}
         </div>
       </div>
+      <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
       <div className="body-f muted" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14, fontSize: 14 }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Calendar className="w-4 h-4" style={{ flexShrink: 0 }} />{formatDate(job.scheduledDate)}</span>
@@ -468,17 +473,6 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onDelete, onRev
               ? `${job.pendingApplicationCount} candidature(s) en attente`
               : 'En attente de candidatures'}
           </span>
-        )}
-        {canDelete && (
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(job.id); }}
-            disabled={isProcessing}
-            className="ghost-btn"
-            style={{ ...deleteBtnStyle, width: '100%' }}
-          >
-            <Trash2 className="w-4 h-4" /> Supprimer
-          </button>
         )}
       </div>
     </div>
