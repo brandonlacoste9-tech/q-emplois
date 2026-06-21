@@ -22,15 +22,6 @@ import {
 
 const CANCELLABLE_STATUSES = ['pending', 'accepted', 'in_progress'] as const;
 
-const deleteBtnStyle: React.CSSProperties = {
-  padding: 4,
-  minWidth: 0,
-  lineHeight: 0,
-  color: '#C46B6B',
-  borderColor: 'rgba(196,107,107,0.45)',
-  flexShrink: 0,
-};
-
 function canManageJob(job: Job, profile: { id: string; role?: string } | null): boolean {
   if (!profile) return false;
   if (!CANCELLABLE_STATUSES.includes(job.status as (typeof CANCELLABLE_STATUSES)[number])) return false;
@@ -362,24 +353,9 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onCancelOrDelet
             <h3 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.title}</h3>
           </div>
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: statusColors[job.status], padding: '2px 8px', borderRadius: 999, fontWeight: 700, whiteSpace: 'nowrap' }}>
-            {JOB_STATUS_LABELS[job.status]}
-          </span>
-          {canCancel && (
-            <button
-              type="button"
-              onClick={onCancelOrDelete}
-              disabled={isProcessing}
-              className="ghost-btn"
-              title={job.status === 'pending' ? 'Supprimer' : 'Annuler'}
-              aria-label={job.status === 'pending' ? 'Supprimer la tâche' : 'Annuler la tâche'}
-              style={deleteBtnStyle}
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
-          )}
-        </div>
+        <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: statusColors[job.status], padding: '2px 8px', borderRadius: 999, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
+          {JOB_STATUS_LABELS[job.status]}
+        </span>
       </div>
       <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
