@@ -43,6 +43,8 @@ async function bootstrap() {
       'https://q-emplois-d9qo.vercel.app',
       'https://www.quebec-emplois.ca',
       'https://quebec-emplois.ca',
+      'https://www.q-emplois.com',
+      'https://q-emplois.com',
       /\.vercel\.app$/ // Allows all Vercel preview branches dynamically
     ];
   }
