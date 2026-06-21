@@ -43,12 +43,12 @@ export function ImageUpload({
     setError('');
 
     const remaining = maxFiles - value.length;
-    if (remaining <= 0) {
+    if (remaining <= 0 && purpose !== 'avatar') {
       setError(`Maximum ${maxFiles} photo${maxFiles > 1 ? 's' : ''}.`);
       return;
     }
 
-    const batch = Array.from(files).slice(0, remaining);
+    const batch = purpose === 'avatar' ? Array.from(files).slice(0, 1) : Array.from(files).slice(0, remaining);
     setUploading(true);
 
     try {
