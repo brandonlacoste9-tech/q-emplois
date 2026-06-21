@@ -32,7 +32,7 @@ export class EmailService {
   }
 
   async sendEmail(to: string, subject: string, htmlContent: string): Promise<boolean> {
-    const from = this.configService.get<string>('EMAIL_FROM') ?? '"Q-Emplois" <noreply@quebec-emplois.ca>';
+    const from = this.configService.get<string>('EMAIL_FROM') ?? '"Q-Emplois" <info@quebec-emplois.ca>';
 
     if (!this.isConfigured || !this.transporter) {
       this.logger.debug('--- EMAIL DISPATCH (SIMULATION) ---');
