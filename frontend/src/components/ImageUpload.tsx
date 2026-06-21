@@ -16,6 +16,58 @@ interface ImageUploadProps {
   hint?: string;
 }
 
+async function compressImage(
+  file: File,
+  maxWidth = 1024,
+  maxHeight = 1024,
+  quality = 0.85
+): Promise<{ dataUrl: string; size: number; type: string }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas context not available'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const type = file.type || 'image/jpeg';
+        const dataUrl = canvas.toDataURL(type, quality);
+        
+        const base64Length = dataUrl.split(',')[1].length;
+        const sizeInBytes = Math.round(base64Length * 0.75);
+        
+        resolve({ dataUrl, size: sizeInBytes, type });
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 async function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -58,18 +110,33 @@ export function ImageUpload({
           setError('Seules les images sont acceptées.');
           continue;
         }
-        if (file.size > MAX_BYTES) {
-          setError('Image trop volumineuse (max 2 Mo).');
-          continue;
+
+        let dataUrl: string;
+        let finalType = file.type || 'image/jpeg';
+        
+        try {
+          const compressed = await compressImage(file);
+          dataUrl = compressed.dataUrl;
+          finalType = compressed.type;
+          
+          if (compressed.size > MAX_BYTES) {
+            setError('Image trop volumineuse (max 2 Mo) après compression.');
+            continue;
+          }
+        } catch {
+          if (file.size > MAX_BYTES) {
+            setError('Image trop volumineuse (max 2 Mo).');
+            continue;
+          }
+          dataUrl = await readFileAsDataUrl(file);
         }
 
-        const dataUrl = await readFileAsDataUrl(file);
         if (uploadImmediately) {
           const res = await api.uploadImage({
             purpose,
             data: dataUrl,
             filename: file.name,
-            contentType: file.type || 'image/jpeg',
+            contentType: finalType,
           });
           if (purpose === 'avatar') {
             onChange([res.url]);
