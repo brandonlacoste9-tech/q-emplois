@@ -421,41 +421,46 @@ class ApiService {
 
   async uploadImage(data: {
     purpose: 'avatar' | 'task';
-    data: string;          // still accepted as base64 data URL from ImageUpload
+    data: string;
     filename: string;
     contentType: string;
   }) {
-    // Convert base64 data URL → Blob → FormData so we send raw binary (no base64 inflation)
-    const base64 = data.data.split(',')[1] ?? data.data;
-    const byteChars = atob(base64);
-    const byteArr = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
-    const blob = new Blob([byteArr], { type: data.contentType });
-
-    const form = new FormData();
-    form.append('file', blob, data.filename);
-
     const token = localStorage.getItem('token');
-    const res = await fetch(
-      `${API_BASE_URL}/media/upload-file?purpose=${encodeURIComponent(data.purpose)}`,
-      {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: form,
-      },
-    );
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
-    if (!res.ok) {
-      const errText = await res.text();
-      let message = 'Échec du téléversement.';
-      try {
-        const parsed = JSON.parse(errText);
-        message = parsed.message ?? message;
-      } catch { /* ignore */ }
-      throw new Error(message);
+    // ── Attempt 1: multipart/form-data (no base64 overhead) ──────────────────
+    try {
+      const base64 = data.data.includes(',') ? data.data.split(',')[1] : data.data;
+      const byteChars = atob(base64);
+      const byteArr = new Uint8Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+      const blob = new Blob([byteArr], { type: data.contentType });
+      const form = new FormData();
+      form.append('file', blob, data.filename);
+
+      const res = await fetch(
+        `${API_BASE_URL}/media/upload-file?purpose=${encodeURIComponent(data.purpose)}`,
+        { method: 'POST', headers: authHeaders, body: form },
+      );
+
+      // If the new endpoint exists and succeeded, use it
+      if (res.ok) return res.json() as Promise<{ url: string; purpose: string }>;
+
+      // If it's a 404 the route isn't deployed yet — fall through to legacy
+      if (res.status !== 404 && res.status !== 405) {
+        const errText = await res.text();
+        let message = 'Échec du téléversement.';
+        try { message = JSON.parse(errText).message ?? message; } catch { /* noop */ }
+        throw new Error(message);
+      }
+    } catch (err) {
+      // Network error or decode error — only suppress if it's a "route not found" scenario
+      if (err instanceof Error && err.message !== 'Échec du téléversement.') throw err;
     }
 
-    return res.json() as Promise<{ url: string; purpose: string }>;
+    // ── Fallback: legacy JSON / base64 endpoint ───────────────────────────────
+    const response = await this.client.post('/media/upload', data);
+    return response.data as { url: string; purpose: string };
   }
 
   async getAdminMetrics(days = 30) {
