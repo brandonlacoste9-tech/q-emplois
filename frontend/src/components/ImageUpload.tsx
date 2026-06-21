@@ -110,9 +110,9 @@ export function ImageUpload({
                 src={url}
                 alt=""
                 style={{
-                  width: purpose === 'avatar' ? 84 : 72,
-                  height: purpose === 'avatar' ? 84 : 72,
-                  borderRadius: purpose === 'avatar' ? '50%' : 8,
+                  width: 72,
+                  height: 72,
+                  borderRadius: 8,
                   objectFit: 'cover',
                   border: '2px solid rgba(217,179,140,0.25)',
                 }}
