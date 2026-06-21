@@ -33,8 +33,22 @@ async function bootstrap() {
   }
   
   // Enable CORS
+  const rawCorsOrigin = configService.get('CORS_ORIGIN');
+  let corsOrigin: any = '*';
+  if (rawCorsOrigin) {
+    corsOrigin = rawCorsOrigin.split(',');
+  } else {
+    corsOrigin = [
+      'http://localhost:5173',
+      'https://q-emplois-d9qo.vercel.app',
+      'https://www.quebec-emplois.ca',
+      'https://quebec-emplois.ca',
+      /\.vercel\.app$/ // Allows all Vercel preview branches dynamically
+    ];
+  }
+
   app.enableCors({
-    origin: configService.get('CORS_ORIGIN') || '*',
+    origin: corsOrigin,
     credentials: true,
   });
 
