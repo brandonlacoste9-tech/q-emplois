@@ -376,10 +376,12 @@ class ApiService {
     return response.data;
   }
 
-  async sendMessage(conversationId: string, content: string): Promise<Message> {
-    const response = await this.client.post(`/conversations/${conversationId}/messages`, {
-      content,
-    });
+  async sendMessage(
+    conversationId: string,
+    payload: string | { content?: string; attachmentUrl?: string; type?: 'text' | 'image' },
+  ): Promise<Message> {
+    const body = typeof payload === 'string' ? { content: payload } : payload;
+    const response = await this.client.post(`/conversations/${conversationId}/messages`, body);
     return response.data;
   }
 
@@ -477,7 +479,7 @@ class ApiService {
   }
 
   async uploadImage(data: {
-    purpose: 'avatar' | 'task';
+    purpose: 'avatar' | 'task' | 'message';
     data: string;
     filename: string;
     contentType: string;

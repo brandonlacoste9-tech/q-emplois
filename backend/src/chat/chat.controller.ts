@@ -1,13 +1,22 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/user.decorator';
-import { IsString } from 'class-validator';
 
 class SendMessageDto {
+  @IsOptional()
   @IsString()
-  content: string;
+  content?: string;
+
+  @IsOptional()
+  @IsString()
+  attachmentUrl?: string;
+
+  @IsOptional()
+  @IsIn(['text', 'image'])
+  type?: 'text' | 'image';
 }
 
 @ApiTags('chat')
@@ -43,7 +52,11 @@ export class ChatController {
     @Param('id') id: string,
     @Body() dto: SendMessageDto,
   ) {
-    return this.chatService.sendMessage(userId, id, dto.content);
+    return this.chatService.sendMessage(userId, id, {
+      content: dto.content,
+      attachmentUrl: dto.attachmentUrl,
+      type: dto.type,
+    });
   }
 
   @Post(':id/read')

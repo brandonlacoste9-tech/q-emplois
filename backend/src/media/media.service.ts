@@ -22,12 +22,17 @@ export class MediaService {
       return { url, purpose: 'avatar' };
     }
 
+    if (dto.purpose === 'message') {
+      const url = await this.storageService.uploadMessagePhoto(userId, buffer, dto.filename, contentType);
+      return { url, purpose: 'message' };
+    }
+
     const url = await this.storageService.uploadTaskPhoto(userId, buffer, dto.filename, contentType);
     return { url, purpose: 'task' };
   }
 
   /** Multipart upload — buffer comes directly from Multer, no base64 overhead */
-  async uploadFile(userId: string, file: Express.Multer.File, purpose: 'avatar' | 'task' | 'document') {
+  async uploadFile(userId: string, file: Express.Multer.File, purpose: 'avatar' | 'task' | 'document' | 'message') {
     if (purpose === 'avatar') {
       const url = await this.storageService.uploadAvatar(
         userId,
@@ -55,6 +60,16 @@ export class MediaService {
         update: { licenseDocumentUrl: url, isVerified: false, verifiedAt: null },
       });
       return { url, purpose: 'document' };
+    }
+
+    if (purpose === 'message') {
+      const url = await this.storageService.uploadMessagePhoto(
+        userId,
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+      );
+      return { url, purpose: 'message' };
     }
 
     const url = await this.storageService.uploadTaskPhoto(

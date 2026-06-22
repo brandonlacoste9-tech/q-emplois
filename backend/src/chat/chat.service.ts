@@ -35,6 +35,7 @@ export class ChatService {
       senderId: string | null;
       type: ChatMessageType;
       content: string;
+      attachmentUrl?: string | null;
       createdAt: Date;
       isRead: boolean;
     },
@@ -47,6 +48,7 @@ export class ChatService {
       senderName,
       type: message.type,
       content: message.content,
+      attachmentUrl: message.attachmentUrl ?? undefined,
       createdAt: message.createdAt.toISOString(),
       isRead: message.isRead,
     };
@@ -54,10 +56,16 @@ export class ChatService {
 
   private unreadWhere(userId: string) {
     return {
-      type: ChatMessageType.text,
+      type: { in: [ChatMessageType.text, ChatMessageType.image] },
       senderId: { not: userId },
       isRead: false,
     };
+  }
+
+  private previewContent(message: { type: ChatMessageType; content: string }) {
+    if (message.type === ChatMessageType.image) return '📷 Photo';
+    if (message.type === ChatMessageType.system) return message.content;
+    return message.content;
   }
 
   private mapConversation(
@@ -77,6 +85,7 @@ export class ChatService {
         senderId: string | null;
         type: ChatMessageType;
         content: string;
+        attachmentUrl?: string | null;
         createdAt: Date;
         isRead: boolean;
       }>;
@@ -459,7 +468,11 @@ export class ChatService {
     };
   }
 
-  async sendMessage(userId: string, conversationId: string, content: string) {
+  async sendMessage(
+    userId: string,
+    conversationId: string,
+    payload: { content?: string; attachmentUrl?: string; type?: 'text' | 'image' },
+  ) {
     const conversation = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
       include: {
@@ -473,14 +486,25 @@ export class ChatService {
       throw new ForbiddenException('Accès refusé.');
     }
     await this.assertMessagingAllowed(conversation, userId);
-    await this.assertCanSend(conversation, content);
+
+    const isImage = !!payload.attachmentUrl?.trim();
+    const text = payload.content?.trim() ?? '';
+    if (!isImage && !text) {
+      throw new BadRequestException('Le message ne peut pas être vide.');
+    }
+    if (isImage && payload.type === 'text') {
+      throw new BadRequestException('Type de message invalide pour une pièce jointe.');
+    }
+
+    await this.assertCanSend(conversation, text);
 
     const message = await this.prisma.chatMessage.create({
       data: {
         conversationId,
         senderId: userId,
-        type: ChatMessageType.text,
-        content,
+        type: isImage ? ChatMessageType.image : ChatMessageType.text,
+        content: isImage ? (text || '📷 Photo') : text,
+        attachmentUrl: isImage ? payload.attachmentUrl!.trim() : null,
       },
     });
 
@@ -493,35 +517,51 @@ export class ChatService {
     const recipientId = isClient ? conversation.providerId : conversation.clientId;
     const sender = isClient ? conversation.client : conversation.provider;
     const senderName = [sender.firstName, sender.lastName].filter(Boolean).join(' ');
+    const preview = this.previewContent(message);
 
-    const payload = this.mapMessage(message, senderName);
-    this.chatGateway.emitNewMessage(recipientId, payload);
+    const mapped = this.mapMessage(message, senderName);
+    this.chatGateway.emitNewMessage(recipientId, mapped);
 
     await this.notificationsService.create(
       recipientId,
       'new_message',
-      'Nouveau message',
-      content.slice(0, 120),
-      { conversationId, senderId: userId, content: content.slice(0, 500) },
+      isImage ? 'Nouvelle photo' : 'Nouveau message',
+      preview.slice(0, 120),
+      {
+        conversationId,
+        senderId: userId,
+        content: preview.slice(0, 500),
+        type: message.type,
+        attachmentUrl: message.attachmentUrl ?? undefined,
+      },
     );
 
     if (!this.chatGateway.isUserConnected(recipientId)) {
       await this.externalNotifications.notifyOfflineMessage(
         recipientId,
         senderName || 'Un utilisateur',
-        content,
+        preview,
         conversationId,
       );
     }
 
-    return payload;
+    return mapped;
   }
 
   async markRead(userId: string, conversationId: string) {
-    await this.prisma.chatMessage.updateMany({
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { clientId: true, providerId: true },
+    });
+    if (!conversation) throw new NotFoundException('Conversation introuvable.');
+    if (conversation.clientId !== userId && conversation.providerId !== userId) {
+      throw new ForbiddenException('Accès refusé.');
+    }
+
+    const updated = await this.prisma.chatMessage.updateMany({
       where: {
         conversationId,
-        type: ChatMessageType.text,
+        type: { in: [ChatMessageType.text, ChatMessageType.image] },
         senderId: { not: userId },
         isRead: false,
       },
@@ -536,6 +576,13 @@ export class ChatService {
       },
       data: { isRead: true },
     });
+
+    if (updated.count > 0) {
+      const senderId = conversation.clientId === userId
+        ? conversation.providerId
+        : conversation.clientId;
+      this.chatGateway.emitMessagesRead(senderId, { conversationId, readBy: userId });
+    }
 
     return { success: true };
   }

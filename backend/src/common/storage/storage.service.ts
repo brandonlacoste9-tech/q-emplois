@@ -51,6 +51,18 @@ export class StorageService {
     return this.uploadPublicFile('task-photos', userId, buffer, filename, contentType, MAX_IMAGE_BYTES);
   }
 
+  async uploadMessagePhoto(
+    userId: string,
+    buffer: Buffer,
+    filename: string,
+    contentType: string,
+  ): Promise<string> {
+    if (!contentType.startsWith('image/')) {
+      throw new BadRequestException('Seules les images sont acceptées.');
+    }
+    return this.uploadPublicFile('message-photos', userId, buffer, filename, contentType, MAX_IMAGE_BYTES);
+  }
+
   parseUploadPayload(data: string, contentType: string): { buffer: Buffer; contentType: string } {
     if (data.startsWith('data:')) {
       const parts = data.split(',');

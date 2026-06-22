@@ -429,9 +429,15 @@ export function JobDetail() {
           </div>
           {jobConversation?.lastMessage && (
             <p className="body-f muted2" style={{ fontSize: 13, margin: 0 }}>
-              Dernier message : {jobConversation.lastMessage.type === 'system' ? jobConversation.lastMessage.content : jobConversation.lastMessage.content.slice(0, 80)}
+              Dernier message :{' '}
+              {jobConversation.lastMessage.type === 'image'
+                ? '📷 Photo'
+                : jobConversation.lastMessage.type === 'system'
+                  ? jobConversation.lastMessage.content
+                  : jobConversation.lastMessage.content.slice(0, 80)}
             </p>
           )}
+        </div>
         </div>
 
         {isJobOwner && isClientMode && job.status === 'pending' && applications.length > 0 && (

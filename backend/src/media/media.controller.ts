@@ -53,11 +53,11 @@ export class MediaController {
   uploadFile(
     @CurrentUser('userId') userId: string,
     @UploadedFile() file: Express.Multer.File,
-    @Query('purpose') purpose: 'avatar' | 'task' | 'document',
+    @Query('purpose') purpose: 'avatar' | 'task' | 'document' | 'message',
   ) {
     if (!file) throw new BadRequestException('Aucun fichier reçu.');
-    if (!['avatar', 'task', 'document'].includes(purpose)) {
-      throw new BadRequestException('purpose doit être "avatar", "task" ou "document".');
+    if (!['avatar', 'task', 'document', 'message'].includes(purpose)) {
+      throw new BadRequestException('purpose doit être "avatar", "task", "message" ou "document".');
     }
     if (purpose === 'document' && file.size > MAX_DOC_BYTES) {
       throw new BadRequestException('Document trop volumineux (max 5 Mo).');

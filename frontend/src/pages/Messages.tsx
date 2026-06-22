@@ -1,14 +1,35 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { useUnreadMessages } from '../hooks/useUnreadMessages';
 import type { Conversation, ConversationJobContext, ConversationStatus, Message } from '../types';
-import { MessageSquare, Send, Loader2, ArrowLeft, Briefcase } from 'lucide-react';
+import { MessageSquare, Send, Loader2, ArrowLeft, Briefcase, ImagePlus } from 'lucide-react';
 import { gold } from '../styles/design-tokens';
 import { socketService } from '../services/socket';
 import { formatPrice, formatDate } from '../utils';
+
+const QUICK_REPLIES: Record<ConversationStatus, string[]> = {
+  application: [
+    'Bonjour! Pouvez-vous préciser votre expérience?',
+    'Quand seriez-vous disponible?',
+    'Merci pour votre intérêt!',
+  ],
+  active: [
+    'Parfait, merci!',
+    'Je suis en route.',
+    'À quelle heure demain?',
+  ],
+  archived: [],
+};
+
+function messagePreview(m?: Message) {
+  if (!m) return 'Nouvelle conversation';
+  if (m.type === 'system') return `ℹ ${m.content}`;
+  if (m.type === 'image') return '📷 Photo';
+  return m.content;
+}
 
 function JobChatHeader({ job }: { job: ConversationJobContext }) {
   return (
@@ -58,9 +79,21 @@ export function Messages() {
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [typingUserId, setTypingUserId] = useState<string | null>(null);
   const [mobileShowThread, setMobileShowThread] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageAtRef = useRef<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingEmitRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const lastOwnMessageId = useMemo(() => {
+    const own = messages.filter((m) => m.senderId === user?.id && m.type !== 'system');
+    return own[own.length - 1]?.id;
+  }, [messages, user?.id]);
+
+  const quickReplies = conversationStatus ? QUICK_REPLIES[conversationStatus] : [];
 
   const loadConversations = useCallback(async () => {
     const data = await api.getConversations();
@@ -184,9 +217,29 @@ export function Messages() {
         return updated;
       });
 
-      if (msg.conversationId !== activeId && msg.type === 'text' && msg.senderId !== user?.id) {
+      if (
+        msg.conversationId !== activeId
+        && (msg.type === 'text' || msg.type === 'image')
+        && msg.senderId !== user?.id
+      ) {
         refreshUnread();
       }
+    };
+
+    const handleTyping = ({ conversationId, userId: typerId }: { conversationId: string; userId: string }) => {
+      if (conversationId !== activeId || typerId === user?.id) return;
+      setTypingUserId(typerId);
+      if (typingClearRef.current) clearTimeout(typingClearRef.current);
+      typingClearRef.current = setTimeout(() => setTypingUserId(null), 3000);
+    };
+
+    const handleMessagesRead = ({ conversationId }: { conversationId: string }) => {
+      if (conversationId !== activeId) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.senderId === user?.id && m.type !== 'system' ? { ...m, isRead: true } : m,
+        ),
+      );
     };
 
     const handleReconnect = () => {
@@ -196,12 +249,94 @@ export function Messages() {
     };
 
     socket.on('newMessage', handleNewMessage);
+    socket.on('typing', handleTyping);
+    socket.on('messagesRead', handleMessagesRead);
     socket.on('connect', handleReconnect);
     return () => {
       socket.off('newMessage', handleNewMessage);
+      socket.off('typing', handleTyping);
+      socket.off('messagesRead', handleMessagesRead);
       socket.off('connect', handleReconnect);
     };
   }, [activeId, loadConversations, loadMessages, refreshUnread, user?.id]);
+
+  useEffect(() => {
+    setTypingUserId(null);
+  }, [activeId]);
+
+  const handleDraftChange = (value: string) => {
+    setDraft(value);
+    if (!activeId || !canSend) return;
+    if (typingEmitRef.current) clearTimeout(typingEmitRef.current);
+    typingEmitRef.current = setTimeout(() => {
+      socketService.emitTyping(activeId);
+    }, 400);
+  };
+
+  const handleQuickReply = (text: string) => {
+    handleDraftChange(text);
+  };
+
+  const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeId || uploading) return;
+
+    if (!file.type.startsWith('image/')) {
+      addToast('Seules les images sont acceptées.', 'error');
+      e.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const data = reader.result as string;
+      const tempId = `temp-${Date.now()}`;
+      const optimistic: Message = {
+        id: tempId,
+        conversationId: activeId,
+        senderId: user?.id ?? null,
+        senderName: '',
+        type: 'image',
+        content: '📷 Photo',
+        attachmentUrl: data,
+        createdAt: new Date().toISOString(),
+        isRead: false,
+      };
+
+      setMessages((prev) => [...prev, optimistic]);
+      setUploading(true);
+
+      try {
+        const { url } = await api.uploadImage({
+          purpose: 'message',
+          data,
+          filename: file.name,
+          contentType: file.type,
+        });
+        const msg = await api.sendMessage(activeId, { attachmentUrl: url, type: 'image' });
+        setMessages((prev) => prev.map((m) => (m.id === tempId ? msg : m)));
+        lastMessageAtRef.current = msg.createdAt;
+        setConversations((prev) => {
+          const idx = prev.findIndex((c) => c.id === activeId);
+          if (idx === -1) return prev;
+          const updated = [...prev];
+          const conv = { ...updated[idx], lastMessage: msg, updatedAt: msg.createdAt };
+          updated.splice(idx, 1);
+          updated.unshift(conv);
+          return updated;
+        });
+      } catch (err: unknown) {
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        const msg = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message
+          ?? (err as Error)?.message;
+        addToast(msg ?? "Impossible d'envoyer la photo", 'error');
+      } finally {
+        setUploading(false);
+        e.target.value = '';
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -328,7 +463,7 @@ export function Messages() {
                       </p>
                     )}
                     <p className="body-f muted2" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
-                      {c.lastMessage?.type === 'system' ? `ℹ ${c.lastMessage.content}` : (c.lastMessage?.content ?? 'Nouvelle conversation')}
+                      {messagePreview(c.lastMessage)}
                     </p>
                   </button>
                 ))
@@ -400,41 +535,115 @@ export function Messages() {
                       }
 
                       const mine = m.senderId === user?.id;
+                      const isImage = m.type === 'image' && m.attachmentUrl;
                       return (
-                        <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
+                        <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: isImage ? '65%' : '75%' }}>
                           <div
                             style={{
-                              padding: '10px 14px',
+                              padding: isImage ? 6 : '10px 14px',
                               borderRadius: 12,
                               background: mine ? 'rgba(184,123,68,0.25)' : 'rgba(15,25,36,0.6)',
                               border: `1px solid ${mine ? 'rgba(184,123,68,0.4)' : 'rgba(217,179,140,0.15)'}`,
                               opacity: m.id.startsWith('temp-') ? 0.7 : 1,
+                              overflow: 'hidden',
                             }}
                           >
-                            <p className="body-f cream-hi" style={{ fontSize: 14 }}>{m.content}</p>
+                            {isImage ? (
+                              <>
+                                <a href={m.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                                  <img
+                                    src={m.attachmentUrl}
+                                    alt="Photo envoyée"
+                                    style={{ display: 'block', maxWidth: '100%', borderRadius: 8 }}
+                                  />
+                                </a>
+                                {m.content && m.content !== '📷 Photo' && (
+                                  <p className="body-f cream-hi" style={{ fontSize: 14, padding: '8px 8px 4px' }}>{m.content}</p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="body-f cream-hi" style={{ fontSize: 14 }}>{m.content}</p>
+                            )}
                           </div>
                           <p className="body-f muted2" style={{ fontSize: 11, marginTop: 4, textAlign: mine ? 'right' : 'left' }}>
                             {new Date(m.createdAt).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
+                            {mine && m.id === lastOwnMessageId && m.isRead && (
+                              <span style={{ marginLeft: 6, color: gold }}>· Vu</span>
+                            )}
                           </p>
                         </div>
                       );
                     })}
+                    {typingUserId && (
+                      <p className="body-f muted2" style={{ fontSize: 12, fontStyle: 'italic', padding: '4px 0' }}>
+                        En train d&apos;écrire…
+                      </p>
+                    )}
                     <div ref={bottomRef} />
                   </div>
 
                   {canSend ? (
-                    <form onSubmit={handleSend} style={{ padding: 14, borderTop: '1px solid rgba(217,179,140,0.12)', display: 'flex', gap: 10 }}>
-                      <input
-                        className="q-field"
-                        value={draft}
-                        onChange={(e) => setDraft(e.target.value)}
-                        placeholder={conversationStatus === 'application' ? 'Poser une question sur la tâche…' : 'Écrire un message…'}
-                        style={{ flex: 1 }}
-                      />
-                      <button type="submit" disabled={sending || !draft.trim()} className="gold-btn" style={{ padding: '10px 16px' }}>
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </form>
+                    <div style={{ borderTop: '1px solid rgba(217,179,140,0.12)' }}>
+                      {quickReplies.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 14px 0' }}>
+                          {quickReplies.map((text) => (
+                            <button
+                              key={text}
+                              type="button"
+                              onClick={() => handleQuickReply(text)}
+                              className="body-f"
+                              style={{
+                                fontSize: 12,
+                                padding: '6px 10px',
+                                borderRadius: 999,
+                                border: '1px solid rgba(217,179,140,0.25)',
+                                background: 'rgba(15,25,36,0.5)',
+                                color: 'rgba(217,179,140,0.9)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {text}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <form onSubmit={handleSend} style={{ padding: 14, display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={handleImagePick}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading || sending}
+                          aria-label="Envoyer une photo"
+                          style={{
+                            background: 'transparent',
+                            border: '1px solid rgba(217,179,140,0.25)',
+                            borderRadius: 8,
+                            padding: '10px 12px',
+                            color: gold,
+                            cursor: uploading ? 'wait' : 'pointer',
+                            opacity: uploading ? 0.6 : 1,
+                          }}
+                        >
+                          {uploading ? <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} /> : <ImagePlus className="w-4 h-4" />}
+                        </button>
+                        <input
+                          className="q-field"
+                          value={draft}
+                          onChange={(e) => handleDraftChange(e.target.value)}
+                          placeholder={conversationStatus === 'application' ? 'Poser une question sur la tâche…' : 'Écrire un message…'}
+                          style={{ flex: 1 }}
+                        />
+                        <button type="submit" disabled={sending || uploading || !draft.trim()} className="gold-btn" style={{ padding: '10px 16px' }}>
+                          <Send className="w-4 h-4" />
+                        </button>
+                      </form>
+                    </div>
                   ) : (
                     <p className="body-f muted2" style={{ padding: 14, fontSize: 13, borderTop: '1px solid rgba(217,179,140,0.12)', margin: 0 }}>
                       Conversation en lecture seule.

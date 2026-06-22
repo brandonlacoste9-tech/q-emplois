@@ -2,9 +2,9 @@ import { IsIn, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UploadImageDto {
-  @ApiProperty({ enum: ['avatar', 'task'] })
-  @IsIn(['avatar', 'task'])
-  purpose: 'avatar' | 'task';
+  @ApiProperty({ enum: ['avatar', 'task', 'message'] })
+  @IsIn(['avatar', 'task', 'message'])
+  purpose: 'avatar' | 'task' | 'message';
 
   @IsString()
   data: string;

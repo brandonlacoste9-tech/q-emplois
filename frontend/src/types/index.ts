@@ -248,7 +248,7 @@ export interface Transaction {
   description: string;
 }
 
-export type MessageType = 'text' | 'system';
+export type MessageType = 'text' | 'image' | 'system';
 
 export interface Message {
   id: string;
@@ -258,6 +258,7 @@ export interface Message {
   senderAvatar?: string;
   type?: MessageType;
   content: string;
+  attachmentUrl?: string;
   createdAt: string;
   isRead: boolean;
 }

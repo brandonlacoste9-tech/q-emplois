@@ -486,6 +486,7 @@ model PlatformNotification {
 // ========================
 enum ChatMessageType {
   text
+  image
   system
 }
 
@@ -523,6 +524,7 @@ model ChatMessage {
   sender         User?           @relation("SentMessages", fields: [senderId], references: [id], onDelete: SetNull)
   type           ChatMessageType @default(text)
   content        String
+  attachmentUrl  String?
   isRead         Boolean         @default(false)
   createdAt      DateTime        @default(now())
 

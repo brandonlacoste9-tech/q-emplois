@@ -66,4 +66,8 @@ export const socketService = {
     if (socket?.connected) return socket;
     return this.connect(currentToken, currentBaseUrl);
   },
+
+  emitTyping(conversationId: string) {
+    socket?.emit('typing', { conversationId });
+  },
 };
