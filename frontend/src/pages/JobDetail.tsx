@@ -577,16 +577,21 @@ export function JobDetail() {
             )}
 
             {isJobOwner && job.paymentStatus !== 'paid' && ['accepted', 'in_progress', 'completed'].includes(job.status) && (
-              <button
-                type="button"
-                onClick={handlePay}
-                disabled={paying}
-                className="gold-btn"
-                style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}
-              >
-                <CreditCard className="w-4 h-4" />
-                {paying ? 'Redirection…' : `Payer ${formatPrice(job.estimatedPrice)}`}
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <button
+                  type="button"
+                  onClick={handlePay}
+                  disabled={paying}
+                  className="gold-btn"
+                  style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8, alignSelf: 'flex-start' }}
+                >
+                  <CreditCard className="w-4 h-4" />
+                  {paying ? 'Redirection…' : `Payer ${formatPrice(job.estimatedPrice)}`}
+                </button>
+                <span className="body-f muted2" style={{ fontSize: 12 }}>
+                  Paiement Stripe optionnel — vous pouvez aussi payer le travailleur directement.
+                </span>
+              </div>
             )}
 
             {job.status === 'completed' && !hasReview && (

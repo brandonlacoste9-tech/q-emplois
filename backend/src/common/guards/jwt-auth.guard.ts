@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -10,6 +11,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly reflector: Reflector,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -31,12 +33,21 @@ export class JwtAuthGuard implements CanActivate {
         secret: this.configService.get('JWT_SECRET'),
       });
       
+      const account = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, deletedAt: true, suspendedAt: true },
+      });
+
+      if (!account || account.deletedAt || account.suspendedAt) {
+        throw new UnauthorizedException('Compte indisponible. Veuillez vous reconnecter.');
+      }
+
       request.user = {
         userId: payload.sub,
         email: payload.email,
         role: payload.role,
       };
-      
+
       return true;
     } catch (error) {
       throw new UnauthorizedException('Token invalide ou expiré. Veuillez vous reconnecter.');

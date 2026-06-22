@@ -111,6 +111,12 @@ export class AuthService {
       throw new UnauthorizedException('Email ou mot de passe incorrect.');
     }
 
+    if (user.suspendedAt) {
+      throw new UnauthorizedException(
+        'Compte suspendu. Contactez support@qemplois.ca si vous pensez qu\'il s\'agit d\'une erreur.',
+      );
+    }
+
     // Verify password
     const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
 
@@ -154,7 +160,7 @@ export class AuthService {
         where: { id: payload.sub },
       });
 
-      if (!user || user.deletedAt) {
+      if (!user || user.deletedAt || user.suspendedAt) {
         throw new UnauthorizedException('Token invalide.');
       }
 

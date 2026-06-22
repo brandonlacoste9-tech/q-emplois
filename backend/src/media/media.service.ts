@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { StorageService } from '../common/storage/storage.service';
+import { EmailService } from '../common/email/email.service';
 import { UploadImageDto } from './media.dto';
 
 @Injectable()
@@ -8,6 +10,8 @@ export class MediaService {
   constructor(
     private readonly storageService: StorageService,
     private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+    private readonly configService: ConfigService,
   ) {}
 
   async upload(userId: string, dto: UploadImageDto) {
@@ -57,8 +61,35 @@ export class MediaService {
       await this.prisma.provider.upsert({
         where: { userId },
         create: { userId, serviceTypes: [], licenseDocumentUrl: url, isVerified: false },
-        update: { licenseDocumentUrl: url, isVerified: false, verifiedAt: null },
+        update: {
+          licenseDocumentUrl: url,
+          isVerified: false,
+          verifiedAt: null,
+          rejectedAt: null,
+          rejectionReason: null,
+        },
       });
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, firstName: true, lastName: true },
+      });
+      if (user?.email) {
+        await this.emailService.sendVerificationReceived(user.email, user.firstName);
+        const adminEmail =
+          this.configService.get<string>('ADMIN_EMAIL') || 'admin@qemplois.ca';
+        const frontendUrl =
+          this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+        const taskerName =
+          [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+        await this.emailService.sendVerificationPendingAdmin(
+          adminEmail,
+          taskerName,
+          user.email,
+          `${frontendUrl}/admin`,
+        );
+      }
+
       return { url, purpose: 'document' };
     }
 

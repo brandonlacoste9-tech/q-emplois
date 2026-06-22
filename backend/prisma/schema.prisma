@@ -60,6 +60,8 @@ model User {
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   deletedAt           DateTime?          // Soft delete for Law 25
+  suspendedAt         DateTime?          // Admin suspension — blocks login/API
+  suspensionReason    String?
   
   // Relations
   provider            Provider?

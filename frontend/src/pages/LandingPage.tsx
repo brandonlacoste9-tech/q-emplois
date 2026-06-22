@@ -48,7 +48,7 @@ const T = {
         { ic: "📝", t: "Décrivez", d: "Mentionnez vos besoins pour trouver le bon pro." },
         { ic: "👥", t: "Comparez", d: "Recevez des candidatures et choisissez le travailleur qui vous convient." },
         { ic: "📅", t: "Réservez", d: "Confirmez la date et coordonnez-vous via la messagerie." },
-        { ic: "✅", t: "Terminez", d: "Le travail se fait; paiement en ligne à venir prochainement." },
+        { ic: "✅", t: "Terminez", d: "Le travail se fait; payez en ligne (Stripe) ou directement avec le travailleur." },
       ],
     },
     wa: {
@@ -121,7 +121,7 @@ const T = {
         { ic: "📝", t: "Describe", d: "Tell us what you need to find the right pro." },
         { ic: "👥", t: "Compare", d: "Review applicants and pick the tasker that fits." },
         { ic: "📅", t: "Book", d: "Confirm the date and coordinate via messaging." },
-        { ic: "✅", t: "Complete", d: "Work gets done; online payment coming soon." },
+        { ic: "✅", t: "Complete", d: "Work gets done; pay online (Stripe) or directly with your tasker." },
       ],
     },
     wa: {
@@ -193,12 +193,12 @@ export function LandingPage() {
   const seoContent = {
     fr: {
       title: "Québec emplois | Déneigement, déménagement & aide à domicile au Québec",
-      description: "Trouvez de l'aide près de chez vous : déneigement, déménagement, montage de meubles, ménage. Travailleurs vérifiés, prix clair et paiement sécurisé. Pointe-Claire, Montréal, Rive-Sud.",
+      description: "Trouvez de l'aide près de chez vous : déneigement, déménagement, montage de meubles, ménage. Travailleurs vérifiés, prix clair et paiement en ligne optionnel (Stripe). Pointe-Claire, Montréal, Rive-Sud.",
       keywords: "déneigement montréal, déneigement pointe-claire, aide déménagement québec, montage meubles, ménage résidentiel, nettoyage de cour, débarras, aide à domicile, services à domicile québec, travailleurs vérifiés, taskrabbit québec, marché de services local, manutention, aide aînés"
     },
     en: {
       title: "Québec emplois | Snow removal, moving & home help in Québec",
-      description: "Find trusted local help: snow removal, moving, furniture assembly, cleaning. Verified workers, clear pricing and secure payment. Pointe-Claire, Montreal, South Shore.",
+      description: "Find trusted local help: snow removal, moving, furniture assembly, cleaning. Verified workers, clear pricing and optional online payment (Stripe). Pointe-Claire, Montreal, South Shore.",
       keywords: "snow removal montreal, snow removal pointe-claire, moving help quebec, furniture assembly, home cleaning, yard cleanup, junk removal, home services quebec, verified workers, taskrabbit quebec, local services marketplace, heavy lifting, senior help"
     }
   };

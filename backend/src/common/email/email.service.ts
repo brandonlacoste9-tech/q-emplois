@@ -187,6 +187,27 @@ export class EmailService {
     });
   }
 
+  async sendVerificationReceived(
+    to: string,
+    firstName?: string | null,
+  ): Promise<void> {
+    const frontendUrl =
+      process.env.FRONTEND_URL || 'http://localhost:5173';
+    await this.send({
+      to,
+      subject: 'Pièce d\'identité reçue — Q-Emplois',
+      html: `
+        <p>Bonjour ${firstName ?? ''},</p>
+        <p>Nous avons bien reçu votre pièce d'identité. Notre équipe l'examine habituellement <strong>sous 48 heures ouvrables</strong>.</p>
+        <p>Vous recevrez un courriel dès que votre profil est vérifié.</p>
+        <p><a href="${frontendUrl}/profile">Voir mon profil</a></p>
+        <p>— L'équipe Q-Emplois</p>
+        ${this.channelLinksSection()}
+      `,
+      text: `Pièce d'identité reçue. Vérification sous 48 h. ${frontendUrl}/profile`,
+    });
+  }
+
   async sendVerificationPendingAdmin(
     adminEmail: string,
     taskerName: string,

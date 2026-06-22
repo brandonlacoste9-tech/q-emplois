@@ -24,7 +24,11 @@ export function getNotificationHref(
       return '/messages';
     case 'escrow_release':
       return '/latelier';
+    case 'verification_approved':
+    case 'verification_rejected':
+      return '/profile';
     default:
+      if (typeof data?.link === 'string') return data.link;
       return taskId ? `/jobs/${taskId}` : null;
   }
 }

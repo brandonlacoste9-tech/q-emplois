@@ -30,6 +30,7 @@ export function GarantiePage() {
             <li>Contact débloqué seulement après votre choix du travailleur</li>
             <li>Adresse complète visible au travailleur seulement au démarrage du job</li>
             <li>Annulation gratuite avec remboursement de crédit si plus de 24 h avant la date prévue</li>
+            <li>Paiement en ligne optionnel (Stripe) après sélection du travailleur, ou arrangement direct entre vous</li>
           </ul>
         </div>
 

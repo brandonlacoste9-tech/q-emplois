@@ -4,6 +4,7 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { EmailService } from '../common/email/email.service';
 import { AuditService } from '../common/audit/audit.service';
 import { DemoJobsService } from '../common/demo-jobs/demo-jobs.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AdminService {
@@ -27,6 +28,7 @@ export class AdminService {
     private readonly emailService: EmailService,
     private readonly auditService: AuditService,
     private readonly demoJobsService: DemoJobsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async getBetaMetrics(days = 30) {
@@ -181,6 +183,14 @@ export class AdminService {
       await this.emailService.sendTaskerVerified(provider.user.email, provider.user.firstName);
     }
 
+    await this.notificationsService.create(
+      provider.userId,
+      'verification_approved',
+      'Profil vérifié',
+      'Votre pièce d\'identité a été approuvée. Vous pouvez postuler aux tâches.',
+      { link: '/profile' },
+    );
+
     return updated;
   }
 
@@ -223,6 +233,16 @@ export class AdminService {
         reason,
       );
     }
+
+    await this.notificationsService.create(
+      provider.userId,
+      'verification_rejected',
+      'Vérification refusée',
+      reason
+        ? `Motif : ${reason}. Téléversez un nouveau document sur votre profil.`
+        : 'Téléversez un nouveau document sur votre profil pour relancer la vérification.',
+      { link: '/profile', reason: reason ?? null },
+    );
 
     return { success: true };
   }
@@ -340,6 +360,8 @@ export class AdminService {
           phone: true,
           role: true,
           createdAt: true,
+          suspendedAt: true,
+          suspensionReason: true,
           provider: { select: { isVerified: true, serviceTypes: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -359,6 +381,8 @@ export class AdminService {
         createdAt: u.createdAt.toISOString(),
         isVerified: u.provider?.isVerified ?? false,
         serviceTypes: u.provider?.serviceTypes ?? [],
+        suspendedAt: u.suspendedAt?.toISOString() ?? null,
+        suspensionReason: u.suspensionReason ?? null,
       })),
       total,
       page,
@@ -391,6 +415,65 @@ export class AdminService {
       details: { previousRole: user.role, newRole: role, email: user.email },
     });
     return updated;
+  }
+
+  async suspendUser(targetUserId: string, adminUserId: string, reason?: string) {
+    if (targetUserId === adminUserId) {
+      throw new ForbiddenException('Vous ne pouvez pas suspendre votre propre compte.');
+    }
+    const user = await this.prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!user || user.deletedAt) {
+      throw new NotFoundException('Utilisateur non trouvé.');
+    }
+    if (user.role === UserRole.admin) {
+      throw new ForbiddenException('Impossible de suspendre un administrateur.');
+    }
+    if (user.suspendedAt) {
+      throw new BadRequestException('Ce compte est déjà suspendu.');
+    }
+
+    await this.prisma.user.update({
+      where: { id: targetUserId },
+      data: {
+        suspendedAt: new Date(),
+        suspensionReason: reason?.trim() || null,
+      },
+    });
+
+    await this.auditService.log({
+      userId: adminUserId,
+      action: 'user_suspended',
+      resource: 'user',
+      resourceId: targetUserId,
+      details: { email: user.email, reason: reason ?? null },
+    });
+
+    return { success: true };
+  }
+
+  async unsuspendUser(targetUserId: string, adminUserId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!user || user.deletedAt) {
+      throw new NotFoundException('Utilisateur non trouvé.');
+    }
+    if (!user.suspendedAt) {
+      throw new BadRequestException('Ce compte n\'est pas suspendu.');
+    }
+
+    await this.prisma.user.update({
+      where: { id: targetUserId },
+      data: { suspendedAt: null, suspensionReason: null },
+    });
+
+    await this.auditService.log({
+      userId: adminUserId,
+      action: 'user_unsuspended',
+      resource: 'user',
+      resourceId: targetUserId,
+      details: { email: user.email },
+    });
+
+    return { success: true };
   }
 
   async listAllJobs(status?: string, q?: string, page = 1) {

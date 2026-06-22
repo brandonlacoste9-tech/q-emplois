@@ -27,7 +27,7 @@ Q-EMPLOIS is a Quebec-first task-based marketplace platform where customers post
 1. **Customer posts task** - "Need help moving furniture"
 2. **Taskers claim task** - Use 1 credit to claim
 3. **Work gets done** - Tasker completes the task
-4. **Payment happens** - Customer pays tasker directly
+4. **Payment happens** - Customer pays via optional Stripe checkout or directly with tasker
 5. **Reviews exchanged** - Both parties leave reviews
 
 ---
@@ -45,7 +45,8 @@ Q-EMPLOIS is a Quebec-first task-based marketplace platform where customers post
 
 ### What We DON'T Do
 
-- ❌ We don't handle customer-to-tasker payments
+- ✅ Optional Stripe checkout for task payments (after tasker selection)
+- Direct payment between customer and tasker is also supported
 - ❌ We don't take commissions on work
 - ❌ We don't guarantee work quality
 - ❌ We're just the middleman connecting people
@@ -302,11 +303,13 @@ All legal documents are in `docs/`:
 
 ### Task Payment (Customer → Tasker)
 
-**IMPORTANT:** We do NOT handle this payment.
+**Optional Stripe checkout** is available on the job detail page after a tasker is selected (status accepted, in progress, or completed).
 
-- Customer pays tasker directly (cash, e-transfer, etc.)
-- Platform is NOT involved in work payments
-- We only sell credits for task claims
+- Customer can pay via Stripe Checkout from the job page
+- Direct payment (cash, e-transfer, etc.) between customer and tasker is also fine
+- Platform facilitates optional online payment but does not require it
+
+See `docs/PAYMENT_POLICY.md` for the canonical policy.
 
 ---
 

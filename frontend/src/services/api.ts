@@ -629,6 +629,8 @@ class ApiService {
         createdAt: string;
         isVerified: boolean;
         serviceTypes: string[];
+        suspendedAt?: string | null;
+        suspensionReason?: string | null;
       }>;
       total: number;
       page: number;
@@ -639,6 +641,16 @@ class ApiService {
   async updateUserRole(userId: string, role: string) {
     const response = await this.client.patch(`/admin/users/${userId}/role`, { role });
     return response.data;
+  }
+
+  async suspendUser(userId: string, reason?: string) {
+    const response = await this.client.post(`/admin/users/${userId}/suspend`, { reason });
+    return response.data as { success: boolean };
+  }
+
+  async unsuspendUser(userId: string) {
+    const response = await this.client.post(`/admin/users/${userId}/unsuspend`);
+    return response.data as { success: boolean };
   }
 
   async getAdminJobs(params: { status?: string; q?: string; page?: number } = {}) {

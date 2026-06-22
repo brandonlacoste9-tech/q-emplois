@@ -31,6 +31,12 @@ const VERIFICATION_BADGES: Record<string, { label: string; color: string; bg: st
     bg: 'rgba(196,107,107,0.15)',
     icon: <XCircle className="w-3 h-3" />,
   },
+  rejected: {
+    label: 'Refusé',
+    color: '#C46B6B',
+    bg: 'rgba(196,107,107,0.15)',
+    icon: <XCircle className="w-3 h-3" />,
+  },
 };
 
 interface TaskerCardProps {

@@ -25,6 +25,8 @@ export interface TradesmanProfile extends User {
   licenseNumber?: string;
   licenseDocument?: string;
   verificationExpiresAt?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
   bio?: string;
   address?: Address;
   availability: Availability;

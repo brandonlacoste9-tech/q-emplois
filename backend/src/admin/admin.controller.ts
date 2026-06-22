@@ -91,6 +91,25 @@ export class AdminController {
     return this.adminService.updateUserRole(userId, body.role, adminId);
   }
 
+  @Post('users/:userId/suspend')
+  @ApiOperation({ summary: 'Suspendre un utilisateur' })
+  suspendUser(
+    @Param('userId') userId: string,
+    @CurrentUser('userId') adminId: string,
+    @Body() body?: { reason?: string },
+  ) {
+    return this.adminService.suspendUser(userId, adminId, body?.reason);
+  }
+
+  @Post('users/:userId/unsuspend')
+  @ApiOperation({ summary: 'Réactiver un utilisateur suspendu' })
+  unsuspendUser(
+    @Param('userId') userId: string,
+    @CurrentUser('userId') adminId: string,
+  ) {
+    return this.adminService.unsuspendUser(userId, adminId);
+  }
+
   @Get('jobs')
   @ApiOperation({ summary: 'Lister toutes les tâches (admin)' })
   listJobs(

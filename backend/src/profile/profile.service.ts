@@ -52,6 +52,9 @@ export class ProfileService {
         ? `https://t.me/${this.configService.get('TELEGRAM_BOT_USERNAME')}?start=link_${user.id}`
         : undefined,
       isVerified: provider?.isVerified ?? false,
+      verificationExpiresAt: provider?.verificationExpiresAt?.toISOString() ?? null,
+      rejectedAt: provider?.rejectedAt?.toISOString() ?? null,
+      rejectionReason: provider?.rejectionReason ?? null,
       rating: provider?.rating ?? 0,
       reviewCount: provider?.reviewCount ?? 0,
       createdAt: user.createdAt.toISOString(),

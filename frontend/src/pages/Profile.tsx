@@ -158,6 +158,7 @@ export function Profile() {
   const verificationColors: Record<typeof verificationStatus, string> = {
     verified: '#7FB069',
     pending: '#D9A441',
+    rejected: '#C46B6B',
     unverified: '#C46B6B',
     expired: '#C46B6B',
   };
@@ -213,9 +214,25 @@ export function Profile() {
         )}
 
         {canTask && verificationStatus !== 'verified' && (
-          <div className="stitch-box body-f" style={{ ...card, marginBottom: 20, padding: 16, background: 'rgba(184,123,68,0.12)' }}>
+          <div
+            className="stitch-box body-f"
+            style={{
+              ...card,
+              marginBottom: 20,
+              padding: 16,
+              background: verificationStatus === 'rejected'
+                ? 'rgba(196,107,107,0.12)'
+                : 'rgba(184,123,68,0.12)',
+              borderColor: verificationStatus === 'rejected' ? 'rgba(196,107,107,0.35)' : undefined,
+            }}
+          >
             <p className="cream-hi" style={{ fontWeight: 600, marginBottom: 6 }}>{VERIFICATION_LABELS[verificationStatus]}</p>
             <p className="muted" style={{ fontSize: 14, margin: 0 }}>{VERIFICATION_HINTS[verificationStatus]}</p>
+            {verificationStatus === 'rejected' && profile?.rejectionReason && (
+              <p className="body-f" style={{ fontSize: 13, marginTop: 10, color: '#E8D5C5' }}>
+                <strong>Motif :</strong> {profile.rejectionReason}
+              </p>
+            )}
           </div>
         )}
 

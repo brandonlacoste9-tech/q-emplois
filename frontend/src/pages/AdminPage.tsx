@@ -50,6 +50,8 @@ interface AdminUser {
   role: string;
   createdAt: string;
   isVerified: boolean;
+  suspendedAt?: string | null;
+  suspensionReason?: string | null;
 }
 
 interface AdminJob {
@@ -348,6 +350,40 @@ export function AdminPage() {
     }
   };
 
+  const handleSuspend = async (user: AdminUser) => {
+    const reason = window.prompt(
+      `Motif de suspension pour ${user.email} (optionnel) :`,
+      '',
+    );
+    if (reason === null) return;
+    setProcessing(user.id);
+    try {
+      await api.suspendUser(user.id, reason.trim() || undefined);
+      addToast('Compte suspendu', 'success');
+      await loadUsers();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      addToast(msg ?? 'Erreur', 'error');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleUnsuspend = async (user: AdminUser) => {
+    if (!window.confirm(`Réactiver le compte ${user.email} ?`)) return;
+    setProcessing(user.id);
+    try {
+      await api.unsuspendUser(user.id);
+      addToast('Compte réactivé', 'success');
+      await loadUsers();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      addToast(msg ?? 'Erreur', 'error');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
   const handleRoleChange = async (userId: string, role: string) => {
     if (!window.confirm(`Changer le rôle vers « ${ROLE_LABELS[role] ?? role} » ?`)) return;
     setProcessing(userId);
@@ -638,23 +674,30 @@ export function AdminPage() {
                       <th style={{ padding: 8, textAlign: 'left' }}>Utilisateur</th>
                       <th style={{ padding: 8, textAlign: 'left' }}>Rôle</th>
                       <th style={{ padding: 8, textAlign: 'left' }}>Inscrit</th>
+                      <th style={{ padding: 8, textAlign: 'left' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {adminUsers.length === 0 ? (
-                      <tr><td colSpan={3} className="muted2" style={{ padding: 16, textAlign: 'center' }}>Aucun utilisateur</td></tr>
+                      <tr><td colSpan={4} className="muted2" style={{ padding: 16, textAlign: 'center' }}>Aucun utilisateur</td></tr>
                     ) : adminUsers.map((u) => (
                       <tr key={u.id} style={{ borderBottom: '1px solid rgba(217,179,140,0.06)' }}>
                         <td style={{ padding: 8 }}>
                           <p className="cream-hi" style={{ fontWeight: 600 }}>{u.firstName} {u.lastName}</p>
                           <p className="muted2" style={{ fontSize: 12 }}>{u.email}</p>
-                          {u.isVerified && <span style={{ fontSize: 10, color: '#7FB069' }}>✓ vérifié</span>}
+                          {u.suspendedAt && (
+                            <span style={{ fontSize: 10, color: '#C46B6B', fontWeight: 700 }}>Suspendu</span>
+                          )}
+                          {u.isVerified && !u.suspendedAt && <span style={{ fontSize: 10, color: '#7FB069' }}>✓ vérifié</span>}
+                          {u.suspensionReason && (
+                            <p className="muted2" style={{ fontSize: 11, marginTop: 4 }}>{u.suspensionReason}</p>
+                          )}
                         </td>
                         <td style={{ padding: 8 }}>
                           <select
                             className="q-field"
                             value={u.role}
-                            disabled={processing === u.id || (u.id === profile?.id && u.role === 'admin')}
+                            disabled={processing === u.id || u.suspendedAt != null || (u.id === profile?.id && u.role === 'admin')}
                             onChange={(e) => handleRoleChange(u.id, e.target.value)}
                             style={{ fontSize: 12, padding: '4px 8px' }}
                           >
@@ -665,6 +708,31 @@ export function AdminPage() {
                         </td>
                         <td className="muted2" style={{ padding: 8, fontSize: 12 }}>
                           {new Date(u.createdAt).toLocaleDateString('fr-CA')}
+                        </td>
+                        <td style={{ padding: 8 }}>
+                          {u.id !== profile?.id && u.role !== 'admin' && (
+                            u.suspendedAt ? (
+                              <button
+                                type="button"
+                                className="ghost-btn"
+                                disabled={processing === u.id}
+                                onClick={() => handleUnsuspend(u)}
+                                style={{ padding: '4px 10px', fontSize: 12 }}
+                              >
+                                Réactiver
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="ghost-btn"
+                                disabled={processing === u.id}
+                                onClick={() => handleSuspend(u)}
+                                style={{ padding: '4px 10px', fontSize: 12, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)' }}
+                              >
+                                Suspendre
+                              </button>
+                            )
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -875,6 +943,8 @@ export function AdminPage() {
                 <option value="">Toutes les actions</option>
                 <option value="provider_verified">Vérification approuvée</option>
                 <option value="provider_verification_rejected">Vérification rejetée</option>
+                <option value="user_suspended">Compte suspendu</option>
+                <option value="user_unsuspended">Compte réactivé</option>
                 <option value="user_role_updated">Rôle modifié</option>
                 <option value="task_deleted">Tâche supprimée</option>
                 <option value="task_cancelled">Tâche annulée</option>

@@ -32,6 +32,7 @@ function mapBrowseResult(
     locationLat: unknown;
     locationLng: unknown;
     verificationExpiresAt: Date | null;
+    rejectedAt: Date | null;
     user: { id: string; firstName: string | null; lastName: string | null; avatarUrl: string | null; createdAt: Date };
   },
   distanceKm?: number,
@@ -40,6 +41,8 @@ function mapBrowseResult(
     ? 'expired'
     : provider.isVerified
     ? 'verified'
+    : provider.rejectedAt
+    ? 'rejected'
     : provider.licenseDocumentUrl
     ? 'pending'
     : 'unverified';
@@ -196,9 +199,9 @@ export class ProvidersService {
     });
 
     withDistance.sort((a, b) => {
-      const statusOrder: Record<string, number> = { verified: 0, pending: 1, unverified: 2, expired: 3 };
-      const aStatus = a.provider.isVerified ? 'verified' : a.provider.licenseDocumentUrl ? 'pending' : 'unverified';
-      const bStatus = b.provider.isVerified ? 'verified' : b.provider.licenseDocumentUrl ? 'pending' : 'unverified';
+      const statusOrder: Record<string, number> = { verified: 0, pending: 1, unverified: 2, rejected: 3, expired: 4 };
+      const aStatus = mapBrowseResult(a.provider).verificationStatus;
+      const bStatus = mapBrowseResult(b.provider).verificationStatus;
       if (aStatus !== bStatus) return (statusOrder[aStatus] ?? 0) - (statusOrder[bStatus] ?? 0);
       if (a.provider.rating !== b.provider.rating) return b.provider.rating - a.provider.rating;
       if (a.distanceKm != null && b.distanceKm != null) return a.distanceKm - b.distanceKm;
@@ -308,8 +311,12 @@ export class ProvidersService {
         licenseDocumentUrl: url,
         isVerified: false,
         verifiedAt: null,
+        rejectedAt: null,
+        rejectionReason: null,
       },
     });
+
+    await this.emailService.sendVerificationReceived(user.email, user.firstName);
 
     const adminEmail =
       this.configService.get<string>('ADMIN_EMAIL') || 'admin@qemplois.ca';
