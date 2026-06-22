@@ -236,6 +236,38 @@ a.nav-link:hover { color: #B87B44; }
   .mobile-bottom-nav { display: none !important; }
 }
 
+/* --- ADMIN MOBILE --- */
+.admin-mobile-cards { display: none; }
+.admin-mobile-card {
+  padding: 14px;
+  background: rgba(15, 25, 36, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(217, 179, 140, 0.08);
+}
+.admin-mobile-cards { flex-direction: column; gap: 10px; }
+
+@media (max-width: 768px) {
+  .admin-page-inner { padding: 20px 16px !important; }
+  .admin-page .admin-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-left: -4px;
+    margin-right: -4px;
+    padding-bottom: 4px;
+  }
+  .admin-page .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-page .admin-tabs button {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .admin-messages-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .admin-table-desktop { display: none !important; }
+  .admin-mobile-cards { display: flex !important; }
+}
+
 /* --- EMPIRE SPLIT (portal split band) --- */
 .empire-split {
   background: linear-gradient(180deg, rgba(31, 47, 63, 0.95), rgba(31, 47, 63, 0.8));

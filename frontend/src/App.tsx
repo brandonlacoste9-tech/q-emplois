@@ -1,5 +1,6 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { FEATURE_L_ATELIER } from './utils/featureFlags'
 const LandingPage = React.lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 const QJobsPage = React.lazy(() => import('./pages/QJobsPage').then(m => ({ default: m.QJobsPage })));
 const LAtelierPage = React.lazy(() => import('./pages/LAtelierPage').then(m => ({ default: m.LAtelierPage })));
@@ -117,7 +118,7 @@ function App() {
             path="/latelier"
             element={
               <ProtectedRoute>
-                <LAtelierPage />
+                {FEATURE_L_ATELIER ? <LAtelierPage /> : <Navigate to="/dashboard" replace />}
               </ProtectedRoute>
             }
           />

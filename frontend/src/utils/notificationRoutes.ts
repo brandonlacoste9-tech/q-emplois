@@ -1,3 +1,5 @@
+import { FEATURE_L_ATELIER } from './featureFlags';
+
 /** Resolve in-app route for a platform notification (backend `type` + `data`). */
 export function getNotificationHref(
   type: string,
@@ -23,7 +25,7 @@ export function getNotificationHref(
       if (conversationId) return `/messages?conversationId=${conversationId}`;
       return '/messages';
     case 'escrow_release':
-      return '/latelier';
+      return FEATURE_L_ATELIER ? '/latelier' : '/dashboard';
     case 'verification_approved':
     case 'verification_rejected':
       return '/profile';

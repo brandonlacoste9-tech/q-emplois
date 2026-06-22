@@ -28,6 +28,7 @@ import {
   VERIFICATION_LABELS,
   VERIFICATION_HINTS,
 } from '../utils/taskerVerification';
+import { FEATURE_L_ATELIER } from '../utils/featureFlags';
 
 const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 20 };
 
@@ -67,6 +68,7 @@ export function Profile() {
   }, [canTask]);
 
   useEffect(() => {
+    if (!FEATURE_L_ATELIER) return;
     api.getEscrowContracts().then(setEscrowContracts).catch(() => setEscrowContracts([]));
   }, []);
 
@@ -521,7 +523,7 @@ export function Profile() {
               </div>
             )}
 
-            {/* Escrow / L'Atelier */}
+            {FEATURE_L_ATELIER && (
             <div className="stitch-box" style={{ ...card, marginTop: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -550,6 +552,7 @@ export function Profile() {
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
       </div>

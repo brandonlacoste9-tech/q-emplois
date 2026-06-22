@@ -200,7 +200,7 @@ Backend runs on `http://localhost:3000`
 **Frontend (.env):**
 ```env
 VITE_API_URL=http://localhost:3000
-VITE_WHATSAPP_URL=https://wa.me/YOUR_NUMBER
+# Optional: VITE_FEATURE_L_ATELIER=true to show escrow UI (hidden by default in beta)
 ```
 
 **Backend (.env):**
@@ -233,7 +233,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 - Stitching borders (dashed lines)
 - Gold buttons with embossed effect
 - Service icons in circular badges
-- WhatsApp green for chat CTA
+- Telegram accent for tasker alert CTA
 
 ---
 
@@ -313,22 +313,11 @@ See `docs/PAYMENT_POLICY.md` for the canonical policy.
 
 ---
 
-## 🤖 WHATSAPP INTEGRATION
+## 📱 TASKER ALERTS (Telegram)
 
-### Max (Ti-Guy) - AI Assistant
+Taskers connect Telegram from **Profile** to receive job alerts and apply via **POSTULER** / **PASSER**.
 
-**Features:**
-- Find jobs via WhatsApp chat
-- Post tasks via WhatsApp
-- Get matched with taskers
-- Receive notifications
-- Quick responses (< 5 minutes)
-
-**Setup:**
-- WhatsApp Business API
-- Webhook integration
-- AI-powered matching
-- Bilingual support (FR/EN)
+WhatsApp alerts are **deferred** to a later phase — copy and docs reference Telegram only for now.
 
 ---
 
@@ -401,12 +390,10 @@ This is a private project, but if you're a founding tasker or early user:
 
 **For Taskers:**
 - Email: support@q-emplois.ca
-- Telegram: @qemplois
-- WhatsApp: [Your Number]
+- Telegram: connect from Profile for job alerts
 
 **For Customers:**
 - Email: help@q-emplois.ca
-- WhatsApp: Chat with Max
 
 **For Bugs:**
 - GitHub Issues (if public)

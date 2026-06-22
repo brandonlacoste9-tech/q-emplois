@@ -453,8 +453,8 @@ export function AdminPage() {
   }
 
   return (
-    <div className="leather" style={{ minHeight: '100vh' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
+    <div className="leather admin-page" style={{ minHeight: '100vh' }}>
+      <div className="admin-page-inner" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <BarChart3 className="w-8 h-8" style={{ color: gold }} />
@@ -481,7 +481,7 @@ export function AdminPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+        <div className="admin-tabs" style={{ display: 'flex', gap: 8, flexWrap: 'nowrap', marginBottom: 24 }}>
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -668,7 +668,53 @@ export function AdminPage() {
               <p className="body-f muted" style={{ textAlign: 'center', padding: 24 }}>Chargement…</p>
             ) : (
               <>
-                <table className="body-f" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <div className="admin-mobile-cards">
+                  {adminUsers.length === 0 ? (
+                    <p className="body-f muted2" style={{ padding: 16, textAlign: 'center' }}>Aucun utilisateur</p>
+                  ) : adminUsers.map((u) => (
+                    <div key={`card-${u.id}`} className="admin-mobile-card">
+                      <p className="serif cream-hi" style={{ fontWeight: 700, fontSize: 15 }}>{u.firstName} {u.lastName}</p>
+                      <p className="body-f muted2" style={{ fontSize: 13 }}>{u.email}</p>
+                      {u.suspendedAt && (
+                        <span style={{ fontSize: 11, color: '#C46B6B', fontWeight: 700 }}>Suspendu</span>
+                      )}
+                      {u.isVerified && !u.suspendedAt && (
+                        <span style={{ fontSize: 11, color: '#7FB069' }}>✓ vérifié</span>
+                      )}
+                      {u.suspensionReason && (
+                        <p className="body-f muted2" style={{ fontSize: 12, marginTop: 4 }}>{u.suspensionReason}</p>
+                      )}
+                      <p className="body-f muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                        Inscrit {new Date(u.createdAt).toLocaleDateString('fr-CA')}
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10, alignItems: 'center' }}>
+                        <select
+                          className="q-field"
+                          value={u.role}
+                          disabled={processing === u.id || u.suspendedAt != null || (u.id === profile?.id && u.role === 'admin')}
+                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                          style={{ fontSize: 12, padding: '6px 10px', flex: 1, minWidth: 120 }}
+                        >
+                          <option value="client">Client</option>
+                          <option value="provider">Travailleur</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                        {u.id !== profile?.id && u.role !== 'admin' && (
+                          u.suspendedAt ? (
+                            <button type="button" className="ghost-btn" disabled={processing === u.id} onClick={() => handleUnsuspend(u)} style={{ padding: '6px 12px', fontSize: 12 }}>
+                              Réactiver
+                            </button>
+                          ) : (
+                            <button type="button" className="ghost-btn" disabled={processing === u.id} onClick={() => handleSuspend(u)} style={{ padding: '6px 12px', fontSize: 12, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)' }}>
+                              Suspendre
+                            </button>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <table className="body-f admin-table-desktop" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ color: gold, borderBottom: '1px solid rgba(217,179,140,0.2)' }}>
                       <th style={{ padding: 8, textAlign: 'left' }}>Utilisateur</th>
@@ -749,7 +795,7 @@ export function AdminPage() {
         )}
 
         {tab === 'messages' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 380px) 1fr', gap: 16, alignItems: 'start' }}>
+          <div className="admin-messages-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 380px) 1fr', gap: 16, alignItems: 'start' }}>
             <div className="stitch-box" style={card}>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                 <button
@@ -963,28 +1009,44 @@ export function AdminPage() {
             {auditLoading ? (
               <div className="body-f muted" style={{ padding: 24, textAlign: 'center' }}>Chargement…</div>
             ) : (
-              <table className="body-f" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                <thead>
-                  <tr style={{ color: gold, borderBottom: '1px solid rgba(217,179,140,0.2)' }}>
-                    <th style={{ padding: 8, textAlign: 'left' }}>Date</th>
-                    <th style={{ padding: 8, textAlign: 'left' }}>Action</th>
-                    <th style={{ padding: 8, textAlign: 'left' }}>Ressource</th>
-                    <th style={{ padding: 8, textAlign: 'left' }}>Utilisateur</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <>
+                <div className="admin-mobile-cards">
                   {auditLogs.length === 0 ? (
-                    <tr><td colSpan={4} className="muted2" style={{ padding: 16, textAlign: 'center' }}>Aucun log</td></tr>
+                    <p className="body-f muted2" style={{ padding: 16, textAlign: 'center' }}>Aucun log</p>
                   ) : auditLogs.map((log) => (
-                    <tr key={log.id} style={{ borderBottom: '1px solid rgba(217,179,140,0.06)' }}>
-                      <td className="muted2" style={{ padding: 8 }}>{new Date(log.createdAt).toLocaleString('fr-CA')}</td>
-                      <td className="cream-hi" style={{ padding: 8 }}>{log.action}</td>
-                      <td className="muted2" style={{ padding: 8 }}>{log.resource}</td>
-                      <td className="muted2" style={{ padding: 8 }}>{log.userId?.slice(0, 8) || '—'}</td>
-                    </tr>
+                    <div key={`audit-card-${log.id}`} className="admin-mobile-card">
+                      <p className="body-f cream-hi" style={{ fontWeight: 600, fontSize: 14 }}>{log.action}</p>
+                      <p className="body-f muted2" style={{ fontSize: 12 }}>{log.resource}</p>
+                      <p className="body-f muted2" style={{ fontSize: 11, marginTop: 4 }}>
+                        {new Date(log.createdAt).toLocaleString('fr-CA')}
+                        {log.userId ? ` · ${log.userId.slice(0, 8)}` : ''}
+                      </p>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+                <table className="body-f admin-table-desktop" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ color: gold, borderBottom: '1px solid rgba(217,179,140,0.2)' }}>
+                      <th style={{ padding: 8, textAlign: 'left' }}>Date</th>
+                      <th style={{ padding: 8, textAlign: 'left' }}>Action</th>
+                      <th style={{ padding: 8, textAlign: 'left' }}>Ressource</th>
+                      <th style={{ padding: 8, textAlign: 'left' }}>Utilisateur</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditLogs.length === 0 ? (
+                      <tr><td colSpan={4} className="muted2" style={{ padding: 16, textAlign: 'center' }}>Aucun log</td></tr>
+                    ) : auditLogs.map((log) => (
+                      <tr key={log.id} style={{ borderBottom: '1px solid rgba(217,179,140,0.06)' }}>
+                        <td className="muted2" style={{ padding: 8 }}>{new Date(log.createdAt).toLocaleString('fr-CA')}</td>
+                        <td className="cream-hi" style={{ padding: 8 }}>{log.action}</td>
+                        <td className="muted2" style={{ padding: 8 }}>{log.resource}</td>
+                        <td className="muted2" style={{ padding: 8 }}>{log.userId?.slice(0, 8) || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
             )}
           </div>
         )}

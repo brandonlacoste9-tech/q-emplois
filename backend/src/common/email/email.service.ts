@@ -229,15 +229,7 @@ export class EmailService {
 
   private channelLinksSection(): string {
     const botUsername = process.env.TELEGRAM_BOT_USERNAME;
-    const whatsappNumber = process.env.WHATSAPP_CONTACT_NUMBER;
-    let html = '';
-    if (botUsername) {
-      html += `<p style="margin-top:16px;font-size:13px;color:#999;">🔔 <a href="https://t.me/${botUsername}" style="color:#7FB069;text-decoration:none;">Connecter Telegram</a> pour recevoir vos notifications en temps réel.</p>`;
-    }
-    if (whatsappNumber) {
-      const clean = whatsappNumber.replace(/[^0-9]/g, '');
-      html += `<p style="margin-top:4px;font-size:13px;color:#999;">💬 <a href="https://wa.me/${clean}" style="color:#7FB069;text-decoration:none;">WhatsApp</a> — notifications instantanées.</p>`;
-    }
-    return html;
+    if (!botUsername) return '';
+    return `<p style="margin-top:16px;font-size:13px;color:#999;">🔔 <a href="https://t.me/${botUsername}" style="color:#7FB069;text-decoration:none;">Connecter Telegram</a> pour recevoir vos notifications en temps réel.</p>`;
   }
 }

@@ -34,18 +34,18 @@ Set `VITE_API_URL=https://YOUR-RAILWAY-URL.up.railway.app/api/v1` in Vercel env 
 
 Point Stripe to: `https://YOUR-RAILWAY-URL.up.railway.app/api/v1/payments/webhook`
 
-## Twilio WhatsApp (tasker alerts)
+## Tasker alerts (Telegram — live)
 
-Set webhook to Railway WhatsApp endpoint; configure `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_NUMBER`.
+Taskers connect Telegram from **Profile**. Job alerts use the Telegram bot (`TELEGRAM_BOT_USERNAME` on Railway).
 
-When a client posts a task, matching taskers with **WhatsApp alerts enabled** receive a message. They reply **POSTULER** to apply (same credit rules as the web) or **PASSER** to skip. **STOP** disables alerts.
+## WhatsApp (deferred)
 
-Taskers enable alerts in **Profile** (requires phone on file). See `backend/src/whatsapp/README.md`.
+Twilio WhatsApp is **not** part of the current beta. Do not configure `TWILIO_*` unless building Phase 3 messaging. User-facing copy is Telegram-only.
 
 ## Beta smoke test
 
 1. Register client → post task
 2. Register tasker → claim with credits → start → complete → review
 3. Buy credits (Stripe test mode)
-4. Create escrow contract (L'Atelier)
-5. Send in-app message after claim
+4. Send in-app message after claim
+5. (Optional) L'Atelier escrow — requires `VITE_FEATURE_L_ATELIER=true` on Vercel
