@@ -69,7 +69,7 @@ export function AppNav() {
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+        <Link to="/" style={{ textDecoration: 'none' }} aria-label="Québec emplois — page d'accueil">
           <BrandLogo size="md" />
         </Link>
 
