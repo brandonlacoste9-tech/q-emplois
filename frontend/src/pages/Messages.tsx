@@ -760,11 +760,32 @@ export function Messages() {
                           className="q-field"
                           value={draft}
                           onChange={(e) => handleDraftChange(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              if (draft.trim() && !sending && !uploading) {
+                                handleSend(e as unknown as React.FormEvent);
+                              }
+                            }
+                          }}
+                          enterKeyHint="send"
                           placeholder={conversationStatus === 'application' ? 'Poser une question sur la tâche…' : 'Écrire un message…'}
+                          aria-label="Message"
                           style={{ flex: 1 }}
                         />
-                        <button type="submit" disabled={sending || uploading || !draft.trim()} className="gold-btn" style={{ padding: '10px 16px' }}>
-                          <Send className="w-4 h-4" />
+                        <button
+                          type="submit"
+                          disabled={sending || uploading || !draft.trim()}
+                          className="gold-btn"
+                          aria-label="Envoyer le message"
+                          style={{ padding: '10px 16px', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+                        >
+                          {sending ? (
+                            <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />
+                          ) : (
+                            <Send className="w-4 h-4" />
+                          )}
+                          <span className="messages-send-label">Envoyer</span>
                         </button>
                       </form>
                     </div>
@@ -785,6 +806,12 @@ export function Messages() {
       </div>
 
       <style>{`
+        .messages-thread-pane {
+          min-height: 0;
+        }
+        .messages-send-label {
+          font-size: 14px;
+        }
         @media (max-width: 768px) {
           .messages-layout {
             grid-template-columns: 1fr !important;
@@ -795,6 +822,7 @@ export function Messages() {
           .messages-thread-pane { display: none !important; }
           .messages-layout.thread-open .messages-list-pane { display: none !important; }
           .messages-layout.thread-open .messages-thread-pane { display: flex !important; }
+          .messages-send-label { display: none; }
         }
       `}</style>
     </div>
