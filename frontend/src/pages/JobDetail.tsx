@@ -154,6 +154,29 @@ export function JobDetail() {
     }
   };
 
+  const handleApply = async () => {
+    if (!job || processing) return;
+    setProcessing(true);
+    try {
+      const updated = await api.applyToJob(job.id, applyMessage || undefined);
+      setJob(updated);
+      setApplyMessage('');
+      addToast('Candidature envoyée!', 'success');
+      if (canTask) {
+        const bal = await api.getCreditBalance();
+        setCreditBalance(bal.balance);
+      }
+      await load();
+    } catch (err) {
+      const msg = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string })?.message
+        : undefined;
+      addToast(msg ?? 'Impossible de postuler', 'error');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handlePay = async () => {
     if (!job) return;
     setPaying(true);
@@ -231,9 +254,29 @@ export function JobDetail() {
                 <h1 className="serif cream-hi" style={{ fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 900 }}>{job.title}</h1>
               </div>
             </div>
-            <span className="body-f" style={{ fontSize: 12, color: '#1F2F3F', background: statusColors[job.status], padding: '4px 12px', borderRadius: 999, fontWeight: 700 }}>
-              {JOB_STATUS_LABELS[job.status]}
-            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+              {hasApplied && (
+                <span
+                  className="body-f"
+                  style={{
+                    fontSize: 12,
+                    color: '#1F2F3F',
+                    background: '#7FB069',
+                    padding: '4px 12px',
+                    borderRadius: 999,
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                  }}
+                >
+                  <Check className="w-3.5 h-3.5" /> Postulé
+                </span>
+              )}
+              <span className="body-f" style={{ fontSize: 12, color: '#1F2F3F', background: statusColors[job.status], padding: '4px 12px', borderRadius: 999, fontWeight: 700 }}>
+                {JOB_STATUS_LABELS[job.status]}
+              </span>
+            </div>
           </div>
 
           <p className="body-f muted" style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>{job.description}</p>
@@ -284,12 +327,6 @@ export function JobDetail() {
                 Compléter la vérification
               </Link>
             </div>
-          )}
-
-          {hasApplied && (
-            <p className="body-f" style={{ fontSize: 13, marginBottom: 20, color: '#D9A441' }}>
-              Candidature envoyée — en attente du choix du client.
-            </p>
           )}
 
           {!job.contactRedacted && job.addressRedacted && showTaskerActions && (
@@ -359,12 +396,18 @@ export function JobDetail() {
                   style={{ width: '100%', marginBottom: 8, resize: 'vertical' }}
                 />
                 <button
-                  onClick={() => runAction(() => api.applyToJob(job.id, applyMessage || undefined).then(), 'Candidature envoyée!')}
+                  type="button"
+                  onClick={handleApply}
                   disabled={processing}
                   className="gold-btn"
                   style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
-                  <Check className="w-4 h-4" /> Postuler (1 crédit)
+                  {processing ? (
+                    <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  {processing ? 'Envoi de la candidature…' : 'Postuler (1 crédit)'}
                 </button>
                 {(creditBalance ?? 0) <= 0 && (
                   <CreditsLink className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none' }}>Acheter des crédits</CreditsLink>
@@ -373,14 +416,35 @@ export function JobDetail() {
             )}
 
             {hasApplied && (
-              <button
-                onClick={() => runAction(() => api.withdrawApplication(job.id).then(), 'Candidature retirée')}
-                disabled={processing}
-                className="ghost-btn"
-                style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)' }}
-              >
-                <X className="w-4 h-4" /> Retirer ma candidature
-              </button>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', width: '100%' }}>
+                <span
+                  className="body-f"
+                  style={{
+                    padding: '10px 18px',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    borderRadius: 8,
+                    border: '2px solid #7FB069',
+                    background: 'linear-gradient(180deg, #8BC47A, #6FA85E)',
+                    color: '#1F2F3F',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <Check className="w-4 h-4" />
+                  Postulé — en attente du client
+                </span>
+                <button
+                  type="button"
+                  onClick={() => runAction(() => api.withdrawApplication(job.id).then(), 'Candidature retirée')}
+                  disabled={processing}
+                  className="ghost-btn"
+                  style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)' }}
+                >
+                  <X className="w-4 h-4" /> Retirer ma candidature
+                </button>
+              </div>
             )}
 
             {showTaskerActions && job.status === 'accepted' && (

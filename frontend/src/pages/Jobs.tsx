@@ -111,13 +111,22 @@ export function Jobs() {
       return;
     }
     setProcessingJob(jobId);
+    setJobs((prev) =>
+      prev.map((j) => (j.id === jobId ? { ...j, myApplicationStatus: 'pending' } : j)),
+    );
     try {
-      await api.applyToJob(jobId);
+      const updated = await api.applyToJob(jobId);
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? updated : j)),
+      );
       addToast('Candidature envoyée!', 'success');
       const bal = await api.getCreditBalance();
       setCreditBalance(bal.balance);
       loadJobs();
     } catch (err) {
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, myApplicationStatus: null } : j)),
+      );
       const msg = axios.isAxiosError(err)
         ? (err.response?.data as { message?: string })?.message
         : undefined;
@@ -353,9 +362,30 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onCancelOrDelet
             <h3 className="serif cream-hi" style={{ fontSize: 16, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.title}</h3>
           </div>
         </Link>
-        <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: statusColors[job.status], padding: '2px 8px', borderRadius: 999, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
-          {JOB_STATUS_LABELS[job.status]}
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end', flexShrink: 0 }}>
+          {job.myApplicationStatus === 'pending' && (
+            <span
+              className="body-f"
+              style={{
+                fontSize: 11,
+                color: '#1F2F3F',
+                background: '#7FB069',
+                padding: '2px 8px',
+                borderRadius: 999,
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              <Check className="w-3 h-3" /> Postulé
+            </span>
+          )}
+          <span className="body-f" style={{ fontSize: 11, color: '#1F2F3F', background: statusColors[job.status], padding: '2px 8px', borderRadius: 999, fontWeight: 700, whiteSpace: 'nowrap' }}>
+            {JOB_STATUS_LABELS[job.status]}
+          </span>
+        </div>
       </div>
       <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
@@ -388,12 +418,6 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onCancelOrDelet
         </p>
       )}
 
-      {job.myApplicationStatus === 'pending' && (
-        <p className="body-f" style={{ fontSize: 12, marginBottom: 14, color: '#D9A441' }}>
-          Candidature envoyée
-        </p>
-      )}
-
       {!isClient && !job.contactRedacted && job.addressRedacted && job.status === 'accepted' && (
         <p className="body-f muted2" style={{ fontSize: 12, marginBottom: 14, fontStyle: 'italic' }}>
           Adresse exacte visible lorsque vous démarrez le job.
@@ -411,10 +435,38 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onCancelOrDelet
       </Link>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 'auto', flexWrap: 'wrap' }}>
+        {!isClient && job.status === 'pending' && job.myApplicationStatus === 'pending' && (
+          <span
+            className="body-f"
+            style={{
+              flex: 1,
+              minWidth: 120,
+              padding: '8px 14px',
+              fontSize: 14,
+              fontWeight: 700,
+              borderRadius: 8,
+              border: '2px solid #7FB069',
+              background: 'linear-gradient(180deg, #8BC47A, #6FA85E)',
+              color: '#1F2F3F',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+            }}
+          >
+            <Check className="w-4 h-4" />
+            {isProcessing ? 'Envoi…' : 'Postulé'}
+          </span>
+        )}
         {!isClient && job.status === 'pending' && job.myApplicationStatus !== 'pending' && (
           <>
             <button onClick={() => onAccept(job.id)} disabled={isProcessing || !canApply} className="gold-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: canApply ? 1 : 0.5 }}>
-              <Check className="w-4 h-4" /> Postuler
+              {isProcessing ? (
+                <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />
+              ) : (
+                <Check className="w-4 h-4" />
+              )}
+              {isProcessing ? 'Envoi…' : 'Postuler'}
             </button>
             {!canApply && verificationBlocked && (
               <Link to="/profile" className="ghost-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}>
