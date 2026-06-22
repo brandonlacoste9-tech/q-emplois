@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { useUnreadMessages } from '../hooks/useUnreadMessages';
 import type { Conversation, ConversationJobContext, ConversationStatus, Message, MessageSearchResult } from '../types';
-import { MessageSquare, Send, Loader2, ArrowLeft, Briefcase, ImagePlus, Search, Flag } from 'lucide-react';
+import { MessageSquare, Send, Loader2, ArrowLeft, Briefcase, ImagePlus, Search, Flag, Check } from 'lucide-react';
 import { gold } from '../styles/design-tokens';
 import { socketService } from '../services/socket';
 import { formatPrice, formatDate } from '../utils';
@@ -93,6 +93,8 @@ export function Messages() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [sendFeedback, setSendFeedback] = useState<'idle' | 'sent'>('idle');
+  const sendFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [typingUserId, setTypingUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<MessageSearchResult[]>([]);
@@ -111,6 +113,20 @@ export function Messages() {
   }, [messages, user?.id]);
 
   const quickReplies = conversationStatus ? QUICK_REPLIES[conversationStatus] : [];
+
+  const flashSent = useCallback(() => {
+    if (sendFeedbackTimerRef.current) clearTimeout(sendFeedbackTimerRef.current);
+    setSendFeedback('sent');
+    sendFeedbackTimerRef.current = setTimeout(() => setSendFeedback('idle'), 2000);
+  }, []);
+
+  useEffect(() => () => {
+    if (sendFeedbackTimerRef.current) clearTimeout(sendFeedbackTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    setSendFeedback('idle');
+  }, [activeId]);
 
   const runSearch = useCallback(async (q: string) => {
     const trimmed = q.trim();
@@ -378,6 +394,7 @@ export function Messages() {
           updated.unshift(conv);
           return updated;
         });
+        flashSent();
       } catch (err: unknown) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
         const msg = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message
@@ -425,6 +442,7 @@ export function Messages() {
         updated.unshift(conv);
         return updated;
       });
+      flashSent();
     } catch (err: unknown) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setDraft(content);
@@ -434,6 +452,12 @@ export function Messages() {
       setSending(false);
     }
   };
+
+  const sendButtonLabel = sending
+    ? 'Envoi…'
+    : sendFeedback === 'sent'
+      ? 'Envoyé'
+      : 'Envoyer';
 
   const selectConversation = (id: string) => {
     setActiveId(id);
@@ -669,7 +693,10 @@ export function Messages() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, justifyContent: mine ? 'flex-end' : 'flex-start' }}>
                             <p className="body-f muted2" style={{ fontSize: 11, margin: 0, textAlign: mine ? 'right' : 'left' }}>
                               {new Date(m.createdAt).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
-                              {mine && m.id === lastOwnMessageId && m.isRead && (
+                              {mine && m.id.startsWith('temp-') && (
+                                <span style={{ marginLeft: 6, color: '#D9A441' }}>· Envoi…</span>
+                              )}
+                              {mine && !m.id.startsWith('temp-') && m.id === lastOwnMessageId && m.isRead && (
                                 <span style={{ marginLeft: 6, color: gold }}>· Vu</span>
                               )}
                             </p>
@@ -715,7 +742,14 @@ export function Messages() {
                   </div>
 
                   {canSend ? (
-                    <div style={{ borderTop: '1px solid rgba(217,179,140,0.12)' }}>
+                    <div
+                      className="messages-composer"
+                      style={{
+                        borderTop: '1px solid rgba(217,179,140,0.12)',
+                        background: 'rgba(15,25,36,0.85)',
+                        flexShrink: 0,
+                      }}
+                    >
                       {quickReplies.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 14px 0' }}>
                           {quickReplies.map((text) => (
@@ -783,19 +817,34 @@ export function Messages() {
                         />
                         <button
                           type="submit"
-                          disabled={sending || uploading || !draft.trim()}
-                          className="gold-btn"
+                          disabled={sending || uploading || sendFeedback === 'sent' || !draft.trim()}
+                          className={sendFeedback === 'sent' ? 'messages-send-btn sent' : 'gold-btn messages-send-btn'}
                           aria-label="Envoyer le message"
-                          style={{ padding: '10px 16px', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+                          style={{
+                            padding: '10px 18px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 6,
+                            flexShrink: 0,
+                            minWidth: 108,
+                            fontSize: 14,
+                            fontWeight: 700,
+                          }}
                         >
                           {sending ? (
                             <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />
+                          ) : sendFeedback === 'sent' ? (
+                            <Check className="w-4 h-4" />
                           ) : (
                             <Send className="w-4 h-4" />
                           )}
-                          <span className="messages-send-label">Envoyer</span>
+                          <span>{sendButtonLabel}</span>
                         </button>
                       </form>
+                      <p className="body-f muted2" style={{ fontSize: 11, margin: '0 14px 10px', textAlign: 'right' }}>
+                        {sending ? 'Envoi en cours…' : sendFeedback === 'sent' ? 'Message envoyé ✓' : 'Tapez votre message puis appuyez sur Envoyer'}
+                      </p>
                     </div>
                   ) : (
                     <p className="body-f muted2" style={{ padding: 14, fontSize: 13, borderTop: '1px solid rgba(217,179,140,0.12)', margin: 0 }}>
@@ -817,8 +866,25 @@ export function Messages() {
         .messages-thread-pane {
           min-height: 0;
         }
-        .messages-send-label {
-          font-size: 14px;
+        .messages-composer {
+          position: sticky;
+          bottom: 0;
+          z-index: 2;
+        }
+        .messages-send-btn.sent {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 10px 18px;
+          min-width: 108px;
+          border-radius: 8px;
+          border: 2px solid #7FB069;
+          background: linear-gradient(180deg, #8BC47A, #6FA85E);
+          color: #1F2F3F;
+          font-weight: 700;
+          cursor: default;
+          box-shadow: 0 0 0 2px rgba(127,176,105,0.35);
         }
         @media (max-width: 768px) {
           .messages-layout {
@@ -830,7 +896,7 @@ export function Messages() {
           .messages-thread-pane { display: none !important; }
           .messages-layout.thread-open .messages-list-pane { display: none !important; }
           .messages-layout.thread-open .messages-thread-pane { display: flex !important; }
-          .messages-send-label { display: none; }
+          .messages-send-btn { min-width: 96px !important; padding: 10px 14px !important; }
         }
       `}</style>
     </div>
