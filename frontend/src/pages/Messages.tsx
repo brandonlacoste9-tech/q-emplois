@@ -82,6 +82,7 @@ export function Messages() {
   const [searchParams] = useSearchParams();
   const jobIdParam = searchParams.get('jobId');
   const taskerIdParam = searchParams.get('taskerId');
+  const conversationIdParam = searchParams.get('conversationId');
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -180,6 +181,14 @@ export function Messages() {
   );
 
   const pickConversation = useCallback((data: Conversation[]) => {
+    if (conversationIdParam) {
+      const byId = data.find((c) => c.id === conversationIdParam);
+      if (byId) {
+        setActiveId(byId.id);
+        setMobileShowThread(true);
+        return;
+      }
+    }
     const match = jobIdParam ? jobThreadMatch(data) : null;
     if (match) {
       setActiveId(match.id);
@@ -187,7 +196,7 @@ export function Messages() {
       return;
     }
     if (data.length > 0) setActiveId(data[0].id);
-  }, [jobIdParam, jobThreadMatch]);
+  }, [conversationIdParam, jobIdParam, jobThreadMatch]);
 
   const mergeJobConversations = useCallback(async (data: Conversation[]) => {
     if (!jobIdParam) return data;

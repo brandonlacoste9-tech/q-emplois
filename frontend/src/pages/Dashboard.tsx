@@ -19,7 +19,8 @@ import type { DashboardStats, Notification, Job, JobStatus } from '../types';
 import { JOB_STATUS_LABELS } from '../types';
 import { api } from '../services/api';
 import { TaskerOnboarding } from '../components/TaskerOnboarding';
-import { formatPrice, formatShortDate, formatTime, formatDistance } from '../utils';
+import { NotificationList } from '../components/NotificationList';
+import { formatPrice, formatShortDate, formatDistance } from '../utils';
 import { gold } from '../styles/design-tokens';
 
 const wrap: React.CSSProperties = { maxWidth: 1200, margin: '0 auto', padding: '32px 24px' };
@@ -170,14 +171,11 @@ export function Dashboard() {
               <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <Bell className="w-5 h-5" style={{ color: gold }} /> Notifications
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {notifications.map((n) => (
-                  <div key={n.id} style={{ padding: 12, borderRadius: 8, background: 'rgba(15,25,36,0.5)' }}>
-                    <p className="body-f cream-hi" style={{ fontSize: 14, fontWeight: 600 }}>{n.title}</p>
-                    <p className="body-f muted2" style={{ fontSize: 13, marginTop: 4 }}>{n.message}</p>
-                  </div>
-                ))}
-              </div>
+              <NotificationList
+                notifications={notifications}
+                onChange={setNotifications}
+                compact
+              />
             </div>
           )}
 
@@ -392,20 +390,7 @@ export function Dashboard() {
                 <p className="body-f muted2" style={{ fontSize: 14 }}>Aucune notification</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {notifications.map((notif) => (
-                  <div key={notif.id} style={{ padding: 12, borderRadius: 8, background: notif.isRead ? 'rgba(15,25,36,0.4)' : 'rgba(184,123,68,0.12)' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0, background: notif.isRead ? 'rgba(217,179,140,0.3)' : gold }} />
-                      <div>
-                        <p className="body-f cream-hi" style={{ fontSize: 14, fontWeight: 600 }}>{notif.title}</p>
-                        <p className="body-f muted" style={{ fontSize: 12, marginTop: 2 }}>{notif.message}</p>
-                        <p className="body-f muted2" style={{ fontSize: 11, marginTop: 4 }}>{formatTime(notif.createdAt)}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <NotificationList notifications={notifications} onChange={setNotifications} />
             )}
           </div>
         </div>

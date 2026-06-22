@@ -35,6 +35,7 @@ export function MobileBottomNav() {
   ];
 
   const taskerItems = [
+    { path: '/dashboard', label: 'Accueil', icon: Home },
     { path: '/jobs', label: 'Jobs', icon: Briefcase },
     { path: '/credits', label: 'Crédits', icon: Coins },
     { path: '/messages', label: 'Messages', icon: MessageSquare },

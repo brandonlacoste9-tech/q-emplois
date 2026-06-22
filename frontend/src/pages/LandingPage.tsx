@@ -17,6 +17,7 @@ const T = {
       sub: "Déneigement, déménagement, montage de meubles, ménage. Des Québécois vérifiés, un prix clair — vous choisissez votre travailleur parmi les candidats.",
       ph: "De quoi avez-vous besoin ? (ex. déneigement)",
       cta: "Trouver un pro",
+      publishFree: "Publier gratuitement — sans compte",
       city: "Pointe-Claire · Montréal · Rive-Sud",
     },
     trust: {
@@ -89,6 +90,7 @@ const T = {
       sub: "Snow removal, moving, furniture assembly, cleaning. Verified Quebecers, clear pricing — you choose your tasker from applicants.",
       ph: "What do you need? (e.g. snow removal)",
       cta: "Find a pro",
+      publishFree: "Post for free — no account needed",
       city: "Pointe-Claire · Montreal · South Shore",
     },
     trust: {
@@ -405,9 +407,9 @@ export function LandingPage() {
             >
               {lang === "fr" ? "EN" : "FR"}
             </button>
-            <button className="gold-btn" style={{ padding: "8px 18px", fontSize: 13 }}>
+            <Link to="/register" className="gold-btn" style={{ padding: "8px 18px", fontSize: 13, textDecoration: "none" }}>
               {t.nav.signup}
-            </button>
+            </Link>
           </div>
           {/* Mobile hamburger */}
           <button
@@ -452,9 +454,14 @@ export function LandingPage() {
               >
                 {lang === "fr" ? "EN" : "FR"}
               </button>
-              <button className="gold-btn" style={{ flex: 1, padding: "8px 18px", fontSize: 13 }}>
+              <Link
+                to="/register"
+                onClick={() => setMobileOpen(false)}
+                className="gold-btn"
+                style={{ flex: 1, padding: "8px 18px", fontSize: 13, textDecoration: "none", textAlign: "center" }}
+              >
                 {t.nav.signup}
-              </button>
+              </Link>
             </div>
           </div>
         )}
@@ -532,6 +539,11 @@ export function LandingPage() {
               {t.hero.cta}
             </Link>
           </div>
+          <p className="body-f" style={{ marginTop: 14, fontSize: 14 }}>
+            <Link to="/book" className="nav-link" style={{ color: "#E8CDB0", fontWeight: 600 }}>
+              {t.hero.publishFree}
+            </Link>
+          </p>
         </div>
       </section>
 

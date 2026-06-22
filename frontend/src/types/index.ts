@@ -330,9 +330,24 @@ export interface Conversation {
   updatedAt: string;
 }
 
+export type NotificationType =
+  | 'job_application'
+  | 'job_application_rejected'
+  | 'job_accepted'
+  | 'job_cancelled'
+  | 'job_started'
+  | 'job_completed'
+  | 'job_deleted'
+  | 'new_message'
+  | 'escrow_release'
+  | 'new_job'
+  | 'message'
+  | 'payment'
+  | 'review';
+
 export interface Notification {
   id: string;
-  type: 'new_job' | 'job_accepted' | 'job_cancelled' | 'message' | 'payment' | 'review';
+  type: NotificationType | string;
   title: string;
   message: string;
   isRead: boolean;
