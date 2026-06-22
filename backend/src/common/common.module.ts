@@ -7,6 +7,7 @@ import { AuditModule } from './audit/audit.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { DataRetentionService } from './services/data-retention.service';
+import { DemoJobsService } from './demo-jobs/demo-jobs.service';
 import { NotificationService } from './services/notification.service';
 import { TelegramService } from './services/telegram.service';
 import { EmailService } from './services/email.service';
@@ -30,12 +31,13 @@ import { CreditsModule } from '../credits/credits.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [JwtAuthGuard, RolesGuard, DataRetentionService, NotificationService, TelegramService, EmailService],
+  providers: [JwtAuthGuard, RolesGuard, DataRetentionService, DemoJobsService, NotificationService, TelegramService, EmailService],
   exports: [
     PrismaModule,
     RedisModule,
     AuditModule,
     DataRetentionService,
+    DemoJobsService,
     NotificationService,
     TelegramService,
     EmailService,

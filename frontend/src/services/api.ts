@@ -665,7 +665,14 @@ class ApiService {
 
   async seedDemoJobs() {
     const response = await this.client.post('/admin/seed-demo');
-    return response.data as { created: number; updated: number; total: number };
+    return response.data as {
+      created: number;
+      updated: number;
+      cancelled?: number;
+      rotationIndex?: number;
+      openCount?: number;
+      total: number;
+    };
   }
 }
 

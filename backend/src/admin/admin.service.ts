@@ -3,7 +3,7 @@ import { TaskStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { EmailService } from '../common/email/email.service';
 import { AuditService } from '../common/audit/audit.service';
-import { geocodeQuebecAddress } from '../common/utils/geocode';
+import { DemoJobsService } from '../common/demo-jobs/demo-jobs.service';
 
 @Injectable()
 export class AdminService {
@@ -26,6 +26,7 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     private readonly auditService: AuditService,
+    private readonly demoJobsService: DemoJobsService,
   ) {}
 
   async getBetaMetrics(days = 30) {
@@ -457,89 +458,16 @@ export class AdminService {
   }
 
   async seedDemoJobs(adminUserId: string) {
-    const clients = await this.prisma.user.findMany({
-      where: {
-        email: { in: ['demo.client1@qemplois.ca', 'demo.client2@qemplois.ca'] },
-        deletedAt: null,
-      },
-    });
-    if (clients.length === 0) {
+    try {
+      return await this.demoJobsService.refreshDemoJobs({
+        rotate: true,
+        adminUserId,
+        reason: 'admin_manual',
+      });
+    } catch (err) {
       throw new BadRequestException(
-        'Comptes démo introuvables. Exécutez npm run seed sur le serveur d\'abord.',
+        err instanceof Error ? err.message : 'Échec de la restauration des démos.',
       );
     }
-
-    const demoTasks = [
-      { title: 'Ménage printemps 3½', description: 'Nettoyage complet d\'un 3½ à Rosemont.', serviceType: 'menage', address: '1230 Rue Beaubien E', city: 'Montréal', postalCode: 'H2S 1T7', price: 120 },
-      { title: 'Déménagement studio', description: 'Aide pour déménager un studio (2e étage sans ascenseur).', serviceType: 'demenagement', address: '4500 Rue Saint-Denis', city: 'Montréal', postalCode: 'H2J 2L3', price: 180 },
-      { title: 'Montage IKEA', description: 'Montage d\'un lit et d\'une commode IKEA.', serviceType: 'montage_meubles', address: '7890 Boul. Décarie', city: 'Montréal', postalCode: 'H4P 1H5', price: 95 },
-      { title: 'Nettoyage après rénovation', description: 'Poussière et débris après petite rénovation de cuisine.', serviceType: 'nettoyage', address: '2100 Rue Ontario E', city: 'Montréal', postalCode: 'H2K 1V2', price: 150 },
-      { title: 'Tonte de pelouse', description: 'Pelouse moyenne, équipement sur place.', serviceType: 'jardinage', address: '5600 Av. du Parc', city: 'Montréal', postalCode: 'H2V 4H1', price: 60 },
-      { title: 'Livraison meubles Kijiji', description: 'Ramasser un canapé et livrer à Verdun.', serviceType: 'livraison', address: '3900 Rue Wellington', city: 'Verdun', postalCode: 'H4G 1V3', price: 75 },
-      { title: 'Aide ménage hebdo', description: '2h de ménage régulier.', serviceType: 'menage', address: '1200 Rue Sherbrooke O', city: 'Montréal', postalCode: 'H3A 1H6', price: 70 },
-      { title: 'Courses et livraison', description: 'Faire l\'épicerie et livrer chez une personne âgée.', serviceType: 'coursier', address: '1500 Boul. René-Lévesque', city: 'Montréal', postalCode: 'H3G 1T7', price: 35 },
-    ].filter((t) => !/déneigement|deneigement|snow removal/i.test(t.title));
-
-    let created = 0;
-    let updated = 0;
-    for (let i = 0; i < demoTasks.length; i++) {
-      const t = demoTasks[i];
-      const client = clients[i % clients.length];
-      const coords = geocodeQuebecAddress(t.city, t.postalCode);
-      const existing = await this.prisma.task.findFirst({
-        where: { title: t.title, clientId: client.id },
-      });
-      if (!existing) {
-        await this.prisma.task.create({
-          data: {
-            clientId: client.id,
-            title: t.title,
-            description: t.description,
-            serviceType: t.serviceType,
-            address: t.address,
-            city: t.city,
-            postalCode: t.postalCode,
-            locationLat: coords?.lat,
-            locationLng: coords?.lng,
-            estimatedPrice: t.price,
-            estimatedDuration: 120,
-            scheduledDate: new Date(Date.now() + (i + 1) * 86400000),
-            status: TaskStatus.open,
-          },
-        });
-        created++;
-      } else {
-        const patch: {
-          locationLat?: number;
-          locationLng?: number;
-          status?: TaskStatus;
-          scheduledDate?: Date;
-        } = {};
-        if (existing.locationLat == null && coords) {
-          patch.locationLat = coords.lat;
-          patch.locationLng = coords.lng;
-        }
-        if (existing.status !== TaskStatus.open) {
-          patch.status = TaskStatus.open;
-          patch.scheduledDate = new Date(Date.now() + (i + 1) * 86400000);
-        }
-        if (Object.keys(patch).length > 0) {
-          await this.prisma.task.update({
-            where: { id: existing.id },
-            data: patch,
-          });
-          updated++;
-        }
-      }
-    }
-
-    await this.auditService.log({
-      userId: adminUserId,
-      action: 'demo_jobs_seeded',
-      resource: 'task',
-      details: { created, updated },
-    });
-
-    return { created, updated, total: demoTasks.length };
   }
 }

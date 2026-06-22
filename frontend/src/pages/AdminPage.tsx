@@ -364,11 +364,17 @@ export function AdminPage() {
   };
 
   const handleSeedDemo = async () => {
-    if (!window.confirm('Restaurer les tâches démo d\'été manquantes?')) return;
+    if (!window.confirm('Rotation des tâches démo? Les jobs ouverts des comptes démo seront remplacés par le jeu actuel.')) return;
     setSeeding(true);
     try {
       const result = await api.seedDemoJobs();
-      addToast(`${result.created} créée(s), ${result.updated} mise(s) à jour`, 'success');
+      const parts = [
+        `${result.created} créée(s)`,
+        result.updated ? `${result.updated} mise(s) à jour` : null,
+        result.cancelled ? `${result.cancelled} ancienne(s) retirée(s)` : null,
+        result.rotationIndex != null ? `jeu ${result.rotationIndex + 1}` : null,
+      ].filter(Boolean);
+      addToast(parts.join(' · '), 'success');
       await loadCore();
       if (tab === 'jobs') await loadJobs();
     } catch (err: unknown) {
@@ -873,6 +879,7 @@ export function AdminPage() {
                 <option value="task_deleted">Tâche supprimée</option>
                 <option value="task_cancelled">Tâche annulée</option>
                 <option value="demo_jobs_seeded">Démos restaurées</option>
+                <option value="demo_jobs_rotated">Démos rotées (cron)</option>
                 <option value="deletion_requested">Suppression demandée</option>
                 <option value="message_reported">Message signalé</option>
                 <option value="message_report_resolved">Signalement traité</option>

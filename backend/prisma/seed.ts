@@ -1,6 +1,7 @@
 import { PrismaClient, UserRole, TaskStatus, CreditTransactionType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { geocodeQuebecAddress } from '../src/common/utils/geocode';
+import { getActiveDemoJobSet } from '../src/common/demo-jobs/demo-jobs.catalog';
 
 const prisma = new PrismaClient();
 
@@ -106,21 +107,7 @@ async function main() {
     }),
   );
 
-  const demoTasks = [
-    { title: 'Ménage printemps 3½', description: 'Nettoyage complet d\'un 3½ à Rosemont.', serviceType: 'menage', address: '1230 Rue Beaubien E', city: 'Montréal', postalCode: 'H2S 1T7', price: 120 },
-    { title: 'Déménagement studio', description: 'Aide pour déménager un studio (2e étage sans ascenseur).', serviceType: 'demenagement', address: '4500 Rue Saint-Denis', city: 'Montréal', postalCode: 'H2J 2L3', price: 180 },
-    { title: 'Montage IKEA', description: 'Montage d\'un lit et d\'une commode IKEA.', serviceType: 'montage_meubles', address: '7890 Boul. Décarie', city: 'Montréal', postalCode: 'H4P 1H5', price: 95 },
-    { title: 'Nettoyage après rénovation', description: 'Poussière et débris après petite rénovation de cuisine.', serviceType: 'nettoyage', address: '2100 Rue Ontario E', city: 'Montréal', postalCode: 'H2K 1V2', price: 150 },
-    { title: 'Tonte de pelouse', description: 'Pelouse moyenne, équipement sur place.', serviceType: 'jardinage', address: '5600 Av. du Parc', city: 'Montréal', postalCode: 'H2V 4H1', price: 60 },
-    { title: 'Livraison meubles Kijiji', description: 'Ramasser un canapé et livrer à Verdun.', serviceType: 'livraison', address: '3900 Rue Wellington', city: 'Verdun', postalCode: 'H4G 1V3', price: 75 },
-    { title: 'Aide ménage hebdo', description: '2h de ménage régulier.', serviceType: 'menage', address: '1200 Rue Sherbrooke O', city: 'Montréal', postalCode: 'H3A 1H6', price: 70 },
-    { title: 'Courses et livraison', description: 'Faire l\'épicerie et livrer chez une personne âgée.', serviceType: 'coursier', address: '1500 Boul. René-Lévesque', city: 'Montréal', postalCode: 'H3G 1T7', price: 35 },
-  ];
-
-  // Summer marketplace — skip winter-only listings (e.g. snow removal)
-  const activeDemoTasks = demoTasks.filter(
-    (t) => !/déneigement|deneigement|snow removal/i.test(t.title),
-  );
+  const activeDemoTasks = getActiveDemoJobSet(3);
 
   for (let i = 0; i < activeDemoTasks.length; i++) {
     const t = activeDemoTasks[i];
@@ -142,7 +129,7 @@ async function main() {
           locationLat: coords?.lat,
           locationLng: coords?.lng,
           estimatedPrice: t.price,
-          estimatedDuration: 120,
+          estimatedDuration: t.estimatedDuration ?? 120,
           scheduledDate: new Date(Date.now() + (i + 1) * 86400000),
           status: TaskStatus.open,
         },
