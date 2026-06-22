@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { BrandLogo } from './BrandLogo';
+import { UnreadBadge } from './UnreadBadge';
+import { useUnreadMessages } from '../hooks/useUnreadMessages';
 import { gold } from '../styles/design-tokens';
 
 export function AppNav() {
@@ -9,6 +11,7 @@ export function AppNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { logout, user, isClientMode, isAdmin, canTask, setMode } = useAuth();
+  const { unreadTotal } = useUnreadMessages();
 
   const clientNav = [
     { label: 'Tableau de bord', path: '/dashboard' },
@@ -85,9 +88,10 @@ export function AppNav() {
               key={item.path}
               to={item.path}
               className="nav-link nav-hide-sm"
-              style={{ color: pathname === item.path || (item.path === '/jobs' && pathname.startsWith('/jobs/')) ? '#E8CDB0' : '#9A8468', fontWeight: pathname === item.path || (item.path === '/jobs' && pathname.startsWith('/jobs/')) ? 700 : 400 }}
+              style={{ color: pathname === item.path || (item.path === '/jobs' && pathname.startsWith('/jobs/')) ? '#E8CDB0' : '#9A8468', fontWeight: pathname === item.path || (item.path === '/jobs' && pathname.startsWith('/jobs/')) ? 700 : 400, display: 'inline-flex', alignItems: 'center' }}
             >
               {item.label}
+              {item.path === '/messages' && <UnreadBadge count={unreadTotal} />}
             </Link>
           ))}
           {isAdmin && (
@@ -141,9 +145,10 @@ export function AppNav() {
               key={item.path}
               to={item.path}
               onClick={() => setOpen(false)}
-              style={{ display: 'block', padding: '10px 0', textDecoration: 'none', color: pathname === item.path ? '#E8CDB0' : '#9A8468', fontWeight: pathname === item.path ? 700 : 400 }}
+              style={{ display: 'flex', alignItems: 'center', padding: '10px 0', textDecoration: 'none', color: pathname === item.path ? '#E8CDB0' : '#9A8468', fontWeight: pathname === item.path ? 700 : 400 }}
             >
               {item.label}
+              {item.path === '/messages' && <UnreadBadge count={unreadTotal} />}
             </Link>
           ))}
           {isAdmin && (

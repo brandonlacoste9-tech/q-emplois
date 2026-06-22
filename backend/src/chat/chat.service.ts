@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
+import { ChatMessageType, TaskStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationService as ExternalNotificationService } from '../common/services/notification.service';
-import { TaskStatus } from '@prisma/client';
 import { ChatGateway } from './chat.gateway';
 
 @Injectable()
@@ -14,6 +14,35 @@ export class ChatService {
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
   ) {}
+
+  private mapMessage(message: {
+    id: string;
+    conversationId: string;
+    senderId: string | null;
+    type: ChatMessageType;
+    content: string;
+    createdAt: Date;
+    isRead: boolean;
+  }, senderName = '') {
+    return {
+      id: message.id,
+      conversationId: message.conversationId,
+      senderId: message.senderId,
+      senderName,
+      type: message.type,
+      content: message.content,
+      createdAt: message.createdAt.toISOString(),
+      isRead: message.isRead,
+    };
+  }
+
+  private unreadWhere(userId: string) {
+    return {
+      type: ChatMessageType.text,
+      senderId: { not: userId },
+      isRead: false,
+    };
+  }
 
   private async assertMessagingAllowed(
     conversation: { taskId: string | null; clientId: string; providerId: string },
@@ -32,6 +61,77 @@ export class ChatService {
     }
   }
 
+  async ensureTaskConversation(clientId: string, providerId: string, taskId: string) {
+    const existing = await this.prisma.conversation.findFirst({
+      where: { clientId, providerId, taskId },
+    });
+    if (existing) return existing.id;
+
+    const created = await this.prisma.conversation.create({
+      data: { clientId, providerId, taskId },
+    });
+    return created.id;
+  }
+
+  async postSystemMessage(conversationId: string, content: string) {
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+    });
+    if (!conversation) return;
+
+    const message = await this.prisma.chatMessage.create({
+      data: {
+        conversationId,
+        senderId: null,
+        type: ChatMessageType.system,
+        content,
+        isRead: false,
+      },
+    });
+
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { updatedAt: new Date() },
+    });
+
+    const payload = this.mapMessage(message);
+    this.chatGateway.emitNewMessage(conversation.clientId, payload);
+    this.chatGateway.emitNewMessage(conversation.providerId, payload);
+  }
+
+  async postTaskSystemMessage(taskId: string, content: string) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      select: { clientId: true, taskerId: true },
+    });
+    if (!task?.taskerId) return;
+
+    const conversation = await this.prisma.conversation.findFirst({
+      where: {
+        taskId,
+        clientId: task.clientId,
+        providerId: task.taskerId,
+      },
+    });
+    if (!conversation) return;
+
+    await this.postSystemMessage(conversation.id, content);
+  }
+
+  async openTaskConversation(
+    clientId: string,
+    providerId: string,
+    taskId: string,
+    taskerName: string,
+  ) {
+    const conversationId = await this.ensureTaskConversation(clientId, providerId, taskId);
+    await this.postSystemMessage(
+      conversationId,
+      `${taskerName} a été choisi(e) pour cette tâche. Vous pouvez coordonner les détails ici.`,
+    );
+    return conversationId;
+  }
+
   async listConversations(userId: string) {
     const conversations = await this.prisma.conversation.findMany({
       where: {
@@ -39,9 +139,14 @@ export class ChatService {
       },
       include: {
         messages: { orderBy: { createdAt: 'desc' }, take: 1 },
-        client: { select: { id: true, firstName: true, lastName: true } },
-        provider: { select: { id: true, firstName: true, lastName: true } },
-        task: { select: { id: true, title: true } },
+        client: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        provider: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        task: { select: { id: true, title: true, status: true } },
+        _count: {
+          select: {
+            messages: { where: this.unreadWhere(userId) },
+          },
+        },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -53,29 +158,36 @@ export class ChatService {
       return {
         id: c.id,
         clientId: c.clientId,
-        clientName: [other.firstName, other.lastName].filter(Boolean).join(' '),
+        clientName: [other.firstName, other.lastName].filter(Boolean).join(' ') || 'Utilisateur',
+        clientAvatar: other.avatarUrl ?? undefined,
         jobId: c.taskId ?? undefined,
         jobTitle: c.task?.title,
-        unreadCount: 0,
+        jobStatus: c.task?.status,
+        unreadCount: c._count.messages,
         updatedAt: c.updatedAt.toISOString(),
-        lastMessage: last
-          ? {
-              id: last.id,
-              conversationId: c.id,
-              senderId: last.senderId,
-              senderName: '',
-              content: last.content,
-              createdAt: last.createdAt.toISOString(),
-              isRead: last.isRead,
-            }
-          : undefined,
+        lastMessage: last ? this.mapMessage(last) : undefined,
       };
     });
   }
 
-  async getMessages(userId: string, conversationId: string) {
+  async getUnreadTotal(userId: string) {
+    const total = await this.prisma.chatMessage.count({
+      where: {
+        ...this.unreadWhere(userId),
+        conversation: {
+          OR: [{ clientId: userId }, { providerId: userId }],
+        },
+      },
+    });
+    return { total };
+  }
+
+  async getMessages(userId: string, conversationId: string, after?: string) {
     const conversation = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
+      include: {
+        task: { select: { id: true, title: true, status: true, scheduledDate: true, estimatedPrice: true } },
+      },
     });
     if (!conversation) throw new NotFoundException('Conversation introuvable.');
     if (conversation.clientId !== userId && conversation.providerId !== userId) {
@@ -83,10 +195,26 @@ export class ChatService {
     }
     await this.assertMessagingAllowed(conversation, userId);
 
-    return this.prisma.chatMessage.findMany({
-      where: { conversationId },
+    const messages = await this.prisma.chatMessage.findMany({
+      where: {
+        conversationId,
+        ...(after ? { createdAt: { gt: new Date(after) } } : {}),
+      },
       orderBy: { createdAt: 'asc' },
     });
+
+    return {
+      messages: messages.map((m) => this.mapMessage(m)),
+      job: conversation.task
+        ? {
+            id: conversation.task.id,
+            title: conversation.task.title,
+            status: conversation.task.status,
+            scheduledDate: conversation.task.scheduledDate?.toISOString() ?? null,
+            estimatedPrice: Number(conversation.task.estimatedPrice),
+          }
+        : null,
+    };
   }
 
   async sendMessage(userId: string, conversationId: string, content: string) {
@@ -95,7 +223,7 @@ export class ChatService {
       include: {
         client: true,
         provider: true,
-      }
+      },
     });
     if (!conversation) throw new NotFoundException('Conversation introuvable.');
     if (conversation.clientId !== userId && conversation.providerId !== userId) {
@@ -104,7 +232,12 @@ export class ChatService {
     await this.assertMessagingAllowed(conversation, userId);
 
     const message = await this.prisma.chatMessage.create({
-      data: { conversationId, senderId: userId, content },
+      data: {
+        conversationId,
+        senderId: userId,
+        type: ChatMessageType.text,
+        content,
+      },
     });
 
     await this.prisma.conversation.update({
@@ -117,18 +250,9 @@ export class ChatService {
     const sender = isClient ? conversation.client : conversation.provider;
     const senderName = [sender.firstName, sender.lastName].filter(Boolean).join(' ');
 
-    // Notify the recipient via real-time WebSocket
-    this.chatGateway.emitNewMessage(recipientId, {
-      id: message.id,
-      conversationId: message.conversationId,
-      senderId: message.senderId,
-      senderName: senderName,
-      content: message.content,
-      createdAt: message.createdAt.toISOString(),
-      isRead: message.isRead,
-    });
+    const payload = this.mapMessage(message, senderName);
+    this.chatGateway.emitNewMessage(recipientId, payload);
 
-    // Notify the recipient via in-app notifications
     await this.notificationsService.create(
       recipientId,
       'new_message',
@@ -137,28 +261,38 @@ export class ChatService {
       { conversationId, senderId: userId, content: content.slice(0, 500) },
     );
 
-    // If recipient is offline, send Email & Push notification
     if (!this.chatGateway.isUserConnected(recipientId)) {
       await this.externalNotifications.notifyOfflineMessage(
         recipientId,
         senderName || 'Un utilisateur',
         content,
-        conversationId
+        conversationId,
       );
     }
 
-    return message;
+    return payload;
   }
 
   async markRead(userId: string, conversationId: string) {
     await this.prisma.chatMessage.updateMany({
       where: {
         conversationId,
+        type: ChatMessageType.text,
         senderId: { not: userId },
         isRead: false,
       },
       data: { isRead: true },
     });
+
+    await this.prisma.chatMessage.updateMany({
+      where: {
+        conversationId,
+        type: ChatMessageType.system,
+        isRead: false,
+      },
+      data: { isRead: true },
+    });
+
     return { success: true };
   }
 }

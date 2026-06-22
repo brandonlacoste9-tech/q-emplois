@@ -351,8 +351,18 @@ class ApiService {
     return response.data;
   }
 
-  async getMessages(conversationId: string): Promise<Message[]> {
-    const response = await this.client.get(`/conversations/${conversationId}/messages`);
+  async getUnreadMessageCount(): Promise<number> {
+    const response = await this.client.get('/conversations/unread-count');
+    return response.data.total ?? 0;
+  }
+
+  async getMessages(
+    conversationId: string,
+    after?: string,
+  ): Promise<{ messages: Message[]; job: import('../types').ConversationJobContext | null }> {
+    const response = await this.client.get(`/conversations/${conversationId}/messages`, {
+      params: after ? { after } : {},
+    });
     return response.data;
   }
 

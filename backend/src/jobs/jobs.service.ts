@@ -12,6 +12,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { EmailService } from '../common/email/email.service';
 import { ConfigService } from '@nestjs/config';
 import { NotificationService as ExternalNotificationService } from '../common/services/notification.service';
+import { ChatService } from '../chat/chat.service';
 
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { publicPostalSector, sanitizePublicDescription } from '../common/utils/privacy';
@@ -31,6 +32,7 @@ export class JobsService {
     private readonly externalNotifications: ExternalNotificationService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
+    private readonly chatService: ChatService,
   ) {}
 
   private haversineKm(
@@ -432,23 +434,17 @@ export class JobsService {
       },
     });
 
-    const existingConversation = await this.prisma.conversation.findFirst({
-      where: { clientId: task.clientId, providerId: taskerId },
+    const tasker = await this.prisma.user.findUnique({
+      where: { id: taskerId },
+      select: { firstName: true, lastName: true },
     });
-    if (!existingConversation) {
-      await this.prisma.conversation.create({
-        data: {
-          clientId: task.clientId,
-          providerId: taskerId,
-          taskId,
-        },
-      });
-    } else if (!existingConversation.taskId) {
-      await this.prisma.conversation.update({
-        where: { id: existingConversation.id },
-        data: { taskId },
-      });
-    }
+    const taskerName = [tasker?.firstName, tasker?.lastName].filter(Boolean).join(' ') || 'Un travailleur';
+    await this.chatService.openTaskConversation(
+      task.clientId,
+      taskerId,
+      taskId,
+      taskerName,
+    );
 
     await this.auditService.log({
       userId: taskerId,
@@ -457,15 +453,11 @@ export class JobsService {
       resourceId: taskId,
     });
 
-    const tasker = await this.prisma.user.findUnique({
-      where: { id: taskerId },
-      select: { firstName: true, lastName: true },
-    });
     await this.notificationsService.create(
       task.clientId,
       'job_accepted',
       'Travailleur choisi',
-      `${tasker?.firstName ?? 'Un travailleur'} a été choisi pour « ${task.title} ». Votre nom et téléphone lui sont visibles; l'adresse exacte s'affichera au démarrage du travail.`,
+      `${taskerName} a été choisi pour « ${task.title} ». Votre nom et téléphone lui sont visibles; l'adresse exacte s'affichera au démarrage du travail.`,
       { taskId },
     );
 
@@ -772,6 +764,11 @@ export class JobsService {
       details: { refundCredit, admin: isAdmin },
     });
 
+    await this.chatService.postTaskSystemMessage(
+      taskId,
+      'Cette tâche a été annulée.',
+    );
+
     return this.mapTask(updated, undefined, userId);
   }
 
@@ -845,6 +842,11 @@ export class JobsService {
       );
     }
 
+    await this.chatService.postTaskSystemMessage(
+      taskId,
+      'Tâche marquée comme terminée.',
+    );
+
     return this.mapTask(updated, undefined, userId);
   }
 
@@ -883,6 +885,11 @@ export class JobsService {
       'Travailleur en route',
       `${task.title} : le travailleur a démarré le job et voit votre adresse complète.`,
       { taskId },
+    );
+
+    await this.chatService.postTaskSystemMessage(
+      taskId,
+      'Le travail a démarré — l\'adresse complète est visible sur la fiche tâche.',
     );
 
     return this.mapTask(updated, undefined, taskerId);

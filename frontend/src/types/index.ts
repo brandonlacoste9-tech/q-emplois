@@ -248,15 +248,26 @@ export interface Transaction {
   description: string;
 }
 
+export type MessageType = 'text' | 'system';
+
 export interface Message {
   id: string;
   conversationId: string;
-  senderId: string;
+  senderId: string | null;
   senderName: string;
   senderAvatar?: string;
+  type?: MessageType;
   content: string;
   createdAt: string;
   isRead: boolean;
+}
+
+export interface ConversationJobContext {
+  id: string;
+  title: string;
+  status: string;
+  scheduledDate?: string | null;
+  estimatedPrice: number;
 }
 
 export interface Conversation {
@@ -266,6 +277,7 @@ export interface Conversation {
   clientAvatar?: string;
   jobId?: string;
   jobTitle?: string;
+  jobStatus?: string;
   lastMessage?: Message;
   unreadCount: number;
   updatedAt: string;

@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { ReviewModal } from '../components/ReviewModal';
 import { TaskerCard } from '../components/TaskerCard';
-import type { Job, JobStatus, TaskApplication } from '../types';
+import type { Conversation, Job, JobStatus, TaskApplication } from '../types';
 import { JOB_STATUS_LABELS, SERVICE_TYPE_LABELS } from '../types';
 import {
   ArrowLeft, Briefcase, Calendar, Check, Clock, DollarSign,
@@ -39,6 +39,7 @@ export function JobDetail() {
   const [showReview, setShowReview] = useState(false);
   const [applyMessage, setApplyMessage] = useState('');
   const [paying, setPaying] = useState(false);
+  const [jobConversation, setJobConversation] = useState<Conversation | null>(null);
 
   useEffect(() => {
     if (searchParams.get('paid')) addToast('Paiement reçu — merci!', 'success');
@@ -61,6 +62,12 @@ export function JobDetail() {
         setApplications(apps);
       } else {
         setApplications([]);
+      }
+      if (data.status !== 'pending') {
+        const convs = await api.getConversations();
+        setJobConversation(convs.find((c) => c.jobId === id) ?? null);
+      } else {
+        setJobConversation(null);
       }
     } catch {
       addToast('Tâche introuvable', 'error');
@@ -279,10 +286,16 @@ export function JobDetail() {
             </div>
           )}
 
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {(!job.contactRedacted || isJobOwner) && (
+            {job.status !== 'pending' && (
             <Link to={`/messages?jobId=${job.id}`} className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <MessageSquare className="w-4 h-4" /> Messages
+              {jobConversation && jobConversation.unreadCount > 0 && (
+                <span style={{ background: gold, color: '#1F2F3F', borderRadius: 999, fontSize: 10, fontWeight: 800, padding: '1px 6px' }}>
+                  {jobConversation.unreadCount}
+                </span>
+              )}
             </Link>
             )}
 
@@ -400,6 +413,11 @@ export function JobDetail() {
               </button>
             )}
           </div>
+          {jobConversation?.lastMessage && (
+            <p className="body-f muted2" style={{ fontSize: 13, margin: 0 }}>
+              Dernier message : {jobConversation.lastMessage.type === 'system' ? jobConversation.lastMessage.content : jobConversation.lastMessage.content.slice(0, 80)}
+            </p>
+          )}
         </div>
 
         {isJobOwner && isClientMode && job.status === 'pending' && applications.length > 0 && (

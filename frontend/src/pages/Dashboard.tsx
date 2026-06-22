@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Clock,
   Trash2,
+  MessageSquare,
 } from 'lucide-react';
+import { useUnreadMessages } from '../hooks/useUnreadMessages';
 import { useToast } from '../components/Toast';
 import type { DashboardStats, Notification, Job, JobStatus } from '../types';
 import { JOB_STATUS_LABELS } from '../types';
@@ -26,6 +28,7 @@ const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 2
 export function Dashboard() {
   const { profile, isClientMode } = useAuth();
   const { addToast } = useToast();
+  const { unreadTotal } = useUnreadMessages();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [upcomingJobs, setUpcomingJobs] = useState<Job[]>([]);
@@ -119,6 +122,18 @@ export function Dashboard() {
               Publier une tâche
             </div>
           </Link>
+
+          {unreadTotal > 0 && (
+            <Link to="/messages" style={{ textDecoration: 'none', display: 'block', marginBottom: 20 }}>
+              <div className="stitch-box stitch-box-interactive" style={{ ...card, borderColor: 'rgba(184,123,68,0.4)' }}>
+                <p className="serif cream-hi" style={{ fontSize: 17, fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <MessageSquare className="w-5 h-5" style={{ color: gold }} />
+                  {unreadTotal} message{unreadTotal > 1 ? 's' : ''} non lu{unreadTotal > 1 ? 's' : ''}
+                </p>
+                <p className="body-f muted" style={{ fontSize: 14 }}>Répondez à vos travailleurs pour coordonner les tâches</p>
+              </div>
+            </Link>
+          )}
 
           {pendingReview.length > 0 && (
             <Link to={`/jobs/${pendingReview[0].id}`} style={{ textDecoration: 'none', display: 'block', marginBottom: 28 }}>
@@ -287,6 +302,18 @@ export function Dashboard() {
             icon={<Star className="w-5 h-5" style={{ color: gold }} />}
           />
         </div>
+
+        {unreadTotal > 0 && (
+          <Link to="/messages" style={{ textDecoration: 'none', display: 'block', marginBottom: 20 }}>
+            <div className="stitch-box stitch-box-interactive" style={{ ...card, borderColor: 'rgba(184,123,68,0.4)' }}>
+              <p className="serif cream-hi" style={{ fontSize: 17, fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <MessageSquare className="w-5 h-5" style={{ color: gold }} />
+                {unreadTotal} message{unreadTotal > 1 ? 's' : ''} non lu{unreadTotal > 1 ? 's' : ''}
+              </p>
+              <p className="body-f muted" style={{ fontSize: 14 }}>Coordonnez vos jobs avec les clients</p>
+            </div>
+          </Link>
+        )}
 
         {/* Quick action */}
         <Link to="/jobs" style={{ textDecoration: 'none', display: 'block', marginBottom: 28 }}>

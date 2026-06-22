@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -22,9 +22,19 @@ export class ChatController {
     return this.chatService.listConversations(userId);
   }
 
+  @Get('unread-count')
+  @ApiOperation({ summary: 'Nombre total de messages non lus' })
+  unreadCount(@CurrentUser('userId') userId: string) {
+    return this.chatService.getUnreadTotal(userId);
+  }
+
   @Get(':id/messages')
-  messages(@CurrentUser('userId') userId: string, @Param('id') id: string) {
-    return this.chatService.getMessages(userId, id);
+  messages(
+    @CurrentUser('userId') userId: string,
+    @Param('id') id: string,
+    @Query('after') after?: string,
+  ) {
+    return this.chatService.getMessages(userId, id, after);
   }
 
   @Post(':id/messages')

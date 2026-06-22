@@ -1,120 +1,223 @@
-import { useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
-import type { Conversation, Message } from '../types';
-import { MessageSquare, Send, Loader2 } from 'lucide-react';
+import { useUnreadMessages } from '../hooks/useUnreadMessages';
+import type { Conversation, ConversationJobContext, Message } from '../types';
+import { MessageSquare, Send, Loader2, ArrowLeft, Briefcase } from 'lucide-react';
 import { gold } from '../styles/design-tokens';
 import { socketService } from '../services/socket';
+import { formatPrice, formatDate } from '../utils';
+
+function JobChatHeader({ job }: { job: ConversationJobContext }) {
+  return (
+    <Link
+      to={`/jobs/${job.id}`}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '10px 14px',
+        margin: '0 18px 8px',
+        borderRadius: 8,
+        background: 'rgba(15,25,36,0.55)',
+        border: '1px solid rgba(217,179,140,0.15)',
+        textDecoration: 'none',
+      }}
+    >
+      <Briefcase className="w-4 h-4" style={{ color: gold, flexShrink: 0 }} />
+      <div style={{ minWidth: 0 }}>
+        <p className="body-f cream-hi" style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {job.title}
+        </p>
+        <p className="body-f muted2" style={{ fontSize: 11 }}>
+          {formatPrice(job.estimatedPrice)}
+          {job.scheduledDate ? ` · ${formatDate(job.scheduledDate)}` : ''}
+          {` · ${job.status}`}
+        </p>
+      </div>
+    </Link>
+  );
+}
 
 export function Messages() {
   const { user } = useAuth();
   const { addToast } = useToast();
+  const { refreshUnread } = useUnreadMessages();
   const [searchParams] = useSearchParams();
   const jobIdParam = searchParams.get('jobId');
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [jobContext, setJobContext] = useState<ConversationJobContext | null>(null);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [mobileShowThread, setMobileShowThread] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const lastMessageAtRef = useRef<string | null>(null);
+
+  const loadConversations = useCallback(async () => {
+    const data = await api.getConversations();
+    setConversations(data);
+    return data;
+  }, []);
 
   useEffect(() => {
-    api.getConversations()
+    loadConversations()
       .then((data) => {
-        setConversations(data);
         if (jobIdParam) {
           const match = data.find((c) => c.jobId === jobIdParam);
-          if (match) setActiveId(match.id);
-          else if (data.length > 0) setActiveId(data[0].id);
+          if (match) {
+            setActiveId(match.id);
+            setMobileShowThread(true);
+          } else if (data.length > 0) {
+            setActiveId(data[0].id);
+          }
         } else if (data.length > 0) {
           setActiveId(data[0].id);
         }
       })
       .catch(() => addToast('Erreur de chargement des conversations', 'error'))
       .finally(() => setLoading(false));
-  }, [addToast, jobIdParam]);
+  }, [addToast, jobIdParam, loadConversations]);
+
+  const loadMessages = useCallback(async (conversationId: string, after?: string) => {
+    const data = await api.getMessages(conversationId, after);
+    setJobContext(data.job);
+    if (after) {
+      setMessages((prev) => {
+        const merged = [...prev];
+        for (const m of data.messages) {
+          if (!merged.some((x) => x.id === m.id)) merged.push(m);
+        }
+        return merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      });
+    } else {
+      setMessages(data.messages);
+    }
+    const last = data.messages[data.messages.length - 1];
+    if (last) lastMessageAtRef.current = last.createdAt;
+    await api.markAsRead(conversationId);
+    refreshUnread();
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c)),
+    );
+  }, [refreshUnread]);
 
   useEffect(() => {
     if (!activeId) return;
-    api.getMessages(activeId)
-      .then((msgs) => {
-        setMessages(msgs.map((m: { id: string; conversationId: string; senderId: string; content: string; createdAt: string; isRead: boolean }) => ({
-          id: m.id,
-          conversationId: m.conversationId,
-          senderId: m.senderId,
-          senderName: '',
-          content: m.content,
-          createdAt: m.createdAt,
-          isRead: m.isRead,
-        })));
-        api.markAsRead(activeId).catch(() => undefined);
-      })
-      .catch(() => addToast('Erreur de chargement des messages', 'error'));
-  }, [activeId, addToast]);
+    loadMessages(activeId).catch(() => addToast('Erreur de chargement des messages', 'error'));
+  }, [activeId, addToast, loadMessages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   useEffect(() => {
-    const socket = socketService.getSocket();
+    const socket = socketService.reconnectIfNeeded();
     if (!socket) return;
 
     const handleNewMessage = (msg: Message) => {
       if (msg.conversationId === activeId) {
         setMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev;
-          return [...prev, msg];
+          const withoutTemp = prev.filter((m) => !m.id.startsWith('temp-') || m.content !== msg.content);
+          return [...withoutTemp, msg];
         });
-        api.markAsRead(activeId).catch(() => undefined);
+        lastMessageAtRef.current = msg.createdAt;
+        api.markAsRead(activeId!).catch(() => undefined);
+        refreshUnread();
       }
-      
+
       setConversations((prev) => {
         const idx = prev.findIndex((c) => c.id === msg.conversationId);
         if (idx === -1) {
-          // If conversation is new, refresh list
-          api.getConversations().then(setConversations).catch(() => undefined);
+          loadConversations().catch(() => undefined);
           return prev;
         }
         const updated = [...prev];
-        const conv = { ...updated[idx], lastMessage: msg, updatedAt: new Date().toISOString() };
+        const conv = {
+          ...updated[idx],
+          lastMessage: msg,
+          updatedAt: new Date().toISOString(),
+          unreadCount:
+            msg.conversationId === activeId || msg.senderId === user?.id || msg.type === 'system'
+              ? updated[idx].unreadCount
+              : updated[idx].unreadCount + 1,
+        };
         updated.splice(idx, 1);
         updated.unshift(conv);
         return updated;
       });
+
+      if (msg.conversationId !== activeId && msg.type === 'text' && msg.senderId !== user?.id) {
+        refreshUnread();
+      }
+    };
+
+    const handleReconnect = () => {
+      if (activeId && lastMessageAtRef.current) {
+        loadMessages(activeId, lastMessageAtRef.current).catch(() => undefined);
+      }
     };
 
     socket.on('newMessage', handleNewMessage);
+    socket.on('connect', handleReconnect);
     return () => {
       socket.off('newMessage', handleNewMessage);
+      socket.off('connect', handleReconnect);
     };
-  }, [activeId]);
+  }, [activeId, loadConversations, loadMessages, refreshUnread, user?.id]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeId || !draft.trim()) return;
+    if (!activeId || !draft.trim() || sending) return;
+
+    const content = draft.trim();
+    const tempId = `temp-${Date.now()}`;
+    const optimistic: Message = {
+      id: tempId,
+      conversationId: activeId,
+      senderId: user?.id ?? null,
+      senderName: '',
+      type: 'text',
+      content,
+      createdAt: new Date().toISOString(),
+      isRead: true,
+    };
+
+    setMessages((prev) => [...prev, optimistic]);
+    setDraft('');
     setSending(true);
+
     try {
-      const msg = await api.sendMessage(activeId, draft.trim());
-      setMessages((prev) => [...prev, {
-        id: msg.id,
-        conversationId: msg.conversationId,
-        senderId: msg.senderId,
-        senderName: '',
-        content: msg.content,
-        createdAt: msg.createdAt,
-        isRead: msg.isRead,
-      }]);
-      setDraft('');
+      const msg = await api.sendMessage(activeId, content);
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? msg : m)));
+      lastMessageAtRef.current = msg.createdAt;
+      setConversations((prev) => {
+        const idx = prev.findIndex((c) => c.id === activeId);
+        if (idx === -1) return prev;
+        const updated = [...prev];
+        const conv = { ...updated[idx], lastMessage: msg, updatedAt: msg.createdAt };
+        updated.splice(idx, 1);
+        updated.unshift(conv);
+        return updated;
+      });
     } catch {
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setDraft(content);
       addToast("Impossible d'envoyer le message", 'error');
     } finally {
       setSending(false);
     }
+  };
+
+  const selectConversation = (id: string) => {
+    setActiveId(id);
+    setMobileShowThread(true);
   };
 
   const activeConv = conversations.find((c) => c.id === activeId);
@@ -129,7 +232,7 @@ export function Messages() {
 
         {jobLinkedConv && (
           <div className="body-f muted" style={{ padding: '12px 16px', marginBottom: 16, borderRadius: 8, background: 'rgba(184,123,68,0.12)', fontSize: 14 }}>
-            Aucun fil de discussion pour cette tâche pour le moment. Un chat s'ouvrira automatiquement quand un travailleur accepte la job.
+            Aucun fil pour cette tâche. Un chat s&apos;ouvrira quand un travailleur sera choisi.
           </div>
         )}
 
@@ -138,55 +241,122 @@ export function Messages() {
             <Loader2 className="w-8 h-8" style={{ color: gold, animation: 'spin 0.9s linear infinite' }} />
           </div>
         ) : (
-          <div className="stitch-box" style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 320px) 1fr', minHeight: 480, background: 'rgba(21,35,50,0.7)', overflow: 'hidden' }}>
-            <div style={{ borderRight: '1px solid rgba(217,179,140,0.12)', overflowY: 'auto' }}>
+          <div
+            className={`stitch-box messages-layout${mobileShowThread ? ' thread-open' : ''}`}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(240px, 320px) 1fr',
+              minHeight: 480,
+              background: 'rgba(21,35,50,0.7)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              className="messages-list-pane"
+              style={{
+                borderRight: '1px solid rgba(217,179,140,0.12)',
+                overflowY: 'auto',
+              }}
+            >
               {conversations.length === 0 ? (
                 <p className="body-f muted" style={{ padding: 24, fontSize: 14 }}>
-                  Aucune conversation. Acceptez ou publiez une tâche pour démarrer un fil.
+                  Aucune conversation. Publiez ou acceptez une tâche pour démarrer un fil.
                 </p>
               ) : (
                 conversations.map((c) => (
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => setActiveId(c.id)}
+                    onClick={() => selectConversation(c.id)}
                     style={{
-                      width: '100%', textAlign: 'left', padding: '14px 16px', border: 'none', cursor: 'pointer',
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '14px 16px',
+                      border: 'none',
+                      cursor: 'pointer',
                       background: activeId === c.id ? 'rgba(184,123,68,0.15)' : 'transparent',
                       borderBottom: '1px solid rgba(217,179,140,0.08)',
                     }}
                   >
-                    <p className="body-f cream-hi" style={{ fontWeight: 600, fontSize: 14 }}>{c.clientName}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                      <p className="body-f cream-hi" style={{ fontWeight: 600, fontSize: 14 }}>{c.clientName}</p>
+                      {c.unreadCount > 0 && (
+                        <span style={{ background: gold, color: '#1F2F3F', borderRadius: 999, fontSize: 10, fontWeight: 800, padding: '2px 7px' }}>
+                          {c.unreadCount}
+                        </span>
+                      )}
+                    </div>
                     {c.jobTitle && (
                       <p className="body-f muted2" style={{ fontSize: 11, marginTop: 2 }}>{c.jobTitle}</p>
                     )}
                     <p className="body-f muted2" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
-                      {c.lastMessage?.content ?? 'Nouvelle conversation'}
+                      {c.lastMessage?.type === 'system' ? `ℹ ${c.lastMessage.content}` : (c.lastMessage?.content ?? 'Nouvelle conversation')}
                     </p>
                   </button>
                 ))
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div
+              className="messages-thread-pane"
+              style={{ display: 'flex', flexDirection: 'column' }}
+            >
               {activeConv ? (
                 <>
-                  <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(217,179,140,0.12)' }}>
-                    <p className="serif cream-hi" style={{ fontWeight: 700 }}>{activeConv.clientName}</p>
-                    {activeConv.jobTitle && (
-                      <p className="body-f muted2" style={{ fontSize: 13, marginTop: 2 }}>{activeConv.jobTitle}</p>
-                    )}
+                  <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(217,179,140,0.12)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <button
+                      type="button"
+                      className="messages-back-btn"
+                      onClick={() => setMobileShowThread(false)}
+                      style={{ display: 'none', background: 'transparent', border: 'none', color: gold, cursor: 'pointer', padding: 4 }}
+                      aria-label="Retour aux conversations"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div>
+                      <p className="serif cream-hi" style={{ fontWeight: 700 }}>{activeConv.clientName}</p>
+                      {activeConv.jobTitle && (
+                        <p className="body-f muted2" style={{ fontSize: 13, marginTop: 2 }}>{activeConv.jobTitle}</p>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ flex: 1, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+                  {jobContext && <JobChatHeader job={jobContext} />}
+
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '8px 18px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {messages.map((m) => {
+                      if (m.type === 'system') {
+                        return (
+                          <div key={m.id} style={{ alignSelf: 'center', maxWidth: '90%', textAlign: 'center' }}>
+                            <p
+                              className="body-f muted2"
+                              style={{
+                                fontSize: 12,
+                                fontStyle: 'italic',
+                                padding: '8px 12px',
+                                borderRadius: 8,
+                                background: 'rgba(217,179,140,0.08)',
+                                border: '1px dashed rgba(217,179,140,0.2)',
+                              }}
+                            >
+                              {m.content}
+                            </p>
+                          </div>
+                        );
+                      }
+
                       const mine = m.senderId === user?.id;
                       return (
                         <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
-                          <div style={{
-                            padding: '10px 14px', borderRadius: 12,
-                            background: mine ? 'rgba(184,123,68,0.25)' : 'rgba(15,25,36,0.6)',
-                            border: `1px solid ${mine ? 'rgba(184,123,68,0.4)' : 'rgba(217,179,140,0.15)'}`,
-                          }}>
+                          <div
+                            style={{
+                              padding: '10px 14px',
+                              borderRadius: 12,
+                              background: mine ? 'rgba(184,123,68,0.25)' : 'rgba(15,25,36,0.6)',
+                              border: `1px solid ${mine ? 'rgba(184,123,68,0.4)' : 'rgba(217,179,140,0.15)'}`,
+                              opacity: m.id.startsWith('temp-') ? 0.7 : 1,
+                            }}
+                          >
                             <p className="body-f cream-hi" style={{ fontSize: 14 }}>{m.content}</p>
                           </div>
                           <p className="body-f muted2" style={{ fontSize: 11, marginTop: 4, textAlign: mine ? 'right' : 'left' }}>
@@ -197,6 +367,7 @@ export function Messages() {
                     })}
                     <div ref={bottomRef} />
                   </div>
+
                   <form onSubmit={handleSend} style={{ padding: 14, borderTop: '1px solid rgba(217,179,140,0.12)', display: 'flex', gap: 10 }}>
                     <input
                       className="q-field"
@@ -205,7 +376,7 @@ export function Messages() {
                       placeholder="Écrire un message…"
                       style={{ flex: 1 }}
                     />
-                    <button type="submit" disabled={sending} className="gold-btn" style={{ padding: '10px 16px' }}>
+                    <button type="submit" disabled={sending || !draft.trim()} className="gold-btn" style={{ padding: '10px 16px' }}>
                       <Send className="w-4 h-4" />
                     </button>
                   </form>
@@ -219,6 +390,20 @@ export function Messages() {
           </div>
         )}
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .messages-layout {
+            grid-template-columns: 1fr !important;
+            min-height: 70vh !important;
+          }
+          .messages-back-btn { display: inline-flex !important; }
+          .messages-list-pane { display: block !important; }
+          .messages-thread-pane { display: none !important; }
+          .messages-layout.thread-open .messages-list-pane { display: none !important; }
+          .messages-layout.thread-open .messages-thread-pane { display: flex !important; }
+        }
+      `}</style>
     </div>
   );
 }

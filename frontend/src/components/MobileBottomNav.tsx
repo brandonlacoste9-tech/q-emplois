@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Briefcase, Home, MessageSquare, User, Coins, PlusCircle, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useUnreadMessages } from '../hooks/useUnreadMessages';
 import { gold } from '../styles/design-tokens';
 
 const itemStyle = (active: boolean): React.CSSProperties => ({
@@ -21,6 +22,7 @@ const itemStyle = (active: boolean): React.CSSProperties => ({
 export function MobileBottomNav() {
   const { pathname } = useLocation();
   const { isClientMode, isAdmin } = useAuth();
+  const { unreadTotal } = useUnreadMessages();
 
   const isActive = (path: string) =>
     pathname === path || (path === '/jobs' && pathname.startsWith('/jobs/'));
@@ -58,9 +60,31 @@ export function MobileBottomNav() {
     >
       <div style={{ display: 'flex', maxWidth: 1200, margin: '0 auto' }}>
         {items.map(({ path, label, icon: Icon }) => (
-          <Link key={path} to={path} style={itemStyle(isActive(path))}>
+          <Link key={path} to={path} style={{ ...itemStyle(isActive(path)), position: 'relative' }}>
             <Icon className="w-5 h-5" style={{ color: isActive(path) ? gold : '#9A8468' }} />
             <span>{label}</span>
+            {path === '/messages' && unreadTotal > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 4,
+                  right: '18%',
+                  minWidth: 16,
+                  height: 16,
+                  borderRadius: 999,
+                  background: gold,
+                  color: '#1F2F3F',
+                  fontSize: 9,
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 4px',
+                }}
+              >
+                {unreadTotal > 99 ? '99+' : unreadTotal}
+              </span>
+            )}
           </Link>
         ))}
         {isAdmin && (
