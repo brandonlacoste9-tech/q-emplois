@@ -126,7 +126,7 @@ export function AdminPage() {
 
   const [msgConversations, setMsgConversations] = useState<AdminConversation[]>([]);
   const [msgConvPage, setMsgConvPage] = useState(1);
-  const [msgConvTotal, setMsgConvTotal] = useState(0);
+  const [, setMsgConvTotal] = useState(0);
   const [msgConvQuery, setMsgConvQuery] = useState('');
   const [msgConvLoading, setMsgConvLoading] = useState(false);
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);

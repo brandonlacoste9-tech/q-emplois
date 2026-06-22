@@ -18,11 +18,11 @@ function buildSocket(baseUrl: string, token: string): Socket {
     console.log('[Socket] connected');
   });
 
-  instance.on('disconnect', (reason) => {
+  instance.on('disconnect', (reason: string) => {
     console.log('[Socket] disconnected:', reason);
   });
 
-  instance.on('connect_error', (err) => {
+  instance.on('connect_error', (err: Error) => {
     console.warn('[Socket] connect_error:', err.message);
   });
 

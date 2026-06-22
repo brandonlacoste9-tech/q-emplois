@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
@@ -130,7 +130,17 @@ export function LAtelierPage() {
     <div className="leather" style={{ minHeight: '100vh', color: '#D9B38C' }}>
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 40px', background: 'rgba(31,47,63,0.92)', borderBottom: '2px dashed rgba(217,179,140,0.2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Link to="/dashboard"><BrandLogo size="md" /></Link>
+          <a
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.assign('/');
+            }}
+            style={{ textDecoration: 'none', cursor: 'pointer' }}
+            aria-label="Québec emplois — page d'accueil"
+          >
+            <BrandLogo size="md" />
+          </a>
           <span className="serif gold" style={{ fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', fontSize: '0.85rem' }}>L'Atelier</span>
         </div>
         <button onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} style={{ background: 'transparent', border: '1px dashed rgba(217,179,140,0.35)', color: '#D9B38C', padding: '4px 12px', cursor: 'pointer', borderRadius: 6, fontSize: 12 }}>
