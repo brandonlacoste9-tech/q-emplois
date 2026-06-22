@@ -12,7 +12,11 @@
    - `MIGRATE_DATABASE_URL` — Supabase **session pooler** `:5432` (for auto-migrate on deploy)
    - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — ID document storage (optional; falls back to inline)
    - Remove `REDIS_URL` if it points to localhost (in-memory fallback is fine)
-   - Optional: `STRIPE_*`, `TWILIO_*` for payments and WhatsApp
+   - Optional: `STRIPE_*` for payments
+   - Demo job rotation (recommended on production):
+     - `DEMO_JOBS_CRON_ENABLED=true` — daily cron at 5 AM ET
+     - `DEMO_JOBS_ROTATION_DAYS=3` — rotate demo set every N days
+     - `DEMO_JOBS_MIN_OPEN=6` — re-seed if fewer open demo jobs
 
 2. **Settings → Domains** — copy the current `*.up.railway.app` URL (old `q-emplois-production` may 404 if the service was recreated).
 

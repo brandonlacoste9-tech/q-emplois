@@ -208,6 +208,34 @@ export class EmailService {
     });
   }
 
+  async sendCreditPurchaseConfirmation(
+    to: string,
+    firstName: string | null | undefined,
+    credits: number,
+    amountCad: number,
+    newBalance: number,
+    packLabel: string,
+  ): Promise<void> {
+    const frontendUrl =
+      this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
+    const formattedAmount = amountCad.toFixed(2);
+    await this.send({
+      to,
+      subject: `${credits} crédits ajoutés — Q-Emplois`,
+      html: `
+        <p>Bonjour ${firstName ?? ''},</p>
+        <p>Merci pour votre achat! <strong>${credits} crédit${credits > 1 ? 's' : ''}</strong> (${packLabel}) ont été ajoutés à votre compte.</p>
+        <p>Montant payé : <strong>${formattedAmount} $ CAD</strong></p>
+        <p>Solde actuel : <strong>${newBalance} crédit${newBalance > 1 ? 's' : ''}</strong></p>
+        <p>1 crédit = 1 candidature à une tâche (remboursé si vous n'êtes pas retenu).</p>
+        <p><a href="${frontendUrl}/jobs">Voir les tâches disponibles</a> · <a href="${frontendUrl}/credits">Mes crédits</a></p>
+        <p>— L'équipe Q-Emplois</p>
+        ${this.channelLinksSection()}
+      `,
+      text: `Achat confirmé: ${credits} crédits (${formattedAmount} $ CAD). Solde: ${newBalance}. ${frontendUrl}/jobs`,
+    });
+  }
+
   async sendVerificationPendingAdmin(
     adminEmail: string,
     taskerName: string,

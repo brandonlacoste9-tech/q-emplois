@@ -11,6 +11,7 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { CreditsService, CREDIT_PACKS } from '../credits/credits.service';
 import { EscrowMilestoneStatus } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../common/email/email.service';
 import { generateInvoiceHtml, generateInvoiceNumber } from '../common/utils/invoice';
 
 @Injectable()
@@ -23,6 +24,7 @@ export class PaymentsService {
     @Inject(forwardRef(() => CreditsService))
     private readonly creditsService: CreditsService,
     private readonly notificationsService: NotificationsService,
+    private readonly emailService: EmailService,
   ) {
     const key = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (key) {
@@ -170,12 +172,39 @@ export class PaymentsService {
           typeof session.payment_intent === 'string'
             ? session.payment_intent
             : session.payment_intent?.id;
+        const paymentRef = paymentIntentId ?? session.id;
 
-        await this.creditsService.applyPackPurchase(
-          userId,
-          packKey,
-          paymentIntentId ?? session.id,
-        );
+        const existing = await this.prisma.creditTransaction.findFirst({
+          where: { stripePaymentIntentId: paymentRef },
+        });
+        if (!existing) {
+          const pack = CREDIT_PACKS[packKey];
+          const creditsFromMeta = Number(session.metadata.credits);
+          const balance = await this.creditsService.applyPackPurchase(
+            userId,
+            packKey,
+            paymentRef,
+          );
+
+          const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { email: true, firstName: true },
+          });
+          if (user?.email && pack) {
+            const credits =
+              Number.isFinite(creditsFromMeta) && creditsFromMeta > 0
+                ? creditsFromMeta
+                : pack.credits;
+            await this.emailService.sendCreditPurchaseConfirmation(
+              user.email,
+              user.firstName,
+              credits,
+              pack.priceCad,
+              balance.balance,
+              pack.label,
+            );
+          }
+        }
       } else if (session.metadata?.type === 'task_payment') {
         const taskId = session.metadata.taskId;
         if (taskId) {
