@@ -69,9 +69,9 @@ export function AppNav() {
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link to="/" style={{ textDecoration: 'none' }} aria-label="Québec emplois — page d'accueil">
+        <a href="/" style={{ textDecoration: 'none' }} aria-label="Québec emplois — page d'accueil">
           <BrandLogo size="md" />
-        </Link>
+        </a>
 
         <div className="body-f" style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 14 }}>
           <div className="nav-hide-sm" style={{ display: 'flex', gap: 6, marginRight: 4 }}>
