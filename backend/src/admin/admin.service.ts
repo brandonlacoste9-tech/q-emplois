@@ -508,12 +508,28 @@ export class AdminService {
           },
         });
         created++;
-      } else if (existing.locationLat == null && coords) {
-        await this.prisma.task.update({
-          where: { id: existing.id },
-          data: { locationLat: coords.lat, locationLng: coords.lng },
-        });
-        updated++;
+      } else {
+        const patch: {
+          locationLat?: number;
+          locationLng?: number;
+          status?: TaskStatus;
+          scheduledDate?: Date;
+        } = {};
+        if (existing.locationLat == null && coords) {
+          patch.locationLat = coords.lat;
+          patch.locationLng = coords.lng;
+        }
+        if (existing.status !== TaskStatus.open) {
+          patch.status = TaskStatus.open;
+          patch.scheduledDate = new Date(Date.now() + (i + 1) * 86400000);
+        }
+        if (Object.keys(patch).length > 0) {
+          await this.prisma.task.update({
+            where: { id: existing.id },
+            data: patch,
+          });
+          updated++;
+        }
       }
     }
 

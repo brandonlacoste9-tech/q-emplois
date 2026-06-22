@@ -269,17 +269,21 @@ export class JobsService {
     });
 
     let conversationByTaskId = new Map<string, string>();
-    if (!clientView) {
-      const conversations = await this.prisma.conversation.findMany({
-        where: {
-          providerId: userId,
-          taskId: { in: tasks.map((t) => t.id) },
-        },
-        select: { taskId: true, status: true },
-      });
-      conversationByTaskId = new Map(
-        conversations.map((c) => [c.taskId, c.status]),
-      );
+    if (!clientView && tasks.length > 0) {
+      try {
+        const conversations = await this.prisma.conversation.findMany({
+          where: {
+            providerId: userId,
+            taskId: { in: tasks.map((t) => t.id) },
+          },
+          select: { taskId: true, status: true },
+        });
+        conversationByTaskId = new Map(
+          conversations.map((c) => [c.taskId, c.status]),
+        );
+      } catch {
+        // Messaging schema may not be migrated yet — jobs board must still load.
+      }
     }
 
     let results = tasks.map((t) =>
@@ -343,11 +347,17 @@ export class JobsService {
     ) {
       throw new ForbiddenException('Accès refusé.');
     }
-    const myConversation = await this.prisma.conversation.findFirst({
-      where: { taskId: id, providerId: userId },
-      select: { status: true },
-    });
-    return this.mapTask(task, user?.provider, userId, myConversation?.status ?? null);
+    let myConversationStatus: string | null = null;
+    try {
+      const myConversation = await this.prisma.conversation.findFirst({
+        where: { taskId: id, providerId: userId },
+        select: { status: true },
+      });
+      myConversationStatus = myConversation?.status ?? null;
+    } catch {
+      // Messaging schema may not be migrated yet.
+    }
+    return this.mapTask(task, user?.provider, userId, myConversationStatus);
   }
 
   async create(clientId: string, dto: CreateTaskDto) {
