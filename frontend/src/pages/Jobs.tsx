@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -8,7 +8,7 @@ import { ReviewModal } from '../components/ReviewModal';
 import type { Job, JobStatus, ServiceType, PriceGuideRange } from '../types';
 import { SERVICE_TYPE_LABELS, JOB_STATUS_LABELS } from '../types';
 import {
-  MapPin, Calendar, Clock, DollarSign, Check, Filter, Briefcase, Loader2, Play, Coins, Trash2,
+  MapPin, Calendar, Clock, DollarSign, Check, Filter, Briefcase, Loader2, Play, Coins, Trash2, MessageSquare,
 } from 'lucide-react';
 import { formatPrice, formatDate, formatDuration, formatJobLocation } from '../utils';
 import { gold } from '../styles/design-tokens';
@@ -49,6 +49,7 @@ const SERVICE_TYPES: ServiceType[] = [
 ];
 
 export function Jobs() {
+  const navigate = useNavigate();
   const { profile, isClientMode, canTask } = useAuth();
   const isClient = isClientMode;
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -102,6 +103,25 @@ export function Jobs() {
       addToast('Erreur lors du chargement des jobs', 'error');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAskQuestion = async (jobId: string) => {
+    setProcessingJob(jobId);
+    try {
+      await api.startJobInquiry(jobId);
+      addToast('Fil ouvert — posez votre question au client', 'success');
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, myConversationStatus: 'inquiry' } : j)),
+      );
+      navigate(`/messages?jobId=${jobId}`);
+    } catch (err) {
+      const msg = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string })?.message
+        : undefined;
+      addToast(msg ?? 'Impossible d\'ouvrir la conversation', 'error');
+    } finally {
+      setProcessingJob(null);
     }
   };
 
@@ -300,6 +320,7 @@ export function Jobs() {
                 job={job}
                 isClient={isClient}
                 onAccept={handleAccept}
+                onAskQuestion={handleAskQuestion}
                 onStart={handleStart}
                 onDecline={handleDecline}
                 onComplete={handleComplete}
@@ -332,6 +353,7 @@ interface JobCardProps {
   job: Job;
   isClient: boolean;
   onAccept: (id: string) => void;
+  onAskQuestion: (id: string) => void;
   onStart: (id: string) => void;
   onDecline: (id: string) => void;
   onComplete: (id: string) => void;
@@ -344,7 +366,7 @@ interface JobCardProps {
   priceGuide?: PriceGuideRange;
 }
 
-function JobCard({ job, isClient, onAccept, onStart, onComplete, onCancelOrDelete, onReview, isProcessing, canApply, verificationBlocked, canCancel, priceGuide }: JobCardProps) {
+function JobCard({ job, isClient, onAccept, onAskQuestion, onStart, onComplete, onCancelOrDelete, onReview, isProcessing, canApply, verificationBlocked, canCancel, priceGuide }: JobCardProps) {
   const statusColors: Record<JobStatus, string> = {
     pending: '#D9A441', accepted: '#7FB069', in_progress: '#6BA3C4',
     completed: '#9A8468', cancelled: '#C46B6B', declined: '#C46B6B',
@@ -414,7 +436,7 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onCancelOrDelet
 
       {!isClient && job.contactRedacted && job.status === 'pending' && (
         <p className="body-f muted2" style={{ fontSize: 12, marginBottom: 14, fontStyle: 'italic' }}>
-          Postulez pour être considéré; le client choisira un travailleur.
+          Posez une question gratuite ou postulez pour être considéré.
         </p>
       )}
 
@@ -458,8 +480,32 @@ function JobCard({ job, isClient, onAccept, onStart, onComplete, onCancelOrDelet
             {isProcessing ? 'Envoi…' : 'Postulé'}
           </span>
         )}
-        {!isClient && job.status === 'pending' && job.myApplicationStatus !== 'pending' && (
+        {!isClient && job.status === 'pending' && job.myApplicationStatus !== 'pending' && job.myConversationStatus && (
+          <Link
+            to={`/messages?jobId=${job.id}`}
+            className="gold-btn"
+            style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          >
+            <MessageSquare className="w-4 h-4" />
+            {job.myConversationStatus === 'inquiry' ? 'Continuer' : 'Message'}
+          </Link>
+        )}
+        {!isClient && job.status === 'pending' && job.myApplicationStatus !== 'pending' && !job.myConversationStatus && (
           <>
+            <button
+              type="button"
+              onClick={() => onAskQuestion(job.id)}
+              disabled={isProcessing}
+              className="ghost-btn"
+              style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderColor: 'rgba(107,163,196,0.45)' }}
+            >
+              {isProcessing ? (
+                <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />
+              ) : (
+                <MessageSquare className="w-4 h-4" />
+              )}
+              {isProcessing ? 'Ouverture…' : 'Question'}
+            </button>
             <button onClick={() => onAccept(job.id)} disabled={isProcessing || !canApply} className="gold-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: canApply ? 1 : 0.5 }}>
               {isProcessing ? (
                 <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />

@@ -210,8 +210,10 @@ export function JobDetail() {
   const taskerCanApply = canTaskerApply(profile, profile?.verificationExpiresAt);
   const verificationStatus = getTaskerVerificationStatus(profile, profile?.verificationExpiresAt);
   const canApply = showTaskerActions && job.status === 'pending' && !hasApplied && (creditBalance ?? 0) > 0 && taskerCanApply;
-  const canAskQuestion = showTaskerActions && job.status === 'pending' && !hasApplied && taskerCanApply;
-  const hasMessageThread = !!jobConversation;
+  const canAskQuestion = showTaskerActions && job.status === 'pending' && !hasApplied;
+  const hasMessageThread = !!jobConversation || !!job.myConversationStatus;
+  const hasInquiryThread =
+    jobConversation?.status === 'inquiry' || job.myConversationStatus === 'inquiry';
 
   const inquiryConversations = isJobOwner
     ? Object.values(applicantConversations).filter(
@@ -223,7 +225,8 @@ export function JobDetail() {
     if (!job) return;
     setProcessing(true);
     try {
-      await api.startJobInquiry(job.id);
+      const result = await api.startJobInquiry(job.id);
+      setJob((prev) => (prev ? { ...prev, myConversationStatus: result.status } : prev));
       addToast('Fil ouvert — posez votre question au client', 'success');
       navigate(`/messages?jobId=${job.id}`);
     } catch (err: unknown) {
@@ -315,8 +318,42 @@ export function JobDetail() {
 
           {job.contactRedacted && showTaskerActions && !hasApplied && (
             <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 20, fontStyle: 'italic' }}>
-              Contact et adresse masqués. Postulez pour être considéré; le client choisira un travailleur.
+              Contact et adresse masqués. Posez une question gratuite au client ou postulez pour être considéré.
             </p>
+          )}
+
+          {canAskQuestion && !hasMessageThread && (
+            <div
+              className="stitch-box body-f"
+              style={{
+                padding: 16,
+                marginBottom: 20,
+                background: 'rgba(107,163,196,0.12)',
+                border: '1px solid rgba(107,163,196,0.3)',
+              }}
+            >
+              <p className="cream-hi" style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <MessageSquare className="w-4 h-4" style={{ color: gold }} />
+                Une question avant de postuler?
+              </p>
+              <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+                Écrivez au client gratuitement — sans dépenser de crédit. Idéal pour clarifier les détails de la tâche.
+              </p>
+              <button
+                type="button"
+                disabled={processing}
+                onClick={handleAskQuestion}
+                className="gold-btn"
+                style={{ padding: '10px 18px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+              >
+                {processing ? (
+                  <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />
+                ) : (
+                  <MessageSquare className="w-4 h-4" />
+                )}
+                {processing ? 'Ouverture…' : 'Poser une question (gratuit)'}
+              </button>
+            </div>
           )}
 
           {showTaskerActions && !taskerCanApply && job.status === 'pending' && !hasApplied && (
@@ -362,27 +399,31 @@ export function JobDetail() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {(job.status !== 'pending' || hasApplied || hasMessageThread) && (
+            {hasMessageThread && job.status === 'pending' && !hasApplied && (
+              <Link
+                to={`/messages?jobId=${job.id}`}
+                className="gold-btn"
+                style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+              >
+                <MessageSquare className="w-4 h-4" />
+                {hasInquiryThread ? 'Continuer la conversation' : 'Message au client'}
+                {jobConversation && jobConversation.unreadCount > 0 && (
+                  <span style={{ background: '#1F2F3F', color: gold, borderRadius: 999, fontSize: 10, fontWeight: 800, padding: '1px 6px' }}>
+                    {jobConversation.unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
+            {(job.status !== 'pending' || hasApplied) && (
             <Link to={`/messages?jobId=${job.id}`} className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <MessageSquare className="w-4 h-4" /> {hasApplied && job.status === 'pending' ? 'Message au client' : hasMessageThread && job.status === 'pending' ? 'Message au client' : 'Messages'}
+              <MessageSquare className="w-4 h-4" /> {hasApplied && job.status === 'pending' ? 'Message au client' : 'Messages'}
               {jobConversation && jobConversation.unreadCount > 0 && (
                 <span style={{ background: gold, color: '#1F2F3F', borderRadius: 999, fontSize: 10, fontWeight: 800, padding: '1px 6px' }}>
                   {jobConversation.unreadCount}
                 </span>
               )}
             </Link>
-            )}
-
-            {canAskQuestion && !hasMessageThread && (
-              <button
-                type="button"
-                disabled={processing}
-                onClick={handleAskQuestion}
-                className="ghost-btn"
-                style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}
-              >
-                <MessageSquare className="w-4 h-4" /> Poser une question (gratuit)
-              </button>
             )}
 
             {canApply && (

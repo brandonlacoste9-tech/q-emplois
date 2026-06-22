@@ -183,6 +183,7 @@ export interface Job {
   addressRedacted?: boolean;
   pendingApplicationCount?: number;
   myApplicationStatus?: string | null;
+  myConversationStatus?: string | null;
   paymentStatus?: 'unpaid' | 'pending' | 'paid';
   photoUrls?: string[];
 }

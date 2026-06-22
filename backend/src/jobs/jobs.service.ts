@@ -50,6 +50,17 @@ export class JobsService {
     return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
+  private async assertCanInquireAsTasker(taskerId: string): Promise<void> {
+    const provider = await this.prisma.provider.findUnique({
+      where: { userId: taskerId },
+    });
+    if (!provider) {
+      throw new BadRequestException(
+        'Activez le mode travailleur sur votre profil pour poser des questions.',
+      );
+    }
+  }
+
   private async assertCanApplyAsTasker(taskerId: string): Promise<void> {
     const provider = await this.prisma.provider.findUnique({
       where: { userId: taskerId },
@@ -125,7 +136,12 @@ export class JobsService {
     return publicPostalSector(postalCode);
   }
 
-  private mapTask(task: any, provider: any | undefined, viewerUserId: string) {
+  private mapTask(
+    task: any,
+    provider: any | undefined,
+    viewerUserId: string,
+    myConversationStatus?: string | null,
+  ) {
     const revealContact = this.shouldRevealContact(task, viewerUserId);
     const revealAddress = this.shouldRevealAddress(task, viewerUserId);
     const clientName = revealContact
@@ -180,6 +196,7 @@ export class JobsService {
       addressRedacted: !revealAddress,
       pendingApplicationCount,
       myApplicationStatus: myApplication?.status ?? null,
+      myConversationStatus: myConversationStatus ?? null,
       paymentStatus: (task as { paymentStatus?: string }).paymentStatus ?? 'unpaid',
       photoUrls: (task as { photoUrls?: string[] }).photoUrls ?? [],
     };
@@ -251,7 +268,23 @@ export class JobsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    let results = tasks.map((t) => this.mapTask(t, provider, userId));
+    let conversationByTaskId = new Map<string, string>();
+    if (!clientView) {
+      const conversations = await this.prisma.conversation.findMany({
+        where: {
+          providerId: userId,
+          taskId: { in: tasks.map((t) => t.id) },
+        },
+        select: { taskId: true, status: true },
+      });
+      conversationByTaskId = new Map(
+        conversations.map((c) => [c.taskId, c.status]),
+      );
+    }
+
+    let results = tasks.map((t) =>
+      this.mapTask(t, provider, userId, conversationByTaskId.get(t.id) ?? null),
+    );
 
     if (!clientView && provider) {
       results = results.filter((job) => {
@@ -310,7 +343,11 @@ export class JobsService {
     ) {
       throw new ForbiddenException('Accès refusé.');
     }
-    return this.mapTask(task, user?.provider, userId);
+    const myConversation = await this.prisma.conversation.findFirst({
+      where: { taskId: id, providerId: userId },
+      select: { status: true },
+    });
+    return this.mapTask(task, user?.provider, userId, myConversation?.status ?? null);
   }
 
   async create(clientId: string, dto: CreateTaskDto) {
@@ -580,7 +617,7 @@ export class JobsService {
       throw new BadRequestException('Vous ne pouvez pas vous envoyer de message.');
     }
 
-    await this.assertCanApplyAsTasker(taskerId);
+    await this.assertCanInquireAsTasker(taskerId);
 
     const existing = await this.prisma.conversation.findFirst({
       where: { taskId, clientId: task.clientId, providerId: taskerId },

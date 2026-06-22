@@ -202,7 +202,15 @@ export function Messages() {
             );
             setConversations(data);
           } catch {
-            // job conversations may not exist yet
+            if (!taskerIdParam) {
+              try {
+                await api.startJobInquiry(jobIdParam);
+                data = await loadConversations();
+                setConversations(data);
+              } catch {
+                // inquiry not available for this job/user
+              }
+            }
           }
         }
         pickConversation(data);
@@ -811,7 +819,13 @@ export function Messages() {
                             }
                           }}
                           enterKeyHint="send"
-                          placeholder={conversationStatus === 'application' ? 'Poser une question sur la tâche…' : 'Écrire un message…'}
+                          placeholder={
+                            conversationStatus === 'inquiry'
+                              ? 'Posez votre question au client…'
+                              : conversationStatus === 'application'
+                                ? 'Message pour votre candidature…'
+                                : 'Écrire un message…'
+                          }
                           aria-label="Message"
                           style={{ flex: 1 }}
                         />
