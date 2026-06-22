@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
+import { ChatService } from '../chat/chat.service';
+import { MessageReportStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { IsAdmin } from '../common/decorators/roles.decorator';
@@ -12,7 +14,10 @@ import { CurrentUser } from '../common/decorators/user.decorator';
 @IsAdmin()
 @ApiBearerAuth()
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly chatService: ChatService,
+  ) {}
 
   @Get('metrics')
   @ApiOperation({ summary: 'Métriques beta (admin)' })
@@ -100,5 +105,42 @@ export class AdminController {
   @ApiOperation({ summary: 'Restaurer les tâches démo (été)' })
   seedDemo(@CurrentUser('userId') adminId: string) {
     return this.adminService.seedDemoJobs(adminId);
+  }
+
+  @Get('conversations')
+  @ApiOperation({ summary: 'Rechercher des conversations (lecture seule)' })
+  listConversations(
+    @Query('q') q?: string,
+    @Query('page') page?: string,
+  ) {
+    return this.chatService.listConversationsAdmin(q, page ? parseInt(page, 10) : 1);
+  }
+
+  @Get('conversations/:id')
+  @ApiOperation({ summary: 'Voir un fil de conversation (lecture seule)' })
+  getConversation(@Param('id') id: string) {
+    return this.chatService.getConversationAdmin(id);
+  }
+
+  @Get('message-reports')
+  @ApiOperation({ summary: 'File des signalements de messages' })
+  messageReports(
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+  ) {
+    const validStatus = status && ['pending', 'reviewed', 'dismissed'].includes(status)
+      ? (status as MessageReportStatus)
+      : undefined;
+    return this.chatService.listMessageReports(validStatus, page ? parseInt(page, 10) : 1);
+  }
+
+  @Patch('message-reports/:id')
+  @ApiOperation({ summary: 'Traiter un signalement' })
+  resolveReport(
+    @Param('id') id: string,
+    @CurrentUser('userId') adminId: string,
+    @Body() body: { status: 'reviewed' | 'dismissed'; adminNote?: string },
+  ) {
+    return this.chatService.resolveMessageReport(adminId, id, body.status, body.adminNote);
   }
 }

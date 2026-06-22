@@ -57,7 +57,13 @@ export class DataRetentionService {
     const anonymizedPhone = `deleted_${userId}`;
 
     await this.prisma.$transaction([
-      // Anonymize user data
+      this.prisma.chatMessage.updateMany({
+        where: { senderId: userId },
+        data: {
+          content: '[message supprimé]',
+          attachmentUrl: null,
+        },
+      }),
       this.prisma.user.update({
         where: { id: userId },
         data: {
@@ -71,7 +77,6 @@ export class DataRetentionService {
           telegramId: null,
         },
       }),
-      // Log the deletion
       this.prisma.auditLog.create({
         data: {
           userId,

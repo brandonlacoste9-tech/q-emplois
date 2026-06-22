@@ -156,10 +156,63 @@ export class UsersService {
         creditWallet: { include: { transactions: { take: 500, orderBy: { createdAt: 'desc' } } } },
         postedTasks: { take: 100, orderBy: { createdAt: 'desc' } },
         platformNotifications: { take: 200, orderBy: { createdAt: 'desc' } },
-        sentMessages: { take: 200, orderBy: { createdAt: 'desc' } },
+        sentMessages: { take: 500, orderBy: { createdAt: 'desc' } },
+        clientConversations: {
+          take: 100,
+          orderBy: { updatedAt: 'desc' },
+          include: {
+            task: { select: { id: true, title: true, status: true } },
+            provider: { select: { email: true, firstName: true, lastName: true } },
+            messages: { orderBy: { createdAt: 'asc' } },
+          },
+        },
+        providerConversations: {
+          take: 100,
+          orderBy: { updatedAt: 'desc' },
+          include: {
+            task: { select: { id: true, title: true, status: true } },
+            client: { select: { email: true, firstName: true, lastName: true } },
+            messages: { orderBy: { createdAt: 'asc' } },
+          },
+        },
       },
     });
     if (!user) throw new NotFoundException('Utilisateur non trouvé.');
+
+    const mapConversationExport = (
+      c: {
+        id: string;
+        status: string;
+        updatedAt: Date;
+        task: { id: string; title: string; status: string } | null;
+        messages: Array<{
+          id: string;
+          type: string;
+          content: string;
+          attachmentUrl: string | null;
+          createdAt: Date;
+          senderId: string | null;
+        }>;
+      },
+      otherParty: { email: string; firstName: string | null; lastName: string | null },
+    ) => ({
+      id: c.id,
+      status: c.status,
+      job: c.task,
+      otherParty: {
+        email: otherParty.email,
+        name: [otherParty.firstName, otherParty.lastName].filter(Boolean).join(' '),
+      },
+      updatedAt: c.updatedAt.toISOString(),
+      messages: c.messages.map((m) => ({
+        id: m.id,
+        type: m.type,
+        content: m.content,
+        attachmentUrl: m.attachmentUrl,
+        senderId: m.senderId,
+        createdAt: m.createdAt.toISOString(),
+      })),
+    });
 
     return {
       profile: {
@@ -191,6 +244,18 @@ export class UsersService {
         title: t.title,
         status: t.status,
         createdAt: t.createdAt,
+      })),
+      conversations: [
+        ...user.clientConversations.map((c) => mapConversationExport(c, c.provider)),
+        ...user.providerConversations.map((c) => mapConversationExport(c, c.client)),
+      ],
+      sentMessages: user.sentMessages.map((m) => ({
+        id: m.id,
+        conversationId: m.conversationId,
+        type: m.type,
+        content: m.content,
+        attachmentUrl: m.attachmentUrl,
+        createdAt: m.createdAt.toISOString(),
       })),
       exportedAt: new Date().toISOString(),
     };

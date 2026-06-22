@@ -4,8 +4,8 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { useUnreadMessages } from '../hooks/useUnreadMessages';
-import type { Conversation, ConversationJobContext, ConversationStatus, Message } from '../types';
-import { MessageSquare, Send, Loader2, ArrowLeft, Briefcase, ImagePlus } from 'lucide-react';
+import type { Conversation, ConversationJobContext, ConversationStatus, Message, MessageSearchResult } from '../types';
+import { MessageSquare, Send, Loader2, ArrowLeft, Briefcase, ImagePlus, Search, Flag } from 'lucide-react';
 import { gold } from '../styles/design-tokens';
 import { socketService } from '../services/socket';
 import { formatPrice, formatDate } from '../utils';
@@ -23,6 +23,14 @@ const QUICK_REPLIES: Record<ConversationStatus, string[]> = {
   ],
   archived: [],
 };
+
+const REPORT_REASONS: { id: string; label: string }[] = [
+  { id: 'harassment', label: 'Harcèlement' },
+  { id: 'spam', label: 'Spam' },
+  { id: 'contact_info', label: 'Coordonnées non autorisées' },
+  { id: 'inappropriate', label: 'Contenu inapproprié' },
+  { id: 'other', label: 'Autre' },
+];
 
 function messagePreview(m?: Message) {
   if (!m) return 'Nouvelle conversation';
@@ -81,6 +89,10 @@ export function Messages() {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [typingUserId, setTypingUserId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<MessageSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [reportingId, setReportingId] = useState<string | null>(null);
   const [mobileShowThread, setMobileShowThread] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageAtRef = useRef<string | null>(null);
@@ -94,6 +106,42 @@ export function Messages() {
   }, [messages, user?.id]);
 
   const quickReplies = conversationStatus ? QUICK_REPLIES[conversationStatus] : [];
+
+  const runSearch = useCallback(async (q: string) => {
+    const trimmed = q.trim();
+    if (trimmed.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    setSearching(true);
+    try {
+      const results = await api.searchMessages(trimmed);
+      setSearchResults(results);
+    } catch {
+      addToast('Erreur de recherche', 'error');
+    } finally {
+      setSearching(false);
+    }
+  }, [addToast]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => runSearch(searchQuery), 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery, runSearch]);
+
+  const handleReport = async (messageId: string, reason: string) => {
+    if (!activeId) return;
+    setReportingId(messageId);
+    try {
+      await api.reportMessage(activeId, messageId, reason);
+      addToast('Message signalé — notre équipe va examiner.', 'success');
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      addToast(msg ?? 'Impossible de signaler', 'error');
+    } finally {
+      setReportingId(null);
+    }
+  };
 
   const loadConversations = useCallback(async () => {
     const data = await api.getConversations();
@@ -427,6 +475,51 @@ export function Messages() {
                 overflowY: 'auto',
               }}
             >
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(217,179,140,0.08)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Search className="w-4 h-4" style={{ color: gold, flexShrink: 0 }} />
+                  <input
+                    className="q-field"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Rechercher dans les messages…"
+                    style={{ flex: 1, fontSize: 13 }}
+                  />
+                  {searching && <Loader2 className="w-4 h-4" style={{ color: gold, animation: 'spin 0.9s linear infinite' }} />}
+                </div>
+              </div>
+
+              {searchQuery.trim().length >= 2 && (
+                <div style={{ padding: '8px 14px 12px', borderBottom: '1px solid rgba(217,179,140,0.08)' }}>
+                  {searchResults.length === 0 && !searching ? (
+                    <p className="body-f muted2" style={{ fontSize: 12 }}>Aucun résultat.</p>
+                  ) : (
+                    searchResults.map((r) => (
+                      <button
+                        key={`${r.conversationId}-${r.message.id}`}
+                        type="button"
+                        onClick={() => selectConversation(r.conversationId)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '8px 0',
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid rgba(217,179,140,0.06)',
+                        }}
+                      >
+                        <p className="body-f cream-hi" style={{ fontSize: 13, fontWeight: 600 }}>{r.otherPartyName}</p>
+                        {r.jobTitle && <p className="body-f muted2" style={{ fontSize: 11 }}>{r.jobTitle}</p>}
+                        <p className="body-f muted" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {messagePreview(r.message)}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+
               {conversations.length === 0 ? (
                 <p className="body-f muted" style={{ padding: 24, fontSize: 14 }}>
                   Aucune conversation. Publiez ou acceptez une tâche pour démarrer un fil.
@@ -565,12 +658,43 @@ export function Messages() {
                               <p className="body-f cream-hi" style={{ fontSize: 14 }}>{m.content}</p>
                             )}
                           </div>
-                          <p className="body-f muted2" style={{ fontSize: 11, marginTop: 4, textAlign: mine ? 'right' : 'left' }}>
-                            {new Date(m.createdAt).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
-                            {mine && m.id === lastOwnMessageId && m.isRead && (
-                              <span style={{ marginLeft: 6, color: gold }}>· Vu</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, justifyContent: mine ? 'flex-end' : 'flex-start' }}>
+                            <p className="body-f muted2" style={{ fontSize: 11, margin: 0, textAlign: mine ? 'right' : 'left' }}>
+                              {new Date(m.createdAt).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
+                              {mine && m.id === lastOwnMessageId && m.isRead && (
+                                <span style={{ marginLeft: 6, color: gold }}>· Vu</span>
+                              )}
+                            </p>
+                            {!mine && !m.id.startsWith('temp-') && (
+                              <div style={{ position: 'relative' }}>
+                                <button
+                                  type="button"
+                                  disabled={reportingId === m.id}
+                                  onClick={() => {
+                                    const reason = window.prompt(
+                                      `Signaler ce message?\n\n${REPORT_REASONS.map((r) => `${r.id}: ${r.label}`).join('\n')}\n\nEntrez le motif (ex: spam):`,
+                                      'spam',
+                                    );
+                                    if (reason && REPORT_REASONS.some((r) => r.id === reason.trim())) {
+                                      handleReport(m.id, reason.trim());
+                                    } else if (reason) {
+                                      addToast('Motif invalide', 'error');
+                                    }
+                                  }}
+                                  aria-label="Signaler"
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'rgba(217,179,140,0.5)',
+                                    cursor: 'pointer',
+                                    padding: 2,
+                                  }}
+                                >
+                                  <Flag className="w-3 h-3" />
+                                </button>
+                              </div>
                             )}
-                          </p>
+                          </div>
                         </div>
                       );
                     })}

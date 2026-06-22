@@ -6,10 +6,12 @@ import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PrismaModule } from '../common/prisma/prisma.module';
+import { AuditModule } from '../common/audit/audit.module';
 
 @Module({
   imports: [
     PrismaModule,
+    AuditModule,
     NotificationsModule,
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({

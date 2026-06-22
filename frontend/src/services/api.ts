@@ -389,6 +389,62 @@ class ApiService {
     await this.client.post(`/conversations/${conversationId}/read`);
   }
 
+  async searchMessages(q: string): Promise<import('../types').MessageSearchResult[]> {
+    const response = await this.client.get('/conversations/search/messages', { params: { q } });
+    return response.data.results ?? [];
+  }
+
+  async reportMessage(
+    conversationId: string,
+    messageId: string,
+    reason: string,
+    details?: string,
+  ): Promise<void> {
+    await this.client.post(`/conversations/${conversationId}/messages/${messageId}/report`, {
+      reason,
+      details,
+    });
+  }
+
+  async getAdminConversations(params: { q?: string; page?: number } = {}) {
+    const response = await this.client.get('/admin/conversations', { params });
+    return response.data as {
+      conversations: import('../types').AdminConversation[];
+      total: number;
+      page: number;
+    };
+  }
+
+  async getAdminConversation(id: string) {
+    const response = await this.client.get(`/admin/conversations/${id}`);
+    return response.data as {
+      id: string;
+      status: string;
+      job?: { id: string; title: string; status: string };
+      client: { email: string; firstName?: string | null; lastName?: string | null };
+      provider: { email: string; firstName?: string | null; lastName?: string | null };
+      messages: import('../types').Message[];
+    };
+  }
+
+  async getMessageReports(params: { status?: string; page?: number } = {}) {
+    const response = await this.client.get('/admin/message-reports', { params });
+    return response.data as {
+      reports: import('../types').MessageReport[];
+      total: number;
+      page: number;
+    };
+  }
+
+  async resolveMessageReport(
+    id: string,
+    status: 'reviewed' | 'dismissed',
+    adminNote?: string,
+  ) {
+    const response = await this.client.patch(`/admin/message-reports/${id}`, { status, adminNote });
+    return response.data;
+  }
+
   async getNotifications(): Promise<Notification[]> {
     const response = await this.client.get('/notifications');
     return response.data;

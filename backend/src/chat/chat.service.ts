@@ -3,25 +3,43 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Inject,
   forwardRef,
 } from '@nestjs/common';
 import {
   ChatMessageType,
   ConversationStatus,
+  MessageReportStatus,
   TaskApplicationStatus,
   TaskStatus,
 } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { AuditService } from '../common/audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationService as ExternalNotificationService } from '../common/services/notification.service';
 import { ChatGateway } from './chat.gateway';
 import { containsContactInfo, CONTACT_INFO_BLOCKED_MSG } from './message-moderation';
 
+const MESSAGE_RATE_NEW_ACCOUNT = 10;
+const MESSAGE_RATE_DEFAULT = 30;
+const MESSAGE_RATE_WINDOW_MS = 60_000;
+const NEW_ACCOUNT_DAYS = 7;
+
+export const MESSAGE_REPORT_REASONS = [
+  'harassment',
+  'spam',
+  'contact_info',
+  'inappropriate',
+  'other',
+] as const;
+
 @Injectable()
 export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
     private readonly notificationsService: NotificationsService,
     private readonly externalNotifications: ExternalNotificationService,
     @Inject(forwardRef(() => ChatGateway))
@@ -166,6 +184,34 @@ export class ChatService {
   ) {
     if (conversation.status === ConversationStatus.application && containsContactInfo(content)) {
       throw new BadRequestException(CONTACT_INFO_BLOCKED_MSG);
+    }
+  }
+
+  private async assertRateLimit(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { createdAt: true },
+    });
+    if (!user) return;
+
+    const isNewAccount =
+      Date.now() - user.createdAt.getTime() < NEW_ACCOUNT_DAYS * 24 * 60 * 60 * 1000;
+    const maxPerMinute = isNewAccount ? MESSAGE_RATE_NEW_ACCOUNT : MESSAGE_RATE_DEFAULT;
+    const since = new Date(Date.now() - MESSAGE_RATE_WINDOW_MS);
+
+    const recentCount = await this.prisma.chatMessage.count({
+      where: {
+        senderId: userId,
+        createdAt: { gte: since },
+        type: { in: [ChatMessageType.text, ChatMessageType.image] },
+      },
+    });
+
+    if (recentCount >= maxPerMinute) {
+      throw new HttpException(
+        'Trop de messages envoyés. Réessayez dans un moment.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
   }
 
@@ -384,10 +430,13 @@ export class ChatService {
     return conversations.map((c) => this.mapConversation(c, userId));
   }
 
-  async listConversations(userId: string) {
+  async listConversations(userId: string, unreadOnly = false) {
     const conversations = await this.prisma.conversation.findMany({
       where: {
         OR: [{ clientId: userId }, { providerId: userId }],
+        ...(unreadOnly
+          ? { messages: { some: this.unreadWhere(userId) } }
+          : {}),
       },
       include: {
         messages: { orderBy: { createdAt: 'desc' }, take: 1 },
@@ -486,6 +535,7 @@ export class ChatService {
       throw new ForbiddenException('Accès refusé.');
     }
     await this.assertMessagingAllowed(conversation, userId);
+    await this.assertRateLimit(userId);
 
     const isImage = !!payload.attachmentUrl?.trim();
     const text = payload.content?.trim() ?? '';
@@ -585,5 +635,309 @@ export class ChatService {
     }
 
     return { success: true };
+  }
+
+  async searchMessages(userId: string, q: string, limit = 30) {
+    const query = q.trim();
+    if (query.length < 2) {
+      throw new BadRequestException('Recherche trop courte (min. 2 caractères).');
+    }
+
+    const conversations = await this.prisma.conversation.findMany({
+      where: { OR: [{ clientId: userId }, { providerId: userId }] },
+      select: { id: true },
+    });
+    const conversationIds = conversations.map((c) => c.id);
+    if (conversationIds.length === 0) return { results: [] };
+
+    const messages = await this.prisma.chatMessage.findMany({
+      where: {
+        conversationId: { in: conversationIds },
+        type: { in: [ChatMessageType.text, ChatMessageType.image] },
+        content: { contains: query, mode: 'insensitive' },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(limit, 50),
+      include: {
+        conversation: {
+          include: {
+            task: { select: { title: true } },
+            client: { select: { firstName: true, lastName: true } },
+            provider: { select: { firstName: true, lastName: true } },
+          },
+        },
+      },
+    });
+
+    return {
+      results: messages.map((m) => {
+        const conv = m.conversation;
+        const isClient = conv.clientId === userId;
+        const other = isClient ? conv.provider : conv.client;
+        return {
+          message: this.mapMessage(m),
+          conversationId: m.conversationId,
+          jobTitle: conv.task?.title,
+          otherPartyName: [other.firstName, other.lastName].filter(Boolean).join(' ') || 'Utilisateur',
+        };
+      }),
+    };
+  }
+
+  async reportMessage(
+    userId: string,
+    conversationId: string,
+    messageId: string,
+    reason: string,
+    details?: string,
+  ) {
+    if (!MESSAGE_REPORT_REASONS.includes(reason as (typeof MESSAGE_REPORT_REASONS)[number])) {
+      throw new BadRequestException('Motif de signalement invalide.');
+    }
+
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+    });
+    if (!conversation) throw new NotFoundException('Conversation introuvable.');
+    if (conversation.clientId !== userId && conversation.providerId !== userId) {
+      throw new ForbiddenException('Accès refusé.');
+    }
+
+    const message = await this.prisma.chatMessage.findFirst({
+      where: { id: messageId, conversationId },
+    });
+    if (!message) throw new NotFoundException('Message introuvable.');
+    if (message.type === ChatMessageType.system) {
+      throw new BadRequestException('Les messages système ne peuvent pas être signalés.');
+    }
+    if (message.senderId === userId) {
+      throw new BadRequestException('Vous ne pouvez pas signaler votre propre message.');
+    }
+
+    const existing = await this.prisma.messageReport.findFirst({
+      where: { messageId, reporterId: userId },
+    });
+    if (existing) {
+      throw new BadRequestException('Vous avez déjà signalé ce message.');
+    }
+
+    const report = await this.prisma.messageReport.create({
+      data: {
+        messageId,
+        conversationId,
+        reporterId: userId,
+        reason,
+        details: details?.trim() || null,
+      },
+    });
+
+    await this.auditService.log({
+      userId,
+      action: 'message_reported',
+      resource: 'chat_message',
+      resourceId: messageId,
+      details: { conversationId, reason, reportId: report.id },
+    });
+
+    return { success: true, reportId: report.id };
+  }
+
+  async listConversationsAdmin(q?: string, page = 1) {
+    const take = 50;
+    const skip = (page - 1) * take;
+    const trimmed = q?.trim();
+
+    const where = trimmed
+      ? {
+          OR: [
+            { id: trimmed },
+            { client: { email: { contains: trimmed, mode: 'insensitive' as const } } },
+            { provider: { email: { contains: trimmed, mode: 'insensitive' as const } } },
+            { task: { title: { contains: trimmed, mode: 'insensitive' as const } } },
+            { client: { firstName: { contains: trimmed, mode: 'insensitive' as const } } },
+            { client: { lastName: { contains: trimmed, mode: 'insensitive' as const } } },
+            { provider: { firstName: { contains: trimmed, mode: 'insensitive' as const } } },
+            { provider: { lastName: { contains: trimmed, mode: 'insensitive' as const } } },
+          ],
+        }
+      : {};
+
+    const [conversations, total] = await Promise.all([
+      this.prisma.conversation.findMany({
+        where,
+        include: {
+          client: { select: { email: true, firstName: true, lastName: true } },
+          provider: { select: { email: true, firstName: true, lastName: true } },
+          task: { select: { id: true, title: true, status: true } },
+          messages: { orderBy: { createdAt: 'desc' }, take: 1 },
+          _count: { select: { messages: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take,
+      }),
+      this.prisma.conversation.count({ where }),
+    ]);
+
+    const pendingByConv = await this.prisma.messageReport.groupBy({
+      by: ['conversationId'],
+      where: {
+        conversationId: { in: conversations.map((c) => c.id) },
+        status: MessageReportStatus.pending,
+      },
+      _count: { id: true },
+    });
+    const pendingMap = new Map(pendingByConv.map((p) => [p.conversationId, p._count.id]));
+
+    return {
+      conversations: conversations.map((c) => ({
+        id: c.id,
+        status: c.status,
+        jobId: c.taskId,
+        jobTitle: c.task?.title,
+        jobStatus: c.task?.status,
+        clientEmail: c.client.email,
+        clientName: [c.client.firstName, c.client.lastName].filter(Boolean).join(' '),
+        providerEmail: c.provider.email,
+        providerName: [c.provider.firstName, c.provider.lastName].filter(Boolean).join(' '),
+        messageCount: c._count.messages,
+        pendingReports: pendingMap.get(c.id) ?? 0,
+        lastMessage: c.messages[0] ? this.mapMessage(c.messages[0]) : undefined,
+        updatedAt: c.updatedAt.toISOString(),
+      })),
+      total,
+      page,
+    };
+  }
+
+  async getConversationAdmin(conversationId: string) {
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: {
+        client: { select: { id: true, email: true, firstName: true, lastName: true } },
+        provider: { select: { id: true, email: true, firstName: true, lastName: true } },
+        task: { select: { id: true, title: true, status: true } },
+        messages: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+    if (!conversation) throw new NotFoundException('Conversation introuvable.');
+
+    const senderIds = [...new Set(conversation.messages.map((m) => m.senderId).filter(Boolean))] as string[];
+    const senders = senderIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: senderIds } },
+          select: { id: true, firstName: true, lastName: true, email: true },
+        })
+      : [];
+    const senderMap = new Map(senders.map((s) => [s.id, s]));
+
+    return {
+      id: conversation.id,
+      status: conversation.status,
+      job: conversation.task,
+      client: conversation.client,
+      provider: conversation.provider,
+      messages: conversation.messages.map((m) => {
+        const sender = m.senderId ? senderMap.get(m.senderId) : null;
+        const senderName = sender
+          ? [sender.firstName, sender.lastName].filter(Boolean).join(' ') || sender.email
+          : 'Système';
+        return this.mapMessage(m, senderName);
+      }),
+    };
+  }
+
+  async listMessageReports(status?: MessageReportStatus, page = 1) {
+    const take = 50;
+    const skip = (page - 1) * take;
+    const where = status ? { status } : {};
+
+    const [reports, total] = await Promise.all([
+      this.prisma.messageReport.findMany({
+        where,
+        include: {
+          message: true,
+          reporter: { select: { email: true, firstName: true, lastName: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      }),
+      this.prisma.messageReport.count({ where }),
+    ]);
+
+    const conversationIds = [...new Set(reports.map((r) => r.conversationId))];
+    const conversations = conversationIds.length
+      ? await this.prisma.conversation.findMany({
+          where: { id: { in: conversationIds } },
+          include: {
+            task: { select: { title: true } },
+            client: { select: { email: true } },
+            provider: { select: { email: true } },
+          },
+        })
+      : [];
+    const convMap = new Map(conversations.map((c) => [c.id, c]));
+
+    return {
+      reports: reports.map((r) => {
+        const conv = convMap.get(r.conversationId);
+        return {
+          id: r.id,
+          status: r.status,
+          reason: r.reason,
+          details: r.details,
+          adminNote: r.adminNote,
+          createdAt: r.createdAt.toISOString(),
+          reviewedAt: r.reviewedAt?.toISOString() ?? null,
+          conversationId: r.conversationId,
+          messageId: r.messageId,
+          messagePreview: this.previewContent(r.message),
+          reporterEmail: r.reporter.email,
+          reporterName: [r.reporter.firstName, r.reporter.lastName].filter(Boolean).join(' '),
+          jobTitle: conv?.task?.title,
+          clientEmail: conv?.client.email,
+          providerEmail: conv?.provider.email,
+        };
+      }),
+      total,
+      page,
+    };
+  }
+
+  async resolveMessageReport(
+    adminId: string,
+    reportId: string,
+    status: 'reviewed' | 'dismissed',
+    adminNote?: string,
+  ) {
+    const report = await this.prisma.messageReport.findUnique({ where: { id: reportId } });
+    if (!report) throw new NotFoundException('Signalement introuvable.');
+    if (report.status !== MessageReportStatus.pending) {
+      throw new BadRequestException('Ce signalement a déjà été traité.');
+    }
+
+    const nextStatus =
+      status === 'reviewed' ? MessageReportStatus.reviewed : MessageReportStatus.dismissed;
+
+    const updated = await this.prisma.messageReport.update({
+      where: { id: reportId },
+      data: {
+        status: nextStatus,
+        reviewedBy: adminId,
+        reviewedAt: new Date(),
+        adminNote: adminNote?.trim() || null,
+      },
+    });
+
+    await this.auditService.log({
+      userId: adminId,
+      action: 'message_report_resolved',
+      resource: 'message_report',
+      resourceId: reportId,
+      details: { status: nextStatus, conversationId: report.conversationId, messageId: report.messageId },
+    });
+
+    return updated;
   }
 }

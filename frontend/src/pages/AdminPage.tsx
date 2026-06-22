@@ -4,13 +4,14 @@ import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
 import {
-  BarChart3, Check, Copy, ExternalLink, Shield, Trash2, Users, Briefcase, Gift, X,
+  BarChart3, Check, Copy, ExternalLink, Shield, Trash2, Users, Briefcase, Gift, X, MessageSquare,
 } from 'lucide-react';
+import type { AdminConversation, Message, MessageReport } from '../types';
 import { gold } from '../styles/design-tokens';
 
 const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 20 };
 
-type AdminTab = 'overview' | 'verifications' | 'jobs' | 'users' | 'invites' | 'audit';
+type AdminTab = 'overview' | 'verifications' | 'jobs' | 'users' | 'messages' | 'invites' | 'audit';
 
 interface BetaMetrics {
   periodDays: number;
@@ -77,6 +78,7 @@ const TABS: { id: AdminTab; label: string }[] = [
   { id: 'verifications', label: 'Vérifications' },
   { id: 'jobs', label: 'Tâches' },
   { id: 'users', label: 'Utilisateurs' },
+  { id: 'messages', label: 'Messages' },
   { id: 'invites', label: 'Invitations' },
   { id: 'audit', label: 'Audit' },
 ];
@@ -121,6 +123,26 @@ export function AdminPage() {
 
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
+
+  const [msgConversations, setMsgConversations] = useState<AdminConversation[]>([]);
+  const [msgConvPage, setMsgConvPage] = useState(1);
+  const [msgConvTotal, setMsgConvTotal] = useState(0);
+  const [msgConvQuery, setMsgConvQuery] = useState('');
+  const [msgConvLoading, setMsgConvLoading] = useState(false);
+  const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
+  const [selectedConvMessages, setSelectedConvMessages] = useState<Message[]>([]);
+  const [selectedConvMeta, setSelectedConvMeta] = useState<{
+    client: { email: string; firstName?: string | null; lastName?: string | null };
+    provider: { email: string; firstName?: string | null; lastName?: string | null };
+    job?: { title: string };
+    status: string;
+  } | null>(null);
+  const [msgReports, setMsgReports] = useState<MessageReport[]>([]);
+  const [msgReportsTotal, setMsgReportsTotal] = useState(0);
+  const [msgReportsPage, setMsgReportsPage] = useState(1);
+  const [msgReportStatus, setMsgReportStatus] = useState('pending');
+  const [msgReportsLoading, setMsgReportsLoading] = useState(false);
+  const [msgSubTab, setMsgSubTab] = useState<'conversations' | 'reports'>('reports');
 
   const loadCore = async () => {
     setLoading(true);
@@ -184,11 +206,77 @@ export function AdminPage() {
 
   useEffect(() => { loadCore(); }, []);
 
+  const loadMsgConversations = async () => {
+    setMsgConvLoading(true);
+    try {
+      const data = await api.getAdminConversations({
+        page: msgConvPage,
+        q: msgConvQuery || undefined,
+      });
+      setMsgConversations(data.conversations);
+      setMsgConvTotal(data.total);
+    } catch {
+      addToast('Erreur chargement conversations', 'error');
+    } finally {
+      setMsgConvLoading(false);
+    }
+  };
+
+  const loadMsgReports = async () => {
+    setMsgReportsLoading(true);
+    try {
+      const data = await api.getMessageReports({
+        page: msgReportsPage,
+        status: msgReportStatus || undefined,
+      });
+      setMsgReports(data.reports);
+      setMsgReportsTotal(data.total);
+    } catch {
+      addToast('Erreur chargement signalements', 'error');
+    } finally {
+      setMsgReportsLoading(false);
+    }
+  };
+
+  const openAdminConversation = async (id: string) => {
+    setSelectedConvId(id);
+    try {
+      const data = await api.getAdminConversation(id);
+      setSelectedConvMessages(data.messages);
+      setSelectedConvMeta({
+        client: data.client,
+        provider: data.provider,
+        job: data.job,
+        status: data.status,
+      });
+    } catch {
+      addToast('Erreur chargement fil', 'error');
+    }
+  };
+
+  const handleResolveReport = async (reportId: string, status: 'reviewed' | 'dismissed') => {
+    const note = window.prompt('Note admin (optionnel):') ?? undefined;
+    setProcessing(reportId);
+    try {
+      await api.resolveMessageReport(reportId, status, note || undefined);
+      addToast(status === 'reviewed' ? 'Signalement traité' : 'Signalement rejeté', 'success');
+      await loadMsgReports();
+    } catch {
+      addToast('Erreur', 'error');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
   useEffect(() => {
     if (tab === 'audit') loadAudit();
     if (tab === 'jobs') loadJobs();
     if (tab === 'users') loadUsers();
-  }, [tab, auditPage, auditAction, jobsPage, jobsStatus, usersPage, usersRole]);
+    if (tab === 'messages') {
+      loadMsgReports();
+      loadMsgConversations();
+    }
+  }, [tab, auditPage, auditAction, jobsPage, jobsStatus, usersPage, usersRole, msgConvPage, msgReportsPage, msgReportStatus]);
 
   useEffect(() => {
     const interval = setInterval(loadCore, 60000);
@@ -362,6 +450,8 @@ export function AdminPage() {
             >
               {t.label}
               {t.id === 'verifications' && pending.length > 0 && ` (${pending.length})`}
+              {t.id === 'messages' && msgReports.filter((r) => r.status === 'pending').length > 0
+                && ` (${msgReports.filter((r) => r.status === 'pending').length})`}
             </button>
           ))}
         </div>
@@ -584,6 +674,160 @@ export function AdminPage() {
           </div>
         )}
 
+        {tab === 'messages' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 380px) 1fr', gap: 16, alignItems: 'start' }}>
+            <div className="stitch-box" style={card}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                <button
+                  type="button"
+                  onClick={() => setMsgSubTab('reports')}
+                  className={msgSubTab === 'reports' ? 'gold-btn' : 'ghost-btn'}
+                  style={{ padding: '6px 12px', fontSize: 12 }}
+                >
+                  Signalements
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMsgSubTab('conversations')}
+                  className={msgSubTab === 'conversations' ? 'gold-btn' : 'ghost-btn'}
+                  style={{ padding: '6px 12px', fontSize: 12 }}
+                >
+                  Conversations
+                </button>
+              </div>
+
+              {msgSubTab === 'reports' ? (
+                <>
+                  <select
+                    className="q-field"
+                    value={msgReportStatus}
+                    onChange={(e) => { setMsgReportStatus(e.target.value); setMsgReportsPage(1); }}
+                    style={{ width: '100%', marginBottom: 12, fontSize: 13 }}
+                  >
+                    <option value="pending">En attente</option>
+                    <option value="reviewed">Traités</option>
+                    <option value="dismissed">Rejetés</option>
+                    <option value="">Tous</option>
+                  </select>
+                  {msgReportsLoading ? (
+                    <p className="body-f muted" style={{ padding: 16, textAlign: 'center' }}>Chargement…</p>
+                  ) : msgReports.length === 0 ? (
+                    <p className="body-f muted2" style={{ fontSize: 13 }}>Aucun signalement.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 520, overflowY: 'auto' }}>
+                      {msgReports.map((r) => (
+                        <div key={r.id} style={{ padding: 10, background: 'rgba(15,25,36,0.5)', borderRadius: 8 }}>
+                          <p className="body-f cream-hi" style={{ fontSize: 13, fontWeight: 600 }}>{r.reason} · {r.status}</p>
+                          <p className="body-f muted2" style={{ fontSize: 12 }}>{r.messagePreview}</p>
+                          <p className="body-f muted2" style={{ fontSize: 11 }}>
+                            {r.reporterEmail} · {r.jobTitle ?? '—'}
+                          </p>
+                          <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                            <button type="button" onClick={() => openAdminConversation(r.conversationId)} className="ghost-btn" style={{ padding: '4px 10px', fontSize: 11 }}>
+                              Voir fil
+                            </button>
+                            {r.status === 'pending' && (
+                              <>
+                                <button type="button" disabled={processing === r.id} onClick={() => handleResolveReport(r.id, 'reviewed')} className="gold-btn" style={{ padding: '4px 10px', fontSize: 11 }}>
+                                  Traiter
+                                </button>
+                                <button type="button" disabled={processing === r.id} onClick={() => handleResolveReport(r.id, 'dismissed')} className="ghost-btn" style={{ padding: '4px 10px', fontSize: 11 }}>
+                                  Rejeter
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
+                    <button disabled={msgReportsPage <= 1} onClick={() => setMsgReportsPage(msgReportsPage - 1)} className="ghost-btn">←</button>
+                    <span className="body-f cream-hi" style={{ fontSize: 12 }}>{msgReportsPage}</span>
+                    <button disabled={msgReportsPage >= Math.ceil(msgReportsTotal / 50)} onClick={() => setMsgReportsPage(msgReportsPage + 1)} className="ghost-btn">→</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <input
+                    className="q-field"
+                    placeholder="Email, tâche, ID…"
+                    value={msgConvQuery}
+                    onChange={(e) => setMsgConvQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && loadMsgConversations()}
+                    style={{ width: '100%', marginBottom: 12, fontSize: 13 }}
+                  />
+                  <button type="button" onClick={() => { setMsgConvPage(1); loadMsgConversations(); }} className="ghost-btn" style={{ padding: '6px 12px', fontSize: 12, marginBottom: 12 }}>
+                    Rechercher
+                  </button>
+                  {msgConvLoading ? (
+                    <p className="body-f muted" style={{ padding: 16, textAlign: 'center' }}>Chargement…</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 520, overflowY: 'auto' }}>
+                      {msgConversations.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => openAdminConversation(c.id)}
+                          style={{
+                            textAlign: 'left',
+                            padding: 10,
+                            borderRadius: 8,
+                            border: selectedConvId === c.id ? '1px solid rgba(184,123,68,0.5)' : '1px solid rgba(217,179,140,0.12)',
+                            background: selectedConvId === c.id ? 'rgba(184,123,68,0.12)' : 'rgba(15,25,36,0.5)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <p className="body-f cream-hi" style={{ fontSize: 13, fontWeight: 600 }}>{c.jobTitle ?? 'Sans tâche'}</p>
+                          <p className="body-f muted2" style={{ fontSize: 11 }}>{c.clientEmail} ↔ {c.providerEmail}</p>
+                          <p className="body-f muted2" style={{ fontSize: 11 }}>
+                            {c.messageCount} msg · {c.status}
+                            {c.pendingReports > 0 && <span style={{ color: gold }}> · {c.pendingReports} signalement(s)</span>}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="stitch-box" style={{ ...card, minHeight: 400 }}>
+              <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <MessageSquare className="w-5 h-5" style={{ color: gold }} /> Fil (lecture seule)
+              </h2>
+              {!selectedConvId || !selectedConvMeta ? (
+                <p className="body-f muted2" style={{ fontSize: 14 }}>Sélectionnez une conversation ou un signalement.</p>
+              ) : (
+                <>
+                  <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 12 }}>
+                    {selectedConvMeta.job?.title && <strong className="cream-hi">{selectedConvMeta.job.title}</strong>}
+                    {' · '}{selectedConvMeta.status}
+                    <br />
+                    Client: {selectedConvMeta.client.email}
+                    <br />
+                    Travailleur: {selectedConvMeta.provider.email}
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 480, overflowY: 'auto' }}>
+                    {selectedConvMessages.map((m) => (
+                      <div key={m.id} style={{ padding: '8px 12px', borderRadius: 8, background: m.type === 'system' ? 'rgba(217,179,140,0.08)' : 'rgba(15,25,36,0.5)' }}>
+                        <p className="body-f muted2" style={{ fontSize: 11, marginBottom: 4 }}>
+                          {m.senderName || 'Système'} · {new Date(m.createdAt).toLocaleString('fr-CA')}
+                        </p>
+                        {m.type === 'image' && m.attachmentUrl ? (
+                          <a href={m.attachmentUrl} target="_blank" rel="noreferrer" className="body-f cream-hi" style={{ fontSize: 13 }}>📷 Photo</a>
+                        ) : (
+                          <p className="body-f cream-hi" style={{ fontSize: 14 }}>{m.content}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {tab === 'invites' && (
           <div className="stitch-box" style={card}>
             <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -630,6 +874,8 @@ export function AdminPage() {
                 <option value="task_cancelled">Tâche annulée</option>
                 <option value="demo_jobs_seeded">Démos restaurées</option>
                 <option value="deletion_requested">Suppression demandée</option>
+                <option value="message_reported">Message signalé</option>
+                <option value="message_report_resolved">Signalement traité</option>
               </select>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
                 <button disabled={auditPage <= 1} onClick={() => setAuditPage(auditPage - 1)} className="ghost-btn">←</button>

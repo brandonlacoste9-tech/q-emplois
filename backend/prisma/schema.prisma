@@ -79,6 +79,7 @@ model User {
   taskReviewsReceived     TaskReview[]     @relation("TaskReviewsReceived")
   taskApplications        TaskApplication[] @relation("TaskApplications")
   passwordResetTokens     PasswordResetToken[]
+  messageReports          MessageReport[]   @relation("MessageReports")
   
   // Bot integrations
   telegramId          String?            @unique
@@ -527,11 +528,39 @@ model ChatMessage {
   attachmentUrl  String?
   isRead         Boolean         @default(false)
   createdAt      DateTime        @default(now())
+  reports        MessageReport[]
 
   @@index([conversationId])
   @@index([senderId])
   @@index([conversationId, isRead])
   @@map("chat_messages")
+}
+
+enum MessageReportStatus {
+  pending
+  reviewed
+  dismissed
+}
+
+model MessageReport {
+  id             String              @id @default(uuid())
+  messageId      String
+  message        ChatMessage         @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  conversationId String
+  reporterId     String
+  reporter       User                @relation("MessageReports", fields: [reporterId], references: [id], onDelete: Cascade)
+  reason         String
+  details        String?
+  status         MessageReportStatus @default(pending)
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  adminNote      String?
+  createdAt      DateTime            @default(now())
+
+  @@index([status])
+  @@index([messageId])
+  @@index([conversationId])
+  @@map("message_reports")
 }
 
 // ========================

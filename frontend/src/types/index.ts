@@ -273,6 +273,47 @@ export interface ConversationJobContext {
 
 export type ConversationStatus = 'application' | 'active' | 'archived';
 
+export interface MessageSearchResult {
+  message: Message;
+  conversationId: string;
+  jobTitle?: string;
+  otherPartyName: string;
+}
+
+export interface AdminConversation {
+  id: string;
+  status: ConversationStatus;
+  jobId?: string;
+  jobTitle?: string;
+  jobStatus?: string;
+  clientEmail: string;
+  clientName: string;
+  providerEmail: string;
+  providerName: string;
+  messageCount: number;
+  pendingReports: number;
+  lastMessage?: Message;
+  updatedAt: string;
+}
+
+export interface MessageReport {
+  id: string;
+  status: 'pending' | 'reviewed' | 'dismissed';
+  reason: string;
+  details?: string | null;
+  adminNote?: string | null;
+  createdAt: string;
+  reviewedAt?: string | null;
+  conversationId: string;
+  messageId: string;
+  messagePreview: string;
+  reporterEmail: string;
+  reporterName: string;
+  jobTitle?: string;
+  clientEmail?: string;
+  providerEmail?: string;
+}
+
 export interface Conversation {
   id: string;
   clientId: string;
