@@ -570,6 +570,34 @@ export class JobsService {
     return this.chatService.listJobConversations(taskId, userId);
   }
 
+  async startInquiry(taskId: string, taskerId: string) {
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) throw new NotFoundException('Tâche non trouvée.');
+    if (task.status !== TaskStatus.open) {
+      throw new BadRequestException('Cette tâche n\'accepte plus de questions.');
+    }
+    if (task.clientId === taskerId) {
+      throw new BadRequestException('Vous ne pouvez pas vous envoyer de message.');
+    }
+
+    await this.assertCanApplyAsTasker(taskerId);
+
+    const existing = await this.prisma.conversation.findFirst({
+      where: { taskId, clientId: task.clientId, providerId: taskerId },
+    });
+    if (existing) {
+      return { conversationId: existing.id, status: existing.status };
+    }
+
+    const conversationId = await this.chatService.openInquiryConversation(
+      task.clientId,
+      taskerId,
+      taskId,
+    );
+
+    return { conversationId, status: 'inquiry' };
+  }
+
   async listApplications(taskId: string, clientId: string) {
     const task = await this.prisma.task.findUnique({ where: { id: taskId } });
     if (!task) throw new NotFoundException('Tâche non trouvée.');

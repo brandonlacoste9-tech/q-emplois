@@ -492,6 +492,7 @@ enum ChatMessageType {
 }
 
 enum ConversationStatus {
+  inquiry
   application
   active
   archived

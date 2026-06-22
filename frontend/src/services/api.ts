@@ -191,6 +191,11 @@ class ApiService {
     return response.data;
   }
 
+  async startJobInquiry(jobId: string): Promise<{ conversationId: string; status: string }> {
+    const response = await this.client.post(`/jobs/${jobId}/inquiry`);
+    return response.data;
+  }
+
   async applyToJob(id: string, message?: string): Promise<Job> {
     const response = await this.client.post(`/jobs/${id}/apply`, { message });
     return response.data;

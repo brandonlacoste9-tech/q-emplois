@@ -68,6 +68,15 @@ export class JobsController {
     return this.jobsService.create(userId, dto);
   }
 
+  @Post(':id/inquiry')
+  @ApiOperation({ summary: 'Ouvrir un fil de questions avec le client (sans postuler)' })
+  startInquiry(
+    @Param('id') id: string,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.jobsService.startInquiry(id, userId);
+  }
+
   @Post(':id/apply')
   @ApiOperation({ summary: 'Postuler à une tâche (tasker)' })
   apply(

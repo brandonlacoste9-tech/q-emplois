@@ -156,6 +156,14 @@ export class ChatService {
       throw new ForbiddenException('Cette tâche est terminée — messagerie en lecture seule.');
     }
 
+    if (conversation.status === ConversationStatus.inquiry) {
+      if (task.status !== TaskStatus.open) {
+        throw new ForbiddenException('Cette tâche n\'accepte plus de questions.');
+      }
+      if (userId === conversation.clientId || userId === conversation.providerId) return;
+      throw new ForbiddenException('Accès refusé à cette conversation.');
+    }
+
     if (conversation.status === ConversationStatus.application) {
       if (task.status !== TaskStatus.open) {
         throw new ForbiddenException('Cette candidature n\'est plus active.');
@@ -182,7 +190,11 @@ export class ChatService {
     conversation: { status: ConversationStatus },
     content: string,
   ) {
-    if (conversation.status === ConversationStatus.application && containsContactInfo(content)) {
+    if (
+      (conversation.status === ConversationStatus.application
+        || conversation.status === ConversationStatus.inquiry)
+      && containsContactInfo(content)
+    ) {
       throw new BadRequestException(CONTACT_INFO_BLOCKED_MSG);
     }
   }
@@ -227,6 +239,37 @@ export class ChatService {
     return created.id;
   }
 
+  async openInquiryConversation(clientId: string, providerId: string, taskId: string) {
+    let conversation = await this.prisma.conversation.findFirst({
+      where: { clientId, providerId, taskId },
+    });
+
+    if (conversation) {
+      if (conversation.status === ConversationStatus.archived) {
+        conversation = await this.prisma.conversation.update({
+          where: { id: conversation.id },
+          data: { status: ConversationStatus.inquiry, updatedAt: new Date() },
+        });
+        await this.postSystemMessage(conversation.id, 'Fil de questions relancé.');
+      }
+      return conversation.id;
+    }
+
+    conversation = await this.prisma.conversation.create({
+      data: {
+        clientId,
+        providerId,
+        taskId,
+        status: ConversationStatus.inquiry,
+      },
+    });
+    await this.postSystemMessage(
+      conversation.id,
+      'Fil de questions — posez vos questions sur la tâche. Téléphone et adresse masqués jusqu\'à la sélection.',
+    );
+    return conversation.id;
+  }
+
   async openApplicationConversation(
     clientId: string,
     providerId: string,
@@ -250,6 +293,12 @@ export class ChatService {
         conversation.id,
         'Fil de candidature — téléphone et adresse masqués jusqu\'à la sélection.',
       );
+    } else if (conversation.status === ConversationStatus.inquiry) {
+      conversation = await this.prisma.conversation.update({
+        where: { id: conversation.id },
+        data: { status: ConversationStatus.application, updatedAt: new Date() },
+      });
+      await this.postSystemMessage(conversation.id, 'Candidature envoyée — ce fil devient une candidature officielle.');
     } else if (conversation.status === ConversationStatus.archived) {
       conversation = await this.prisma.conversation.update({
         where: { id: conversation.id },
@@ -401,10 +450,15 @@ export class ChatService {
 
     const isClient = task.clientId === userId;
     if (!isClient && task.taskerId !== userId) {
-      const application = await this.prisma.taskApplication.findUnique({
-        where: { taskId_taskerId: { taskId, taskerId: userId } },
-      });
-      if (!application) {
+      const [application, conversation] = await Promise.all([
+        this.prisma.taskApplication.findUnique({
+          where: { taskId_taskerId: { taskId, taskerId: userId } },
+        }),
+        this.prisma.conversation.findFirst({
+          where: { taskId, providerId: userId },
+        }),
+      ]);
+      if (!application && !conversation) {
         throw new ForbiddenException('Accès refusé.');
       }
     }

@@ -11,6 +11,11 @@ import { socketService } from '../services/socket';
 import { formatPrice, formatDate } from '../utils';
 
 const QUICK_REPLIES: Record<ConversationStatus, string[]> = {
+  inquiry: [
+    'Bonjour! J\'ai une question sur cette tâche.',
+    'Pouvez-vous préciser les détails?',
+    'Quand souhaitez-vous que ce soit fait?',
+  ],
   application: [
     'Bonjour! Pouvez-vous préciser votre expérience?',
     'Quand seriez-vous disponible?',
@@ -551,6 +556,7 @@ export function Messages() {
                     {c.jobTitle && (
                       <p className="body-f muted2" style={{ fontSize: 11, marginTop: 2 }}>
                         {c.jobTitle}
+                        {c.status === 'inquiry' && ' · Question'}
                         {c.status === 'application' && ' · Candidature'}
                         {c.status === 'archived' && ' · Archivé'}
                       </p>
@@ -589,7 +595,7 @@ export function Messages() {
 
                   {jobContext && <JobChatHeader job={jobContext} />}
 
-                  {conversationStatus === 'application' && (
+                  {(conversationStatus === 'application' || conversationStatus === 'inquiry') && (
                     <p
                       className="body-f muted2"
                       style={{
@@ -601,7 +607,9 @@ export function Messages() {
                         border: '1px solid rgba(107,163,196,0.25)',
                       }}
                     >
-                      Mode candidature — pas de téléphone, courriel ou lien tant que le travailleur n&apos;est pas choisi.
+                      {conversationStatus === 'inquiry'
+                        ? 'Mode questions — gratuit, sans postuler. Pas de téléphone, courriel ou lien tant que le travailleur n\'est pas choisi.'
+                        : 'Mode candidature — pas de téléphone, courriel ou lien tant que le travailleur n\'est pas choisi.'}
                     </p>
                   )}
 

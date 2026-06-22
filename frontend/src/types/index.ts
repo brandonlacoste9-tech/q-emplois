@@ -271,7 +271,7 @@ export interface ConversationJobContext {
   estimatedPrice: number;
 }
 
-export type ConversationStatus = 'application' | 'active' | 'archived';
+export type ConversationStatus = 'inquiry' | 'application' | 'active' | 'archived';
 
 export interface MessageSearchResult {
   message: Message;

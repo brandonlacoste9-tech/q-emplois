@@ -75,10 +75,8 @@ export function JobDetail() {
         } else {
           setApplicantConversations({});
         }
-        const mine = convs.find((c) => profile?.id && c.providerId === profile.id) ?? convs[0] ?? null;
-        setJobConversation(
-          data.status !== 'pending' || data.myApplicationStatus ? mine : null,
-        );
+        const mine = convs.find((c) => profile?.id && c.providerId === profile.id) ?? null;
+        setJobConversation(mine);
       } catch {
         setJobConversation(null);
         setApplicantConversations({});
@@ -189,6 +187,31 @@ export function JobDetail() {
   const taskerCanApply = canTaskerApply(profile, profile?.verificationExpiresAt);
   const verificationStatus = getTaskerVerificationStatus(profile, profile?.verificationExpiresAt);
   const canApply = showTaskerActions && job.status === 'pending' && !hasApplied && (creditBalance ?? 0) > 0 && taskerCanApply;
+  const canAskQuestion = showTaskerActions && job.status === 'pending' && !hasApplied && taskerCanApply;
+  const hasMessageThread = !!jobConversation;
+
+  const inquiryConversations = isJobOwner
+    ? Object.values(applicantConversations).filter(
+        (c) => c.status === 'inquiry' && c.providerId && !applications.some((a) => a.taskerId === c.providerId),
+      )
+    : [];
+
+  const handleAskQuestion = async () => {
+    if (!job) return;
+    setProcessing(true);
+    try {
+      await api.startJobInquiry(job.id);
+      addToast('Fil ouvert — posez votre question au client', 'success');
+      navigate(`/messages?jobId=${job.id}`);
+    } catch (err: unknown) {
+      const msg = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string })?.message
+        : undefined;
+      addToast(msg ?? 'Impossible d\'ouvrir la conversation', 'error');
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   return (
     <div className="leather" style={{ minHeight: '100vh' }}>
@@ -302,15 +325,27 @@ export function JobDetail() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {(job.status !== 'pending' || hasApplied) && (
+            {(job.status !== 'pending' || hasApplied || hasMessageThread) && (
             <Link to={`/messages?jobId=${job.id}`} className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <MessageSquare className="w-4 h-4" /> {hasApplied && job.status === 'pending' ? 'Message au client' : 'Messages'}
+              <MessageSquare className="w-4 h-4" /> {hasApplied && job.status === 'pending' ? 'Message au client' : hasMessageThread && job.status === 'pending' ? 'Message au client' : 'Messages'}
               {jobConversation && jobConversation.unreadCount > 0 && (
                 <span style={{ background: gold, color: '#1F2F3F', borderRadius: 999, fontSize: 10, fontWeight: 800, padding: '1px 6px' }}>
                   {jobConversation.unreadCount}
                 </span>
               )}
             </Link>
+            )}
+
+            {canAskQuestion && !hasMessageThread && (
+              <button
+                type="button"
+                disabled={processing}
+                onClick={handleAskQuestion}
+                className="ghost-btn"
+                style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+              >
+                <MessageSquare className="w-4 h-4" /> Poser une question (gratuit)
+              </button>
             )}
 
             {canApply && (
@@ -439,6 +474,37 @@ export function JobDetail() {
           )}
         </div>
         </div>
+
+        {isJobOwner && isClientMode && job.status === 'pending' && inquiryConversations.length > 0 && (
+          <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 24, marginBottom: 20 }}>
+            <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>
+              Questions ({inquiryConversations.length})
+            </h2>
+            <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 12 }}>
+              Travailleurs qui posent des questions avant de postuler.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {inquiryConversations.map((c) => (
+                <div key={c.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', padding: 12, background: 'rgba(15,25,36,0.5)', borderRadius: 8 }}>
+                  <p className="body-f cream-hi" style={{ flex: 1, fontWeight: 600 }}>{c.clientName}</p>
+                  <Link
+                    to={`/messages?jobId=${job.id}&taskerId=${c.providerId}`}
+                    className="ghost-btn"
+                    style={{ padding: '8px 14px', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    Répondre
+                    {c.unreadCount > 0 && (
+                      <span style={{ background: gold, color: '#1F2F3F', borderRadius: 999, fontSize: 10, fontWeight: 800, padding: '1px 6px' }}>
+                        {c.unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {isJobOwner && isClientMode && job.status === 'pending' && applications.length > 0 && (
           <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 24 }}>
