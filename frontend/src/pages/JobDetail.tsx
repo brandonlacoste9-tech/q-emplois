@@ -10,7 +10,7 @@ import type { Conversation, Job, JobStatus, TaskApplication } from '../types';
 import { JOB_STATUS_LABELS, SERVICE_TYPE_LABELS } from '../types';
 import {
   ArrowLeft, Briefcase, Calendar, Check, Clock, DollarSign,
-  Loader2, MapPin, MessageSquare, Play, Star, Trash2, X, CreditCard,
+  Loader2, MapPin, MessageSquare, Play, Star, Trash2, X, CreditCard, Send,
 } from 'lucide-react';
 import { formatDate, formatDistance, formatDuration, formatPrice, formatJobLocation } from '../utils';
 import { gold } from '../styles/design-tokens';
@@ -38,6 +38,9 @@ export function JobDetail() {
   const [hasReview, setHasReview] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [applyMessage, setApplyMessage] = useState('');
+  const [inquiryDraft, setInquiryDraft] = useState('');
+  const [sendingQuestion, setSendingQuestion] = useState(false);
+  const [questionSent, setQuestionSent] = useState(false);
   const [paying, setPaying] = useState(false);
   const [jobConversation, setJobConversation] = useState<Conversation | null>(null);
   const [applicantConversations, setApplicantConversations] = useState<Record<string, Conversation>>({});
@@ -212,8 +215,6 @@ export function JobDetail() {
   const canApply = showTaskerActions && job.status === 'pending' && !hasApplied && (creditBalance ?? 0) > 0 && taskerCanApply;
   const canAskQuestion = showTaskerActions && job.status === 'pending' && !hasApplied;
   const hasMessageThread = !!jobConversation || !!job.myConversationStatus;
-  const hasInquiryThread =
-    jobConversation?.status === 'inquiry' || job.myConversationStatus === 'inquiry';
 
   const inquiryConversations = isJobOwner
     ? Object.values(applicantConversations).filter(
@@ -221,21 +222,29 @@ export function JobDetail() {
       )
     : [];
 
-  const handleAskQuestion = async () => {
-    if (!job) return;
-    setProcessing(true);
+  const handleSendQuestion = async () => {
+    if (!job || !inquiryDraft.trim() || sendingQuestion) return;
+    setSendingQuestion(true);
     try {
-      const result = await api.startJobInquiry(job.id);
-      setJob((prev) => (prev ? { ...prev, myConversationStatus: result.status } : prev));
-      addToast('Fil ouvert — posez votre question au client', 'success');
-      navigate(`/messages?jobId=${job.id}`);
+      let conversationId = jobConversation?.id;
+      if (!conversationId) {
+        const result = await api.startJobInquiry(job.id);
+        conversationId = result.conversationId;
+        setJob((prev) => (prev ? { ...prev, myConversationStatus: result.status } : prev));
+      }
+      await api.sendMessage(conversationId, inquiryDraft.trim());
+      setInquiryDraft('');
+      setQuestionSent(true);
+      setTimeout(() => setQuestionSent(false), 2500);
+      addToast('Message envoyé au client!', 'success');
+      await load();
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err)
         ? (err.response?.data as { message?: string })?.message
         : undefined;
-      addToast(msg ?? 'Impossible d\'ouvrir la conversation', 'error');
+      addToast(msg ?? 'Impossible d\'envoyer le message', 'error');
     } finally {
-      setProcessing(false);
+      setSendingQuestion(false);
     }
   };
 
@@ -322,40 +331,6 @@ export function JobDetail() {
             </p>
           )}
 
-          {canAskQuestion && !hasMessageThread && (
-            <div
-              className="stitch-box body-f"
-              style={{
-                padding: 16,
-                marginBottom: 20,
-                background: 'rgba(107,163,196,0.12)',
-                border: '1px solid rgba(107,163,196,0.3)',
-              }}
-            >
-              <p className="cream-hi" style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <MessageSquare className="w-4 h-4" style={{ color: gold }} />
-                Une question avant de postuler?
-              </p>
-              <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
-                Écrivez au client gratuitement — sans dépenser de crédit. Idéal pour clarifier les détails de la tâche.
-              </p>
-              <button
-                type="button"
-                disabled={processing}
-                onClick={handleAskQuestion}
-                className="gold-btn"
-                style={{ padding: '10px 18px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}
-              >
-                {processing ? (
-                  <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />
-                ) : (
-                  <MessageSquare className="w-4 h-4" />
-                )}
-                {processing ? 'Ouverture…' : 'Poser une question (gratuit)'}
-              </button>
-            </div>
-          )}
-
           {showTaskerActions && !taskerCanApply && job.status === 'pending' && !hasApplied && (
             <div className="stitch-box body-f" style={{ padding: 14, marginBottom: 20, background: 'rgba(184,123,68,0.12)' }}>
               <p className="cream-hi" style={{ fontWeight: 600, marginBottom: 6 }}>{VERIFICATION_LABELS[verificationStatus]}</p>
@@ -391,30 +366,150 @@ export function JobDetail() {
                   <p className="body-f muted2" style={{ fontSize: 13 }}>{job.clientPhone}</p>
                 )}
                 {!job.clientPhone && job.contactRedacted && (
-                  <p className="body-f muted2" style={{ fontSize: 13 }}>Contact masqué (Postulez pour voir)</p>
+                  <p className="body-f muted2" style={{ fontSize: 13 }}>Contact masqué jusqu&apos;à la sélection</p>
                 )}
               </div>
             </div>
           )}
 
+          {canAskQuestion && (
+            <div
+              className="stitch-box body-f"
+              style={{
+                padding: 16,
+                marginBottom: 20,
+                background: 'rgba(107,163,196,0.12)',
+                border: '1px solid rgba(107,163,196,0.35)',
+              }}
+            >
+              <p className="cream-hi" style={{ fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <MessageSquare className="w-4 h-4" style={{ color: gold }} />
+                {hasMessageThread ? 'Message au client' : 'Poser une question (gratuit)'}
+              </p>
+              <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+                Écrivez ici pour contacter le client — <strong className="cream-hi">sans crédit</strong>.
+                {canApply && ' Postuler est séparé ci-dessous.'}
+              </p>
+              <textarea
+                className="q-field"
+                value={inquiryDraft}
+                onChange={(e) => setInquiryDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (inquiryDraft.trim() && !sendingQuestion) void handleSendQuestion();
+                  }
+                }}
+                placeholder="Ex: Combien de pièces? Quels meubles? Quelle heure?"
+                rows={3}
+                style={{ width: '100%', marginBottom: 10, resize: 'vertical' }}
+              />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  disabled={sendingQuestion || !inquiryDraft.trim()}
+                  onClick={() => void handleSendQuestion()}
+                  className={questionSent ? 'gold-btn' : 'gold-btn'}
+                  style={{
+                    padding: '10px 20px',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    ...(questionSent
+                      ? {
+                          border: '2px solid #7FB069',
+                          background: 'linear-gradient(180deg, #8BC47A, #6FA85E)',
+                          color: '#1F2F3F',
+                        }
+                      : {}),
+                  }}
+                >
+                  {sendingQuestion ? (
+                    <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />
+                  ) : questionSent ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  {sendingQuestion ? 'Envoi…' : questionSent ? 'Envoyé ✓' : 'Envoyer'}
+                </button>
+                {hasMessageThread && (
+                  <Link
+                    to={`/messages?jobId=${job.id}`}
+                    className="ghost-btn"
+                    style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  >
+                    Voir la conversation
+                    {jobConversation && jobConversation.unreadCount > 0 && (
+                      <span style={{ background: gold, color: '#1F2F3F', borderRadius: 999, fontSize: 10, fontWeight: 800, padding: '1px 6px' }}>
+                        {jobConversation.unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                )}
+              </div>
+              {jobConversation?.lastMessage && (
+                <p className="body-f muted2" style={{ fontSize: 12, marginTop: 12, marginBottom: 0 }}>
+                  Dernier message :{' '}
+                  {jobConversation.lastMessage.type === 'image'
+                    ? '📷 Photo'
+                    : jobConversation.lastMessage.content.slice(0, 80)}
+                </p>
+              )}
+            </div>
+          )}
+
+          {canApply && (
+            <div
+              className="stitch-box body-f"
+              style={{
+                padding: 16,
+                marginBottom: 20,
+                background: 'rgba(21,35,50,0.45)',
+                border: '1px dashed rgba(217,179,140,0.25)',
+              }}
+            >
+              <p className="cream-hi" style={{ fontWeight: 700, marginBottom: 4 }}>Postuler à cette tâche</p>
+              <p className="muted2" style={{ fontSize: 13, marginBottom: 12 }}>
+                La candidature coûte <strong className="cream-hi">1 crédit</strong>. Le message ci-dessous n&apos;est envoyé que si vous postulez.
+              </p>
+              <textarea
+                className="q-field"
+                value={applyMessage}
+                onChange={(e) => setApplyMessage(e.target.value)}
+                placeholder="Note optionnelle pour votre candidature…"
+                rows={2}
+                style={{ width: '100%', marginBottom: 10, resize: 'vertical' }}
+              />
+              <button
+                type="button"
+                onClick={handleApply}
+                disabled={processing}
+                className="gold-btn"
+                style={{ padding: '10px 18px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                {processing ? (
+                  <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                {processing ? 'Envoi de la candidature…' : 'Postuler (1 crédit)'}
+              </button>
+              {(creditBalance ?? 0) <= 0 && (
+                <CreditsLink
+                  className="ghost-btn"
+                  style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', marginLeft: 10 }}
+                >
+                  Acheter des crédits
+                </CreditsLink>
+              )}
+            </div>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {hasMessageThread && job.status === 'pending' && !hasApplied && (
-              <Link
-                to={`/messages?jobId=${job.id}`}
-                className="gold-btn"
-                style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
-              >
-                <MessageSquare className="w-4 h-4" />
-                {hasInquiryThread ? 'Continuer la conversation' : 'Message au client'}
-                {jobConversation && jobConversation.unreadCount > 0 && (
-                  <span style={{ background: '#1F2F3F', color: gold, borderRadius: 999, fontSize: 10, fontWeight: 800, padding: '1px 6px' }}>
-                    {jobConversation.unreadCount}
-                  </span>
-                )}
-              </Link>
-            )}
-
             {(job.status !== 'pending' || hasApplied) && (
             <Link to={`/messages?jobId=${job.id}`} className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <MessageSquare className="w-4 h-4" /> {hasApplied && job.status === 'pending' ? 'Message au client' : 'Messages'}
@@ -424,36 +519,6 @@ export function JobDetail() {
                 </span>
               )}
             </Link>
-            )}
-
-            {canApply && (
-              <>
-                <textarea
-                  className="q-field"
-                  value={applyMessage}
-                  onChange={(e) => setApplyMessage(e.target.value)}
-                  placeholder="Message optionnel au client…"
-                  rows={2}
-                  style={{ width: '100%', marginBottom: 8, resize: 'vertical' }}
-                />
-                <button
-                  type="button"
-                  onClick={handleApply}
-                  disabled={processing}
-                  className="gold-btn"
-                  style={{ padding: '10px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                >
-                  {processing ? (
-                    <Loader2 className="w-4 h-4" style={{ animation: 'spin 0.9s linear infinite' }} />
-                  ) : (
-                    <Check className="w-4 h-4" />
-                  )}
-                  {processing ? 'Envoi de la candidature…' : 'Postuler (1 crédit)'}
-                </button>
-                {(creditBalance ?? 0) <= 0 && (
-                  <CreditsLink className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none' }}>Acheter des crédits</CreditsLink>
-                )}
-              </>
             )}
 
             {hasApplied && (
@@ -567,16 +632,6 @@ export function JobDetail() {
               </button>
             )}
           </div>
-          {jobConversation?.lastMessage && (
-            <p className="body-f muted2" style={{ fontSize: 13, margin: 0 }}>
-              Dernier message :{' '}
-              {jobConversation.lastMessage.type === 'image'
-                ? '📷 Photo'
-                : jobConversation.lastMessage.type === 'system'
-                  ? jobConversation.lastMessage.content
-                  : jobConversation.lastMessage.content.slice(0, 80)}
-            </p>
-          )}
         </div>
         </div>
 
