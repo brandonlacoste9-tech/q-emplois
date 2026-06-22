@@ -522,6 +522,68 @@ class ApiService {
     );
     return response.data;
   }
+
+  async searchAdminProviders(q?: string, status?: string) {
+    const response = await this.client.get('/admin/providers', { params: { q, status } });
+    return response.data;
+  }
+
+  async generateInvite(data?: { maxRedemptions?: number; rewardCredits?: number; discountPct?: number }) {
+    const response = await this.client.post('/admin/invites', data ?? {});
+    return response.data as { code: string; maxRedemptions: number; rewardCredits: number };
+  }
+
+  async getAdminUsers(params: { q?: string; role?: string; page?: number } = {}) {
+    const response = await this.client.get('/admin/users', { params });
+    return response.data as {
+      users: Array<{
+        id: string;
+        email: string;
+        firstName?: string | null;
+        lastName?: string | null;
+        phone?: string | null;
+        role: string;
+        createdAt: string;
+        isVerified: boolean;
+        serviceTypes: string[];
+      }>;
+      total: number;
+      page: number;
+      pages: number;
+    };
+  }
+
+  async updateUserRole(userId: string, role: string) {
+    const response = await this.client.patch(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  }
+
+  async getAdminJobs(params: { status?: string; q?: string; page?: number } = {}) {
+    const response = await this.client.get('/admin/jobs', { params });
+    return response.data as {
+      jobs: Array<{
+        id: string;
+        title: string;
+        status: string;
+        serviceType: string;
+        city?: string | null;
+        estimatedPrice: number;
+        applications: number;
+        clientId: string;
+        clientEmail: string;
+        clientName: string;
+        createdAt: string;
+      }>;
+      total: number;
+      page: number;
+      pages: number;
+    };
+  }
+
+  async seedDemoJobs() {
+    const response = await this.client.post('/admin/seed-demo');
+    return response.data as { created: number; updated: number; total: number };
+  }
 }
 
 export const api = new ApiService();

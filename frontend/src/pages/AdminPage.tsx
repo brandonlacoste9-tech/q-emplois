@@ -2,10 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useToast } from '../components/Toast';
-import { BarChart3, Check, ExternalLink, Shield, X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import {
+  BarChart3, Check, Copy, ExternalLink, Shield, Trash2, Users, Briefcase, Gift, X,
+} from 'lucide-react';
 import { gold } from '../styles/design-tokens';
 
 const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 20 };
+
+type AdminTab = 'overview' | 'verifications' | 'jobs' | 'users' | 'invites' | 'audit';
 
 interface BetaMetrics {
   periodDays: number;
@@ -32,10 +37,31 @@ interface PendingVerification {
   licenseDocumentUrl?: string | null;
   licenseNumber?: string | null;
   updatedAt: string;
-  verifiedAt?: string | null;
-  verifiedBy?: string | null;
   rejectedAt?: string | null;
   rejectionReason?: string | null;
+}
+
+interface AdminUser {
+  id: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  role: string;
+  createdAt: string;
+  isVerified: boolean;
+}
+
+interface AdminJob {
+  id: string;
+  title: string;
+  status: string;
+  serviceType: string;
+  city?: string | null;
+  estimatedPrice: number;
+  applications: number;
+  clientEmail: string;
+  clientName: string;
+  createdAt: string;
 }
 
 const REJECTION_PRESETS = [
@@ -46,8 +72,25 @@ const REJECTION_PRESETS = [
   'Document dans une langue non reconnue (permis hors Québec non couvert pour l\'instant).',
 ];
 
+const TABS: { id: AdminTab; label: string }[] = [
+  { id: 'overview', label: 'Vue d\'ensemble' },
+  { id: 'verifications', label: 'Vérifications' },
+  { id: 'jobs', label: 'Tâches' },
+  { id: 'users', label: 'Utilisateurs' },
+  { id: 'invites', label: 'Invitations' },
+  { id: 'audit', label: 'Audit' },
+];
+
+const ROLE_LABELS: Record<string, string> = {
+  client: 'Client',
+  provider: 'Travailleur',
+  admin: 'Admin',
+};
+
 export function AdminPage() {
   const { addToast } = useToast();
+  const { profile } = useAuth();
+  const [tab, setTab] = useState<AdminTab>('overview');
   const [metrics, setMetrics] = useState<BetaMetrics | null>(null);
   const [pending, setPending] = useState<PendingVerification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,16 +98,31 @@ export function AdminPage() {
   const [rejecting, setRejecting] = useState<PendingVerification | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejectConfirm, setRejectConfirm] = useState(false);
-  const [showAudit, setShowAudit] = useState(false);
+
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [auditPage, setAuditPage] = useState(1);
   const [auditTotal, setAuditTotal] = useState(0);
-  const [auditAction, setAuditAction] = useState("");
+  const [auditAction, setAuditAction] = useState('');
   const [auditLoading, setAuditLoading] = useState(false);
-  const [lastAuditUpdate, setLastAuditUpdate] = useState<Date | null>(null);
-  const [newLogsCount, setNewLogsCount] = useState(0);
 
-  const load = async () => {
+  const [adminJobs, setAdminJobs] = useState<AdminJob[]>([]);
+  const [jobsPage, setJobsPage] = useState(1);
+  const [jobsTotal, setJobsTotal] = useState(0);
+  const [jobsStatus, setJobsStatus] = useState('');
+  const [jobsQuery, setJobsQuery] = useState('');
+  const [jobsLoading, setJobsLoading] = useState(false);
+
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersTotal, setUsersTotal] = useState(0);
+  const [usersRole, setUsersRole] = useState('');
+  const [usersQuery, setUsersQuery] = useState('');
+  const [usersLoading, setUsersLoading] = useState(false);
+
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [seeding, setSeeding] = useState(false);
+
+  const loadCore = async () => {
     setLoading(true);
     try {
       const [m, p] = await Promise.all([api.getAdminMetrics(), api.getPendingVerifications()]);
@@ -77,35 +135,12 @@ export function AdminPage() {
     }
   };
 
-  useEffect(() => { load(); }, []);
-
-  // Auto-refresh audit logs every 30 seconds when tab is open
-  useEffect(() => {
-    if (!showAudit) return;
-    const interval = setInterval(() => {
-      loadAudit();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [showAudit]);
-
-  // Auto-refresh metrics every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      load();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
   const loadAudit = async () => {
     setAuditLoading(true);
     try {
       const data = await api.getAuditLogs({ page: auditPage, action: auditAction || undefined });
       setAuditLogs(data.logs || []);
       setAuditTotal(data.total || 0);
-      setLastAuditUpdate(new Date());
-      if (data.logs && data.logs.length > auditLogs.length) {
-        setNewLogsCount(data.logs.length - auditLogs.length);
-      }
     } catch {
       setAuditLogs([]);
     } finally {
@@ -113,12 +148,59 @@ export function AdminPage() {
     }
   };
 
+  const loadJobs = async () => {
+    setJobsLoading(true);
+    try {
+      const data = await api.getAdminJobs({
+        page: jobsPage,
+        status: jobsStatus || undefined,
+        q: jobsQuery || undefined,
+      });
+      setAdminJobs(data.jobs);
+      setJobsTotal(data.total);
+    } catch {
+      addToast('Erreur chargement tâches', 'error');
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const data = await api.getAdminUsers({
+        page: usersPage,
+        role: usersRole || undefined,
+        q: usersQuery || undefined,
+      });
+      setAdminUsers(data.users);
+      setUsersTotal(data.total);
+    } catch {
+      addToast('Erreur chargement utilisateurs', 'error');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  useEffect(() => { loadCore(); }, []);
+
+  useEffect(() => {
+    if (tab === 'audit') loadAudit();
+    if (tab === 'jobs') loadJobs();
+    if (tab === 'users') loadUsers();
+  }, [tab, auditPage, auditAction, jobsPage, jobsStatus, usersPage, usersRole]);
+
+  useEffect(() => {
+    const interval = setInterval(loadCore, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const approve = async (providerId: string) => {
     setProcessing(providerId);
     try {
       await api.approveVerification(providerId);
       addToast('Travailleur vérifié', 'success');
-      await load();
+      await loadCore();
     } catch {
       addToast('Erreur', 'error');
     } finally {
@@ -144,7 +226,7 @@ export function AdminPage() {
       setRejecting(null);
       setRejectReason('');
       setRejectConfirm(false);
-      await load();
+      await loadCore();
     } catch {
       addToast('Erreur', 'error');
     } finally {
@@ -158,10 +240,84 @@ export function AdminPage() {
     setRejectConfirm(false);
   };
 
+  const handleJobAction = async (job: AdminJob) => {
+    const isPending = job.status === 'pending';
+    const msg = isPending
+      ? 'Supprimer cette tâche? Les candidats seront remboursés.'
+      : 'Annuler cette tâche?';
+    if (!window.confirm(msg)) return;
+    setProcessing(job.id);
+    try {
+      if (isPending) await api.deleteJob(job.id);
+      else await api.cancelJob(job.id);
+      addToast(isPending ? 'Tâche supprimée' : 'Tâche annulée', 'success');
+      await loadJobs();
+      await loadCore();
+    } catch {
+      addToast('Action impossible', 'error');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleRoleChange = async (userId: string, role: string) => {
+    if (!window.confirm(`Changer le rôle vers « ${ROLE_LABELS[role] ?? role} » ?`)) return;
+    setProcessing(userId);
+    try {
+      await api.updateUserRole(userId, role);
+      addToast('Rôle mis à jour', 'success');
+      await loadUsers();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      addToast(msg ?? 'Erreur', 'error');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleSeedDemo = async () => {
+    if (!window.confirm('Restaurer les tâches démo d\'été manquantes?')) return;
+    setSeeding(true);
+    try {
+      const result = await api.seedDemoJobs();
+      addToast(`${result.created} créée(s), ${result.updated} mise(s) à jour`, 'success');
+      await loadCore();
+      if (tab === 'jobs') await loadJobs();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      addToast(msg ?? 'Erreur', 'error');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  const handleGenerateInvite = async () => {
+    setProcessing('invite');
+    try {
+      const result = await api.generateInvite();
+      setInviteCode(result.code);
+      addToast('Code généré', 'success');
+    } catch {
+      addToast('Erreur', 'error');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const copyInvite = async () => {
+    if (!inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      addToast('Code copié', 'success');
+    } catch {
+      addToast('Copie impossible', 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div className="leather" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 44, height: 44, borderRadius: '50%', border: `3px solid rgba(217,179,140,0.2)`, borderBottomColor: gold, animation: 'spin 0.9s linear infinite' }} />
+        <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid rgba(217,179,140,0.2)', borderBottomColor: gold, animation: 'spin 0.9s linear infinite' }} />
       </div>
     );
   }
@@ -169,160 +325,344 @@ export function AdminPage() {
   return (
     <div className="leather" style={{ minHeight: '100vh' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
-          <BarChart3 className="w-8 h-8" style={{ color: gold }} />
-          <div>
-            <h1 className="serif cream-hi" style={{ fontSize: 28, fontWeight: 900 }}>Admin Beta</h1>
-            <p className="body-f muted2" style={{ fontSize: 14 }}>Métriques et vérifications — {metrics?.periodDays ?? 30} derniers jours</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <BarChart3 className="w-8 h-8" style={{ color: gold }} />
+            <div>
+              <h1 className="serif cream-hi" style={{ fontSize: 28, fontWeight: 900 }}>Administration</h1>
+              <p className="body-f muted2" style={{ fontSize: 14 }}>
+                {profile?.firstName} {profile?.lastName} · {profile?.email}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Link to="/jobs" className="ghost-btn" style={{ padding: '8px 14px', fontSize: 13, textDecoration: 'none' }}>
+              Voir le tableau des jobs
+            </Link>
+            <button
+              type="button"
+              disabled={seeding}
+              onClick={handleSeedDemo}
+              className="gold-btn"
+              style={{ padding: '8px 14px', fontSize: 13 }}
+            >
+              {seeding ? 'Restauration…' : 'Restaurer démos'}
+            </button>
           </div>
         </div>
 
-        {metrics && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 28 }}>
-            {[
-              { label: 'Tâches publiées', value: metrics.tasksPosted },
-              { label: 'Ouvertes', value: metrics.tasksOpen },
-              { label: 'Candidatures', value: metrics.applicationsTotal },
-              { label: 'En attente', value: metrics.pendingApplications },
-              { label: 'Moy. candidatures/job', value: metrics.avgApplicationsPerOpenJob },
-              { label: 'Taux sélection', value: `${metrics.selectionRatePercent}%` },
-              { label: 'Taux complétion', value: `${metrics.completionRatePercent}%` },
-              { label: 'Remboursements', value: metrics.refundTransactions },
-              { label: 'ID à vérifier', value: metrics.pendingVerifications },
-            ].map((s) => (
-              <div key={s.label} className="stitch-box" style={card}>
-                <p className="body-f muted2" style={{ fontSize: 12 }}>{s.label}</p>
-                <p className="serif cream-hi" style={{ fontSize: 24, fontWeight: 900 }}>{s.value}</p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={tab === t.id ? 'gold-btn' : 'ghost-btn'}
+              style={{ padding: '8px 16px', fontSize: 13 }}
+            >
+              {t.label}
+              {t.id === 'verifications' && pending.length > 0 && ` (${pending.length})`}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'overview' && metrics && (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 28 }}>
+              {[
+                { label: 'Tâches publiées', value: metrics.tasksPosted },
+                { label: 'Ouvertes', value: metrics.tasksOpen },
+                { label: 'Candidatures', value: metrics.applicationsTotal },
+                { label: 'En attente', value: metrics.pendingApplications },
+                { label: 'Moy. candidatures/job', value: metrics.avgApplicationsPerOpenJob },
+                { label: 'Taux sélection', value: `${metrics.selectionRatePercent}%` },
+                { label: 'Taux complétion', value: `${metrics.completionRatePercent}%` },
+                { label: 'Remboursements', value: metrics.refundTransactions },
+                { label: 'ID à vérifier', value: metrics.pendingVerifications },
+              ].map((s) => (
+                <div key={s.label} className="stitch-box" style={card}>
+                  <p className="body-f muted2" style={{ fontSize: 12 }}>{s.label}</p>
+                  <p className="serif cream-hi" style={{ fontSize: 24, fontWeight: 900 }}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+            {metrics.recentTasks.length > 0 && (
+              <div className="stitch-box" style={card}>
+                <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Tâches récentes</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {metrics.recentTasks.map((t) => (
+                    <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14 }}>
+                      <Link to={`/jobs/${t.id}`} className="body-f cream-hi" style={{ textDecoration: 'none' }}>{t.title}</Link>
+                      <span className="body-f muted2">{t.applications} candid. · {t.status}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
+          </>
+        )}
+
+        {tab === 'verifications' && (
+          <div className="stitch-box" style={card}>
+            <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Shield className="w-5 h-5" style={{ color: gold }} /> Vérifications en attente ({pending.length})
+            </h2>
+            {pending.length === 0 ? (
+              <p className="body-f muted">Aucun document en attente.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {pending.map((p) => (
+                  <div key={p.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', padding: 12, background: 'rgba(15,25,36,0.5)', borderRadius: 8 }}>
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <p className="serif cream-hi" style={{ fontWeight: 700 }}>{p.firstName} {p.lastName}</p>
+                      <p className="body-f muted2" style={{ fontSize: 13 }}>{p.email}</p>
+                      <p className="body-f muted2" style={{ fontSize: 12 }}>{p.serviceTypes.join(', ')}</p>
+                      {p.rejectedAt && p.rejectionReason && (
+                        <div style={{ marginTop: 6, padding: '6px 10px', background: 'rgba(196,107,107,0.12)', border: '1px solid rgba(196,107,107,0.3)', borderRadius: 6 }}>
+                          <p className="body-f" style={{ fontSize: 11, color: '#E8A0A0', fontWeight: 600 }}>Rejet précédent</p>
+                          <p className="body-f" style={{ fontSize: 12, color: '#E8D5C5' }}>{p.rejectionReason}</p>
+                        </div>
+                      )}
+                    </div>
+                    {p.licenseDocumentUrl && (
+                      <a href={p.licenseDocumentUrl} target="_blank" rel="noreferrer" className="ghost-btn" style={{ padding: '8px 12px', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <ExternalLink className="w-4 h-4" /> Voir document
+                      </a>
+                    )}
+                    <button type="button" disabled={processing === p.id} onClick={() => approve(p.id)} className="gold-btn" style={{ padding: '8px 14px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <Check className="w-4 h-4" /> Approuver
+                    </button>
+                    <button type="button" disabled={processing === p.id} onClick={() => { setRejecting(p); setRejectConfirm(false); setRejectReason(''); }} className="ghost-btn" style={{ padding: '8px 14px', fontSize: 13, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <X className="w-4 h-4" /> Rejeter
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-                {/* Tabs */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
-          <button onClick={() => setShowAudit(false)} className={!showAudit ? "gold-btn" : "ghost-btn"} style={{ padding: "10px 20px" }}>Vérifications</button>
-          <button onClick={() => { setShowAudit(true); loadAudit(); }} className={showAudit ? "gold-btn" : "ghost-btn"} style={{ padding: "10px 20px" }}>Audit (Loi 25)</button>
-        </div>
-
-        {/* Audit Section */}
-        {showAudit && (
-          <div className="stitch-box" style={{ ...card, marginBottom: 28 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
-                <Shield className="w-5 h-5" style={{ color: gold }} /> Logs d'audit ({auditTotal})
-              </h2>
-              {newLogsCount > 0 && (
-                <span className="body-f" style={{ fontSize: 11, color: "#7FB069", marginRight: 8 }}>
-                  +{newLogsCount} new
-                </span>
-              )}
-              <button onClick={loadAudit} className="ghost-btn" style={{ padding: "6px 14px", fontSize: 12 }}>Refresh</button>
+        {tab === 'jobs' && (
+          <div className="stitch-box" style={card}>
+            <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Briefcase className="w-5 h-5" style={{ color: gold }} /> Toutes les tâches ({jobsTotal})
+            </h2>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+              <input
+                className="q-field"
+                placeholder="Rechercher titre, ville, email…"
+                value={jobsQuery}
+                onChange={(e) => setJobsQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && loadJobs()}
+                style={{ flex: 1, minWidth: 180 }}
+              />
+              <select className="q-field" value={jobsStatus} onChange={(e) => { setJobsStatus(e.target.value); setJobsPage(1); }} style={{ maxWidth: 160 }}>
+                <option value="">Tous statuts</option>
+                <option value="pending">Ouvertes</option>
+                <option value="accepted">Acceptées</option>
+                <option value="in_progress">En cours</option>
+                <option value="completed">Terminées</option>
+                <option value="cancelled">Annulées</option>
+              </select>
+              <button type="button" onClick={() => { setJobsPage(1); loadJobs(); }} className="ghost-btn" style={{ padding: '8px 14px' }}>Filtrer</button>
             </div>
+            {jobsLoading ? (
+              <p className="body-f muted" style={{ textAlign: 'center', padding: 24 }}>Chargement…</p>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {adminJobs.length === 0 ? (
+                    <p className="body-f muted2">Aucune tâche trouvée.</p>
+                  ) : adminJobs.map((job) => (
+                    <div key={job.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', padding: 12, background: 'rgba(15,25,36,0.5)', borderRadius: 8 }}>
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        <Link to={`/jobs/${job.id}`} className="serif cream-hi" style={{ fontWeight: 700, textDecoration: 'none' }}>{job.title}</Link>
+                        <p className="body-f muted2" style={{ fontSize: 12 }}>
+                          {job.clientName} · {job.clientEmail} · {job.city ?? '—'}
+                        </p>
+                        <p className="body-f muted2" style={{ fontSize: 11 }}>
+                          {job.serviceType} · {job.applications} candid. · {job.estimatedPrice}$ · {new Date(job.createdAt).toLocaleDateString('fr-CA')}
+                        </p>
+                      </div>
+                      <span className="body-f" style={{ fontSize: 12, color: gold }}>{job.status}</span>
+                      {['pending', 'accepted', 'in_progress'].includes(job.status) && (
+                        <button
+                          type="button"
+                          disabled={processing === job.id}
+                          onClick={() => handleJobAction(job)}
+                          className="ghost-btn"
+                          style={{ padding: '6px 12px', fontSize: 12, color: '#C46B6B', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          {job.status === 'pending' ? 'Supprimer' : 'Annuler'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 16 }}>
+                  <button disabled={jobsPage <= 1} onClick={() => setJobsPage(jobsPage - 1)} className="ghost-btn">←</button>
+                  <span className="body-f cream-hi" style={{ fontSize: 13 }}>{jobsPage} / {Math.ceil(jobsTotal / 50) || 1}</span>
+                  <button disabled={jobsPage >= Math.ceil(jobsTotal / 50)} onClick={() => setJobsPage(jobsPage + 1)} className="ghost-btn">→</button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
-            <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-              <select className="q-field" style={{ maxWidth: 220 }} value={auditAction} onChange={(e) => { setAuditAction(e.target.value); loadAudit(); }}>
+        {tab === 'users' && (
+          <div className="stitch-box" style={card}>
+            <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Users className="w-5 h-5" style={{ color: gold }} /> Utilisateurs ({usersTotal})
+            </h2>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+              <input
+                className="q-field"
+                placeholder="Rechercher nom, email, téléphone…"
+                value={usersQuery}
+                onChange={(e) => setUsersQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && loadUsers()}
+                style={{ flex: 1, minWidth: 180 }}
+              />
+              <select className="q-field" value={usersRole} onChange={(e) => { setUsersRole(e.target.value); setUsersPage(1); }} style={{ maxWidth: 160 }}>
+                <option value="">Tous rôles</option>
+                <option value="client">Clients</option>
+                <option value="provider">Travailleurs</option>
+                <option value="admin">Admins</option>
+              </select>
+              <button type="button" onClick={() => { setUsersPage(1); loadUsers(); }} className="ghost-btn" style={{ padding: '8px 14px' }}>Filtrer</button>
+            </div>
+            {usersLoading ? (
+              <p className="body-f muted" style={{ textAlign: 'center', padding: 24 }}>Chargement…</p>
+            ) : (
+              <>
+                <table className="body-f" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ color: gold, borderBottom: '1px solid rgba(217,179,140,0.2)' }}>
+                      <th style={{ padding: 8, textAlign: 'left' }}>Utilisateur</th>
+                      <th style={{ padding: 8, textAlign: 'left' }}>Rôle</th>
+                      <th style={{ padding: 8, textAlign: 'left' }}>Inscrit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminUsers.length === 0 ? (
+                      <tr><td colSpan={3} className="muted2" style={{ padding: 16, textAlign: 'center' }}>Aucun utilisateur</td></tr>
+                    ) : adminUsers.map((u) => (
+                      <tr key={u.id} style={{ borderBottom: '1px solid rgba(217,179,140,0.06)' }}>
+                        <td style={{ padding: 8 }}>
+                          <p className="cream-hi" style={{ fontWeight: 600 }}>{u.firstName} {u.lastName}</p>
+                          <p className="muted2" style={{ fontSize: 12 }}>{u.email}</p>
+                          {u.isVerified && <span style={{ fontSize: 10, color: '#7FB069' }}>✓ vérifié</span>}
+                        </td>
+                        <td style={{ padding: 8 }}>
+                          <select
+                            className="q-field"
+                            value={u.role}
+                            disabled={processing === u.id || (u.id === profile?.id && u.role === 'admin')}
+                            onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                            style={{ fontSize: 12, padding: '4px 8px' }}
+                          >
+                            <option value="client">Client</option>
+                            <option value="provider">Travailleur</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
+                        <td className="muted2" style={{ padding: 8, fontSize: 12 }}>
+                          {new Date(u.createdAt).toLocaleDateString('fr-CA')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 16 }}>
+                  <button disabled={usersPage <= 1} onClick={() => setUsersPage(usersPage - 1)} className="ghost-btn">←</button>
+                  <span className="body-f cream-hi" style={{ fontSize: 13 }}>{usersPage} / {Math.ceil(usersTotal / 50) || 1}</span>
+                  <button disabled={usersPage >= Math.ceil(usersTotal / 50)} onClick={() => setUsersPage(usersPage + 1)} className="ghost-btn">→</button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {tab === 'invites' && (
+          <div className="stitch-box" style={card}>
+            <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Gift className="w-5 h-5" style={{ color: gold }} /> Codes fondateur
+            </h2>
+            <p className="body-f muted2" style={{ fontSize: 14, marginBottom: 20 }}>
+              Générez un code d&apos;invitation pour les travailleurs fondateurs (100 crédits, 15% rabais à vie).
+            </p>
+            <button
+              type="button"
+              disabled={processing === 'invite'}
+              onClick={handleGenerateInvite}
+              className="gold-btn"
+              style={{ padding: '10px 20px', marginBottom: 20 }}
+            >
+              {processing === 'invite' ? 'Génération…' : 'Générer un code'}
+            </button>
+            {inviteCode && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, background: 'rgba(15,25,36,0.5)', borderRadius: 8 }}>
+                <code className="serif cream-hi" style={{ fontSize: 18, letterSpacing: 1 }}>{inviteCode}</code>
+                <button type="button" onClick={copyInvite} className="ghost-btn" style={{ padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Copy className="w-4 h-4" /> Copier
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'audit' && (
+          <div className="stitch-box" style={card}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Shield className="w-5 h-5" style={{ color: gold }} /> Logs d&apos;audit ({auditTotal})
+              </h2>
+              <button onClick={loadAudit} className="ghost-btn" style={{ padding: '6px 14px', fontSize: 12 }}>Actualiser</button>
+            </div>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+              <select className="q-field" style={{ maxWidth: 220 }} value={auditAction} onChange={(e) => { setAuditAction(e.target.value); setAuditPage(1); }}>
                 <option value="">Toutes les actions</option>
                 <option value="provider_verified">Vérification approuvée</option>
                 <option value="provider_verification_rejected">Vérification rejetée</option>
+                <option value="user_role_updated">Rôle modifié</option>
+                <option value="task_deleted">Tâche supprimée</option>
+                <option value="task_cancelled">Tâche annulée</option>
+                <option value="demo_jobs_seeded">Démos restaurées</option>
                 <option value="deletion_requested">Suppression demandée</option>
-                <option value="login">Connexion</option>
-                <option value="data_access">Accès données</option>
               </select>
-
-              {lastAuditUpdate && (
-                <span className="body-f muted2" style={{ fontSize: 11, marginRight: 12 }}>
-                  Updated {lastAuditUpdate.toLocaleTimeString("fr-CA")}
-                </span>
-              )}
-              <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
-                <button disabled={auditPage <= 1} onClick={() => { setAuditPage(auditPage - 1); loadAudit(); }} className="ghost-btn">←</button>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button disabled={auditPage <= 1} onClick={() => setAuditPage(auditPage - 1)} className="ghost-btn">←</button>
                 <span className="body-f cream-hi" style={{ fontSize: 13 }}>{auditPage} / {Math.ceil(auditTotal / 50) || 1}</span>
-                <button disabled={auditPage >= Math.ceil(auditTotal / 50)} onClick={() => { setAuditPage(auditPage + 1); loadAudit(); }} className="ghost-btn">→</button>
+                <button disabled={auditPage >= Math.ceil(auditTotal / 50)} onClick={() => setAuditPage(auditPage + 1)} className="ghost-btn">→</button>
               </div>
             </div>
-
             {auditLoading ? (
-          <div className="body-f muted" style={{ padding: 24, textAlign: "center" }}>Loading...</div>
-        ) : (
-          <table className="body-f" style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-            <thead>
-                <tr style={{ color: "#D9A441", borderBottom: "1px solid rgba(217,179,140,0.2)" }}>
-                  <th style={{ padding: 8, textAlign: "left" }}>Date</th>
-                  <th style={{ padding: 8, textAlign: "left" }}>Action</th>
-                  <th style={{ padding: 8, textAlign: "left" }}>Ressource</th>
-                  <th style={{ padding: 8, textAlign: "left" }}>Utilisateur</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditLogs.length === 0 ? (
-                  <tr><td colSpan={4} className="muted2" style={{ padding: 16, textAlign: "center" }}>Aucun log</td></tr>
-                ) : (
-                  auditLogs.map((log) => (
-                    <tr key={log.id} style={{ borderBottom: "1px solid rgba(217,179,140,0.06)" }}>
-                      <td className="muted2" style={{ padding: 8 }}>{new Date(log.createdAt).toLocaleString("fr-CA")}</td>
+              <div className="body-f muted" style={{ padding: 24, textAlign: 'center' }}>Chargement…</div>
+            ) : (
+              <table className="body-f" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ color: gold, borderBottom: '1px solid rgba(217,179,140,0.2)' }}>
+                    <th style={{ padding: 8, textAlign: 'left' }}>Date</th>
+                    <th style={{ padding: 8, textAlign: 'left' }}>Action</th>
+                    <th style={{ padding: 8, textAlign: 'left' }}>Ressource</th>
+                    <th style={{ padding: 8, textAlign: 'left' }}>Utilisateur</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.length === 0 ? (
+                    <tr><td colSpan={4} className="muted2" style={{ padding: 16, textAlign: 'center' }}>Aucun log</td></tr>
+                  ) : auditLogs.map((log) => (
+                    <tr key={log.id} style={{ borderBottom: '1px solid rgba(217,179,140,0.06)' }}>
+                      <td className="muted2" style={{ padding: 8 }}>{new Date(log.createdAt).toLocaleString('fr-CA')}</td>
                       <td className="cream-hi" style={{ padding: 8 }}>{log.action}</td>
                       <td className="muted2" style={{ padding: 8 }}>{log.resource}</td>
-                      <td className="muted2" style={{ padding: 8 }}>{log.userId?.slice(0, 8) || "—"}</td>
+                      <td className="muted2" style={{ padding: 8 }}>{log.userId?.slice(0, 8) || '—'}</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
-          </div>
-        )}
-
-        <div className="stitch-box" style={{ ...card, marginBottom: 28 }}>
-          <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Shield className="w-5 h-5" style={{ color: gold }} /> Vérifications en attente ({pending.length})
-          </h2>
-          {pending.length === 0 ? (
-            <p className="body-f muted">Aucun document en attente.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {pending.map((p) => (
-                <div key={p.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', padding: 12, background: 'rgba(15,25,36,0.5)', borderRadius: 8 }}>
-                  <div style={{ flex: 1, minWidth: 200 }}>
-                    <p className="serif cream-hi" style={{ fontWeight: 700 }}>{p.firstName} {p.lastName}</p>
-                    <p className="body-f muted2" style={{ fontSize: 13 }}>{p.email}</p>
-                    <p className="body-f muted2" style={{ fontSize: 12 }}>{p.serviceTypes.join(', ')}</p>
-                    {p.rejectedAt && p.rejectionReason && (
-                      <div style={{ marginTop: 6, padding: '6px 10px', background: 'rgba(196,107,107,0.12)', border: '1px solid rgba(196,107,107,0.3)', borderRadius: 6 }}>
-                        <p className="body-f" style={{ fontSize: 11, color: '#E8A0A0', fontWeight: 600, marginBottom: 2 }}>
-                          Rejet précédent · {new Date(p.rejectedAt).toLocaleDateString('fr-CA')}
-                        </p>
-                        <p className="body-f" style={{ fontSize: 12, color: '#E8D5C5' }}>{p.rejectionReason}</p>
-                      </div>
-                    )}
-                  </div>
-                  {p.licenseDocumentUrl && (
-                    <a href={p.licenseDocumentUrl} target="_blank" rel="noreferrer" className="ghost-btn" style={{ padding: '8px 12px', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <ExternalLink className="w-4 h-4" /> Voir document
-                    </a>
-                  )}
-                  <button type="button" disabled={processing === p.id} onClick={() => approve(p.id)} className="gold-btn" style={{ padding: '8px 14px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    <Check className="w-4 h-4" /> Approuver
-                  </button>
-                  <button type="button" disabled={processing === p.id} onClick={() => { setRejecting(p); setRejectConfirm(false); setRejectReason(''); }} className="ghost-btn" style={{ padding: '8px 14px', fontSize: 13, color: '#C46B6B', borderColor: 'rgba(196,107,107,0.35)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    <X className="w-4 h-4" /> Rejeter
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {metrics && metrics.recentTasks.length > 0 && (
-          <div className="stitch-box" style={card}>
-            <h2 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Tâches récentes</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {metrics.recentTasks.map((t) => (
-                <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14 }}>
-                  <Link to={`/jobs/${t.id}`} className="body-f cream-hi" style={{ textDecoration: 'none' }}>{t.title}</Link>
-                  <span className="body-f muted2">{t.applications} candid. · {t.status}</span>
-                </div>
-              ))}
-            </div>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </div>
@@ -330,82 +670,34 @@ export function AdminPage() {
       {rejecting && (
         <div role="dialog" aria-modal="true" onClick={cancelReject} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
           <div onClick={(e) => e.stopPropagation()} className="stitch-box" style={{ ...card, maxWidth: 520, width: '100%' }}>
-            <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
-              Rejeter le document
-            </h3>
-            <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 16 }}>
-              {rejecting.firstName} {rejecting.lastName} — {rejecting.email}
-            </p>
-
-            <label className="body-f muted2" style={{ fontSize: 12, display: 'block', marginBottom: 6 }}>
-              Motif (sera envoyé au travailleur par courriel)
-            </label>
+            <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Rejeter le document</h3>
+            <p className="body-f muted2" style={{ fontSize: 13, marginBottom: 16 }}>{rejecting.firstName} {rejecting.lastName} — {rejecting.email}</p>
             <textarea
               value={rejectReason}
               onChange={(e) => { setRejectReason(e.target.value); if (rejectConfirm) setRejectConfirm(false); }}
               placeholder="Expliquez pourquoi le document est refusé..."
               rows={4}
               maxLength={500}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                background: 'rgba(15,25,36,0.6)',
-                border: '1px solid rgba(217,179,140,0.25)',
-                color: '#F5E6D3',
-                fontFamily: 'inherit',
-                fontSize: 14,
-                resize: 'vertical',
-                marginBottom: 10,
-              }}
+              style={{ width: '100%', padding: '10px 12px', background: 'rgba(15,25,36,0.6)', border: '1px solid rgba(217,179,140,0.25)', color: '#F5E6D3', fontFamily: 'inherit', fontSize: 14, resize: 'vertical', marginBottom: 10 }}
             />
-
             <div style={{ marginBottom: 16 }}>
               <p className="body-f muted2" style={{ fontSize: 11, marginBottom: 6 }}>Suggestions rapides :</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {REJECTION_PRESETS.map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => setRejectReason(preset)}
-                    style={{
-                      padding: '4px 10px',
-                      fontSize: 11,
-                      background: 'rgba(217,179,140,0.08)',
-                      border: '1px solid rgba(217,179,140,0.2)',
-                      color: '#D9B38C',
-                      borderRadius: 12,
-                      cursor: 'pointer',
-                    }}
-                  >
+                  <button key={preset} type="button" onClick={() => setRejectReason(preset)} style={{ padding: '4px 10px', fontSize: 11, background: 'rgba(217,179,140,0.08)', border: '1px solid rgba(217,179,140,0.2)', color: '#D9B38C', borderRadius: 12, cursor: 'pointer' }}>
                     {preset}
                   </button>
                 ))}
               </div>
             </div>
-
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button
-                type="button"
-                onClick={cancelReject}
-                className="ghost-btn"
-                style={{ padding: '10px 16px', fontSize: 14 }}
-              >
-                Annuler
-              </button>
+              <button type="button" onClick={cancelReject} className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14 }}>Annuler</button>
               <button
                 type="button"
                 disabled={processing === rejecting.id || !rejectReason.trim()}
                 onClick={reject}
                 className="ghost-btn"
-                style={{
-                  padding: '10px 16px',
-                  fontSize: 14,
-                  color: rejectConfirm ? '#fff' : '#C46B6B',
-                  background: rejectConfirm ? '#C46B6B' : 'transparent',
-                  borderColor: '#C46B6B',
-                  cursor: processing === rejecting.id || !rejectReason.trim() ? 'not-allowed' : 'pointer',
-                  opacity: !rejectReason.trim() ? 0.5 : 1,
-                }}
+                style={{ padding: '10px 16px', fontSize: 14, color: rejectConfirm ? '#fff' : '#C46B6B', background: rejectConfirm ? '#C46B6B' : 'transparent', borderColor: '#C46B6B', opacity: !rejectReason.trim() ? 0.5 : 1 }}
               >
                 {processing === rejecting.id ? 'Envoi...' : rejectConfirm ? 'Confirmer le rejet' : 'Rejeter'}
               </button>

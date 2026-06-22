@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -64,5 +64,41 @@ export class AdminController {
     @Query('userId') userId?: string,
   ) {
     return this.adminService.getAuditLogs(page ? parseInt(page, 10) : 1, action, userId);
+  }
+
+  @Get('users')
+  @ApiOperation({ summary: 'Rechercher des utilisateurs' })
+  listUsers(
+    @Query('q') q?: string,
+    @Query('role') role?: string,
+    @Query('page') page?: string,
+  ) {
+    return this.adminService.listUsers(q, role, page ? parseInt(page, 10) : 1);
+  }
+
+  @Patch('users/:userId/role')
+  @ApiOperation({ summary: 'Modifier le rôle d\'un utilisateur' })
+  updateUserRole(
+    @Param('userId') userId: string,
+    @CurrentUser('userId') adminId: string,
+    @Body() body: { role: string },
+  ) {
+    return this.adminService.updateUserRole(userId, body.role, adminId);
+  }
+
+  @Get('jobs')
+  @ApiOperation({ summary: 'Lister toutes les tâches (admin)' })
+  listJobs(
+    @Query('status') status?: string,
+    @Query('q') q?: string,
+    @Query('page') page?: string,
+  ) {
+    return this.adminService.listAllJobs(status, q, page ? parseInt(page, 10) : 1);
+  }
+
+  @Post('seed-demo')
+  @ApiOperation({ summary: 'Restaurer les tâches démo (été)' })
+  seedDemo(@CurrentUser('userId') adminId: string) {
+    return this.adminService.seedDemoJobs(adminId);
   }
 }

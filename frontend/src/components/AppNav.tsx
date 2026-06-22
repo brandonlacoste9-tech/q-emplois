@@ -8,7 +8,7 @@ export function AppNav() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { logout, user, isClientMode, canTask, setMode } = useAuth();
+  const { logout, user, isClientMode, isAdmin, canTask, setMode } = useAuth();
 
   const clientNav = [
     { label: 'Tableau de bord', path: '/dashboard' },
@@ -90,6 +90,18 @@ export function AppNav() {
               {item.label}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="nav-link nav-hide-sm"
+              style={{
+                color: pathname.startsWith('/admin') ? '#E8CDB0' : '#D9A441',
+                fontWeight: pathname.startsWith('/admin') ? 700 : 600,
+              }}
+            >
+              Admin
+            </Link>
+          )}
           {user && (
             <span className="body-f nav-hide-sm" style={{ color: '#9A8468', fontSize: 13 }}>
               {user.firstName}
@@ -134,6 +146,21 @@ export function AppNav() {
               {item.label}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              onClick={() => setOpen(false)}
+              style={{
+                display: 'block',
+                padding: '10px 0',
+                textDecoration: 'none',
+                color: pathname.startsWith('/admin') ? '#E8CDB0' : '#D9A441',
+                fontWeight: pathname.startsWith('/admin') ? 700 : 600,
+              }}
+            >
+              Admin
+            </Link>
+          )}
           <button onClick={logout} className="ghost-btn" style={{ marginTop: 8, padding: '8px 14px', fontSize: 13, width: '100%' }}>
             Déconnexion
           </button>

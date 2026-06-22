@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Briefcase, Home, MessageSquare, User, Coins, PlusCircle } from 'lucide-react';
+import { Briefcase, Home, MessageSquare, User, Coins, PlusCircle, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { gold } from '../styles/design-tokens';
 
@@ -20,7 +20,7 @@ const itemStyle = (active: boolean): React.CSSProperties => ({
 
 export function MobileBottomNav() {
   const { pathname } = useLocation();
-  const { isClientMode } = useAuth();
+  const { isClientMode, isAdmin } = useAuth();
 
   const isActive = (path: string) =>
     pathname === path || (path === '/jobs' && pathname.startsWith('/jobs/'));
@@ -40,6 +40,7 @@ export function MobileBottomNav() {
   ];
 
   const items = isClientMode ? clientItems : taskerItems;
+  const adminActive = pathname.startsWith('/admin');
 
   return (
     <nav
@@ -62,6 +63,12 @@ export function MobileBottomNav() {
             <span>{label}</span>
           </Link>
         ))}
+        {isAdmin && (
+          <Link to="/admin" style={itemStyle(adminActive)}>
+            <Shield className="w-5 h-5" style={{ color: adminActive ? gold : '#D9A441' }} />
+            <span>Admin</span>
+          </Link>
+        )}
       </div>
     </nav>
   );

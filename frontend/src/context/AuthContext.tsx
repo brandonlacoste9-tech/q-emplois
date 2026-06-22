@@ -13,6 +13,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   mode: AppMode;
   isClientMode: boolean;
+  isAdmin: boolean;
   canTask: boolean;
   setMode: (mode: AppMode) => void;
   login: (email: string, password: string) => Promise<TradesmanProfile>;
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const canTask =
     (profile?.serviceTypes?.length ?? 0) > 0 || profile?.isTaskerEnabled === true;
+  const isAdmin = profile?.role === 'admin';
   const isClientMode = mode === 'client';
 
   useEffect(() => {
@@ -159,6 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     mode,
     isClientMode,
+    isAdmin,
     canTask,
     setMode,
     login,
