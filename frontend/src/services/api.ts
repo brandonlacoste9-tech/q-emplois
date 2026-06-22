@@ -356,10 +356,20 @@ class ApiService {
     return response.data.total ?? 0;
   }
 
+  async getJobConversations(jobId: string): Promise<import('../types').Conversation[]> {
+    const response = await this.client.get(`/jobs/${jobId}/conversations`);
+    return response.data;
+  }
+
   async getMessages(
     conversationId: string,
     after?: string,
-  ): Promise<{ messages: Message[]; job: import('../types').ConversationJobContext | null }> {
+  ): Promise<{
+    messages: Message[];
+    job: import('../types').ConversationJobContext | null;
+    conversationStatus?: import('../types').ConversationStatus;
+    canSend?: boolean;
+  }> {
     const response = await this.client.get(`/conversations/${conversationId}/messages`, {
       params: after ? { after } : {},
     });

@@ -49,6 +49,15 @@ export class JobsController {
     return this.jobsService.listApplications(id, userId);
   }
 
+  @Get(':id/conversations')
+  @ApiOperation({ summary: 'Conversations liées à une tâche' })
+  listJobConversations(
+    @Param('id') id: string,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.jobsService.listJobConversations(id, userId);
+  }
+
   @Get(':id')
   get(@Param('id') id: string, @CurrentUser('userId') userId: string) {
     return this.jobsService.getById(id, userId);

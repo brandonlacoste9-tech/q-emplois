@@ -489,17 +489,24 @@ enum ChatMessageType {
   system
 }
 
+enum ConversationStatus {
+  application
+  active
+  archived
+}
+
 model Conversation {
-  id         String        @id @default(uuid())
+  id         String               @id @default(uuid())
   clientId   String
-  client     User          @relation("ClientConversations", fields: [clientId], references: [id], onDelete: Cascade)
+  client     User                 @relation("ClientConversations", fields: [clientId], references: [id], onDelete: Cascade)
   providerId String
-  provider   User          @relation("ProviderConversations", fields: [providerId], references: [id], onDelete: Cascade)
+  provider   User                 @relation("ProviderConversations", fields: [providerId], references: [id], onDelete: Cascade)
   taskId     String?
-  task       Task?         @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  task       Task?                @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  status     ConversationStatus   @default(active)
   messages   ChatMessage[]
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
 
   @@unique([clientId, providerId, taskId])
   @@index([clientId])

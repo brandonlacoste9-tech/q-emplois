@@ -40,6 +40,7 @@ export function JobDetail() {
   const [applyMessage, setApplyMessage] = useState('');
   const [paying, setPaying] = useState(false);
   const [jobConversation, setJobConversation] = useState<Conversation | null>(null);
+  const [applicantConversations, setApplicantConversations] = useState<Record<string, Conversation>>({});
 
   useEffect(() => {
     if (searchParams.get('paid')) addToast('Paiement reçu — merci!', 'success');
@@ -63,11 +64,24 @@ export function JobDetail() {
       } else {
         setApplications([]);
       }
-      if (data.status !== 'pending') {
-        const convs = await api.getConversations();
-        setJobConversation(convs.find((c) => c.jobId === id) ?? null);
-      } else {
+      try {
+        const convs = await api.getJobConversations(id);
+        if (data.clientId === profile?.id) {
+          const byTasker: Record<string, Conversation> = {};
+          for (const c of convs) {
+            if (c.providerId) byTasker[c.providerId] = c;
+          }
+          setApplicantConversations(byTasker);
+        } else {
+          setApplicantConversations({});
+        }
+        const mine = convs.find((c) => profile?.id && c.providerId === profile.id) ?? convs[0] ?? null;
+        setJobConversation(
+          data.status !== 'pending' || data.myApplicationStatus ? mine : null,
+        );
+      } catch {
         setJobConversation(null);
+        setApplicantConversations({});
       }
     } catch {
       addToast('Tâche introuvable', 'error');
@@ -288,9 +302,9 @@ export function JobDetail() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {job.status !== 'pending' && (
+            {(job.status !== 'pending' || hasApplied) && (
             <Link to={`/messages?jobId=${job.id}`} className="ghost-btn" style={{ padding: '10px 16px', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <MessageSquare className="w-4 h-4" /> Messages
+              <MessageSquare className="w-4 h-4" /> {hasApplied && job.status === 'pending' ? 'Message au client' : 'Messages'}
               {jobConversation && jobConversation.unreadCount > 0 && (
                 <span style={{ background: gold, color: '#1F2F3F', borderRadius: 999, fontSize: 10, fontWeight: 800, padding: '1px 6px' }}>
                   {jobConversation.unreadCount}
@@ -431,15 +445,30 @@ export function JobDetail() {
                   key={app.id}
                   tasker={{ ...app.tasker, message: app.message }}
                   action={
-                    <button
-                      type="button"
-                      disabled={processing}
-                      onClick={() => runAction(() => api.selectTasker(job.id, app.taskerId).then(), 'Travailleur choisi!')}
-                      className="gold-btn"
-                      style={{ padding: '8px 14px', fontSize: 13 }}
-                    >
-                      Choisir
-                    </button>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                      <Link
+                        to={`/messages?jobId=${job.id}&taskerId=${app.taskerId}`}
+                        className="ghost-btn"
+                        style={{ padding: '8px 14px', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        Message
+                        {(applicantConversations[app.taskerId]?.unreadCount ?? 0) > 0 && (
+                          <span style={{ background: gold, color: '#1F2F3F', borderRadius: 999, fontSize: 10, fontWeight: 800, padding: '1px 6px' }}>
+                            {applicantConversations[app.taskerId].unreadCount}
+                          </span>
+                        )}
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={processing}
+                        onClick={() => runAction(() => api.selectTasker(job.id, app.taskerId).then(), 'Travailleur choisi!')}
+                        className="gold-btn"
+                        style={{ padding: '8px 14px', fontSize: 13 }}
+                      >
+                        Choisir
+                      </button>
+                    </div>
                   }
                 />
               ))}

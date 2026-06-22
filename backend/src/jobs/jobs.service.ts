@@ -549,6 +549,13 @@ export class JobsService {
       );
     }
 
+    await this.chatService.openApplicationConversation(
+      task.clientId,
+      taskerId,
+      taskId,
+      dto.message,
+    );
+
     await this.auditService.log({
       userId: taskerId,
       action: 'task_applied',
@@ -557,6 +564,10 @@ export class JobsService {
     });
 
     return this.getById(taskId, taskerId);
+  }
+
+  async listJobConversations(taskId: string, userId: string) {
+    return this.chatService.listJobConversations(taskId, userId);
   }
 
   async listApplications(taskId: string, clientId: string) {
@@ -656,6 +667,12 @@ export class JobsService {
         `Le client a choisi un autre travailleur pour « ${task.title} ». Votre crédit a été remboursé.`,
         { taskId },
       );
+      await this.chatService.archiveApplicationConversation(
+        task.clientId,
+        other.taskerId,
+        taskId,
+        'Le client a choisi un autre travailleur.',
+      );
     }
 
     await this.prisma.taskApplication.update({
@@ -690,6 +707,13 @@ export class JobsService {
       taskerId,
       taskId,
       'Candidature retirée — remboursement',
+    );
+
+    await this.chatService.archiveApplicationConversation(
+      application.task.clientId,
+      taskerId,
+      taskId,
+      'Candidature retirée.',
     );
 
     return { success: true };
@@ -768,6 +792,7 @@ export class JobsService {
       taskId,
       'Cette tâche a été annulée.',
     );
+    await this.chatService.archiveTaskConversations(taskId);
 
     return this.mapTask(updated, undefined, userId);
   }
@@ -846,6 +871,7 @@ export class JobsService {
       taskId,
       'Tâche marquée comme terminée.',
     );
+    await this.chatService.archiveTaskConversations(taskId);
 
     return this.mapTask(updated, undefined, userId);
   }
@@ -927,6 +953,7 @@ export class JobsService {
       );
     }
 
+    await this.chatService.archiveTaskConversations(taskId, 'Tâche supprimée par le client.');
     await this.prisma.task.delete({ where: { id: taskId } });
 
     await this.auditService.log({

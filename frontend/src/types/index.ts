@@ -270,9 +270,13 @@ export interface ConversationJobContext {
   estimatedPrice: number;
 }
 
+export type ConversationStatus = 'application' | 'active' | 'archived';
+
 export interface Conversation {
   id: string;
   clientId: string;
+  providerId?: string;
+  status?: ConversationStatus;
   clientName: string;
   clientAvatar?: string;
   jobId?: string;

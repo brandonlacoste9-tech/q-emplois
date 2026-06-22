@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { useUnreadMessages } from '../hooks/useUnreadMessages';
-import type { Conversation, ConversationJobContext, Message } from '../types';
+import type { Conversation, ConversationJobContext, ConversationStatus, Message } from '../types';
 import { MessageSquare, Send, Loader2, ArrowLeft, Briefcase } from 'lucide-react';
 import { gold } from '../styles/design-tokens';
 import { socketService } from '../services/socket';
@@ -47,11 +47,14 @@ export function Messages() {
   const { refreshUnread } = useUnreadMessages();
   const [searchParams] = useSearchParams();
   const jobIdParam = searchParams.get('jobId');
+  const taskerIdParam = searchParams.get('taskerId');
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [jobContext, setJobContext] = useState<ConversationJobContext | null>(null);
+  const [conversationStatus, setConversationStatus] = useState<ConversationStatus | null>(null);
+  const [canSend, setCanSend] = useState(true);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -65,28 +68,56 @@ export function Messages() {
     return data;
   }, []);
 
+  const pickConversation = useCallback((data: Conversation[]) => {
+    if (jobIdParam) {
+      const match = data.find(
+        (c) => c.jobId === jobIdParam && (!taskerIdParam || c.providerId === taskerIdParam),
+      );
+      if (match) {
+        setActiveId(match.id);
+        setMobileShowThread(true);
+        return;
+      }
+    }
+    if (data.length > 0) setActiveId(data[0].id);
+  }, [jobIdParam, taskerIdParam]);
+
   useEffect(() => {
-    loadConversations()
-      .then((data) => {
-        if (jobIdParam) {
-          const match = data.find((c) => c.jobId === jobIdParam);
-          if (match) {
-            setActiveId(match.id);
-            setMobileShowThread(true);
-          } else if (data.length > 0) {
-            setActiveId(data[0].id);
+    const load = async () => {
+      try {
+        let data = await loadConversations();
+        if (jobIdParam && !data.some(
+          (c) => c.jobId === jobIdParam && (!taskerIdParam || c.providerId === taskerIdParam),
+        )) {
+          try {
+            const jobConvs = await api.getJobConversations(jobIdParam);
+            const merged = [...data];
+            for (const jc of jobConvs) {
+              if (!merged.some((m) => m.id === jc.id)) merged.push(jc);
+            }
+            data = merged.sort(
+              (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+            );
+            setConversations(data);
+          } catch {
+            // job conversations may not exist yet
           }
-        } else if (data.length > 0) {
-          setActiveId(data[0].id);
         }
-      })
-      .catch(() => addToast('Erreur de chargement des conversations', 'error'))
-      .finally(() => setLoading(false));
-  }, [addToast, jobIdParam, loadConversations]);
+        pickConversation(data);
+      } catch {
+        addToast('Erreur de chargement des conversations', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [addToast, jobIdParam, taskerIdParam, loadConversations, pickConversation]);
 
   const loadMessages = useCallback(async (conversationId: string, after?: string) => {
     const data = await api.getMessages(conversationId, after);
     setJobContext(data.job);
+    setConversationStatus(data.conversationStatus ?? null);
+    setCanSend(data.canSend !== false);
     if (after) {
       setMessages((prev) => {
         const merged = [...prev];
@@ -206,10 +237,11 @@ export function Messages() {
         updated.unshift(conv);
         return updated;
       });
-    } catch {
+    } catch (err: unknown) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setDraft(content);
-      addToast("Impossible d'envoyer le message", 'error');
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      addToast(msg ?? "Impossible d'envoyer le message", 'error');
     } finally {
       setSending(false);
     }
@@ -221,7 +253,9 @@ export function Messages() {
   };
 
   const activeConv = conversations.find((c) => c.id === activeId);
-  const jobLinkedConv = jobIdParam && !conversations.some((c) => c.jobId === jobIdParam);
+  const jobLinkedConv = jobIdParam && !conversations.some(
+    (c) => c.jobId === jobIdParam && (!taskerIdParam || c.providerId === taskerIdParam),
+  );
 
   return (
     <div className="leather" style={{ minHeight: '100vh' }}>
@@ -232,7 +266,7 @@ export function Messages() {
 
         {jobLinkedConv && (
           <div className="body-f muted" style={{ padding: '12px 16px', marginBottom: 16, borderRadius: 8, background: 'rgba(184,123,68,0.12)', fontSize: 14 }}>
-            Aucun fil pour cette tâche. Un chat s&apos;ouvrira quand un travailleur sera choisi.
+            Aucun fil pour cette tâche. Postulez ou attendez une candidature pour démarrer la conversation.
           </div>
         )}
 
@@ -287,7 +321,11 @@ export function Messages() {
                       )}
                     </div>
                     {c.jobTitle && (
-                      <p className="body-f muted2" style={{ fontSize: 11, marginTop: 2 }}>{c.jobTitle}</p>
+                      <p className="body-f muted2" style={{ fontSize: 11, marginTop: 2 }}>
+                        {c.jobTitle}
+                        {c.status === 'application' && ' · Candidature'}
+                        {c.status === 'archived' && ' · Archivé'}
+                      </p>
                     )}
                     <p className="body-f muted2" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
                       {c.lastMessage?.type === 'system' ? `ℹ ${c.lastMessage.content}` : (c.lastMessage?.content ?? 'Nouvelle conversation')}
@@ -322,6 +360,22 @@ export function Messages() {
                   </div>
 
                   {jobContext && <JobChatHeader job={jobContext} />}
+
+                  {conversationStatus === 'application' && (
+                    <p
+                      className="body-f muted2"
+                      style={{
+                        margin: '0 18px 8px',
+                        fontSize: 12,
+                        padding: '10px 12px',
+                        borderRadius: 8,
+                        background: 'rgba(107,163,196,0.12)',
+                        border: '1px solid rgba(107,163,196,0.25)',
+                      }}
+                    >
+                      Mode candidature — pas de téléphone, courriel ou lien tant que le travailleur n&apos;est pas choisi.
+                    </p>
+                  )}
 
                   <div style={{ flex: 1, overflowY: 'auto', padding: '8px 18px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {messages.map((m) => {
@@ -368,18 +422,24 @@ export function Messages() {
                     <div ref={bottomRef} />
                   </div>
 
-                  <form onSubmit={handleSend} style={{ padding: 14, borderTop: '1px solid rgba(217,179,140,0.12)', display: 'flex', gap: 10 }}>
-                    <input
-                      className="q-field"
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      placeholder="Écrire un message…"
-                      style={{ flex: 1 }}
-                    />
-                    <button type="submit" disabled={sending || !draft.trim()} className="gold-btn" style={{ padding: '10px 16px' }}>
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </form>
+                  {canSend ? (
+                    <form onSubmit={handleSend} style={{ padding: 14, borderTop: '1px solid rgba(217,179,140,0.12)', display: 'flex', gap: 10 }}>
+                      <input
+                        className="q-field"
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                        placeholder={conversationStatus === 'application' ? 'Poser une question sur la tâche…' : 'Écrire un message…'}
+                        style={{ flex: 1 }}
+                      />
+                      <button type="submit" disabled={sending || !draft.trim()} className="gold-btn" style={{ padding: '10px 16px' }}>
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </form>
+                  ) : (
+                    <p className="body-f muted2" style={{ padding: 14, fontSize: 13, borderTop: '1px solid rgba(217,179,140,0.12)', margin: 0 }}>
+                      Conversation en lecture seule.
+                    </p>
+                  )}
                 </>
               ) : (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
