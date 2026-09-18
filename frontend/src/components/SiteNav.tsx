@@ -5,8 +5,8 @@ import { colors } from "../styles/design-tokens";
 type Lang = "fr" | "en";
 
 const NAV = {
-  fr: { find: "Trouver de l'aide", become: "Offrir mes services", login: "Connexion", signup: "S'inscrire" },
-  en: { find: "Find help", become: "Offer my services", login: "Log in", signup: "Sign up" },
+  fr: { find: "Jobs ouverts", post: "Publier", login: "Connexion", signup: "S'inscrire" },
+  en: { find: "Open jobs", post: "Post a job", login: "Log in", signup: "Sign up" },
 };
 
 /* Shared top navigation bar — matches the homepage navbar.
@@ -49,8 +49,8 @@ export function SiteNav({
           <BrandLogo size="md" />
         </Link>
         <div className="body-f" style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 14 }}>
-          <Link to="/aide" className="nav-link nav-hide-sm">{t.find}</Link>
-          <Link to="/recrute" className="nav-link nav-hide-sm">{t.become}</Link>
+          <Link to="/jobs" className="nav-link nav-hide-sm">{t.find}</Link>
+          <Link to="/book" className="nav-link nav-hide-sm">{t.post}</Link>
           <Link to="/login" className="nav-link">{t.login}</Link>
           <button
             onClick={onToggleLang}

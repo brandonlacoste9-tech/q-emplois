@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getApiErrorMessage } from '../utils/apiError';
 import { BrandLogo } from '../components/BrandLogo';
@@ -11,7 +11,7 @@ const T = {
   fr: {
     tag: "Le marché de services local du Québec",
     title: "Connexion",
-    sub: "Connectez-vous pour accéder à votre tableau de bord.",
+    sub: "Connecte-toi pour publier ou postuler.",
     welcomeBack: "Bon retour, {name} !",
     remember: "Se souvenir de moi",
     email: "Courriel",
@@ -28,7 +28,7 @@ const T = {
   en: {
     tag: "Québec's local services marketplace",
     title: "Log in",
-    sub: "Sign in to access your dashboard.",
+    sub: "Sign in to post or apply.",
     welcomeBack: "Welcome back, {name}!",
     remember: "Remember me",
     email: "Email",
@@ -56,6 +56,7 @@ export function Login() {
   });
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const t = T[lang];
 
   useEffect(() => {
@@ -82,9 +83,12 @@ export function Login() {
         localStorage.removeItem('qemplois_remember_name');
       }
 
-      const savedMode = localStorage.getItem('qemplois_mode');
-      const taskerReady = (profileData.serviceTypes?.length ?? 0) > 0 || profileData.isTaskerEnabled;
-      navigate(savedMode === 'tasker' && taskerReady ? '/jobs' : '/dashboard');
+      const next = searchParams.get('next');
+      if (next && next.startsWith('/') && !next.startsWith('//')) {
+        navigate(next);
+      } else {
+        navigate('/jobs');
+      }
     } catch (err) {
       setError(getApiErrorMessage(err, t.err));
     } finally {

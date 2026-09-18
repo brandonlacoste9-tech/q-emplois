@@ -28,21 +28,6 @@ function canManageJob(job: Job, profile: { id: string; role?: string } | null): 
   return profile.role === 'admin' || job.clientId === profile.id;
 }
 
-const TASKER_TABS: { value: JobStatus; label: string }[] = [
-  { value: 'pending', label: 'Disponibles' },
-  { value: 'accepted', label: 'Acceptées' },
-  { value: 'in_progress', label: 'En cours' },
-  { value: 'completed', label: 'Terminées' },
-];
-
-const CLIENT_TABS: { value: JobStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'Toutes' },
-  { value: 'pending', label: 'En attente' },
-  { value: 'accepted', label: 'Acceptées' },
-  { value: 'in_progress', label: 'En cours' },
-  { value: 'completed', label: 'Terminées' },
-];
-
 const SERVICE_TYPES: ServiceType[] = [
   'deneigement', 'demenagement', 'menage', 'montage_meubles', 'nettoyage',
   'jardinage', 'livraison', 'coursier', 'autre',
@@ -56,7 +41,7 @@ export function Jobs() {
   const [activeTab, setActiveTab] = useState<string>(isClient ? 'all' : 'pending');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedServiceType, setSelectedServiceType] = useState<ServiceType | ''>('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [processingJob, setProcessingJob] = useState<string | null>(null);
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const [reviewJob, setReviewJob] = useState<Job | null>(null);
@@ -87,18 +72,12 @@ export function Jobs() {
     setIsLoading(true);
     try {
       const filters: { status?: string; serviceType?: string; perspective?: 'mine' | 'board' } = {
-        perspective: profile && isClientMode ? 'mine' : 'board',
+        perspective: 'board',
+        status: 'pending',
       };
-      if (activeTab !== 'all') filters.status = activeTab;
       if (selectedServiceType) filters.serviceType = selectedServiceType;
       const data = await api.getJobs(filters);
-      if (isClientMode) {
-        setJobs(data);
-      } else if (activeTab === 'pending') {
-        setJobs(data.filter((j) => j.status === 'pending'));
-      } else {
-        setJobs(data);
-      }
+      setJobs(data.filter((j) => j.status === 'pending'));
     } catch {
       addToast('Erreur lors du chargement des jobs', 'error');
     } finally {
@@ -242,7 +221,6 @@ export function Jobs() {
     color: active ? '#1F2F3F' : '#D9B38C', fontWeight: active ? 700 : 400,
   });
 
-  const tabs = isClient ? CLIENT_TABS : TASKER_TABS;
   const verificationStatus = getTaskerVerificationStatus(profile, profile?.verificationExpiresAt);
   const taskerCanApply = canTaskerApply(profile, profile?.verificationExpiresAt);
 
@@ -252,10 +230,10 @@ export function Jobs() {
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 24 }}>
           <div>
             <h1 className="serif cream-hi" style={{ fontSize: 'clamp(1.6rem, 4vw, 2.2rem)', fontWeight: 900 }}>
-              {isClient ? 'Mes tâches' : 'Jobs'}
+              Jobs ouverts
             </h1>
             <p className="body-f muted" style={{ fontSize: 15, marginTop: 4 }}>
-              {isClient ? 'Suivez vos tâches publiées' : 'Gère tes demandes de travail'}
+              Au Québec, près de chez toi. Appuie pour voir. Postule si tu veux la job.
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -266,16 +244,12 @@ export function Jobs() {
                 <span className="muted2">crédits</span>
               </CreditsLink>
             )}
-            {!isClient && (
-              <button onClick={() => setShowFilters(!showFilters)} className="ghost-btn" style={{ padding: '8px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <Filter className="w-4 h-4" /> Filtres
-              </button>
-            )}
-            {isClient && (
-              <Link to="/post-job" className="gold-btn" style={{ padding: '8px 16px', fontSize: 14, textDecoration: 'none' }}>
-                + Publier
-              </Link>
-            )}
+            <button onClick={() => setShowFilters(!showFilters)} className="ghost-btn" style={{ padding: '8px 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <Filter className="w-4 h-4" /> Filtres
+            </button>
+            <Link to={profile ? '/post-job' : '/book'} className="gold-btn" style={{ padding: '8px 16px', fontSize: 14, textDecoration: 'none' }}>
+              + Publier
+            </Link>
           </div>
         </div>
 
@@ -306,7 +280,7 @@ export function Jobs() {
           </div>
         )}
 
-        {showFilters && !isClient && (
+        {showFilters && (
           <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 18, marginBottom: 20 }}>
             <p className="q-label" style={{ marginBottom: 10 }}>Type de service</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -320,14 +294,6 @@ export function Jobs() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24, overflowX: 'auto', paddingBottom: 8 }}>
-          {tabs.map((tab) => (
-            <button key={tab.value} onClick={() => setActiveTab(tab.value)} style={{ ...chip(activeTab === tab.value), whiteSpace: 'nowrap', borderRadius: 8 }}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0' }}>
             <Loader2 className="w-8 h-8" style={{ color: gold, animation: 'spin 0.9s linear infinite' }} />
@@ -336,22 +302,14 @@ export function Jobs() {
           <div className="stitch-box" style={{ background: 'rgba(21,35,50,0.7)', padding: 48, textAlign: 'center' }}>
             <Briefcase className="w-16 h-16" style={{ margin: '0 auto 16px', color: 'rgba(217,179,140,0.3)' }} />
             <h3 className="serif cream-hi" style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
-              {isClient ? 'Aucune tâche pour l\'instant' : 'Aucun job ouvert'}
+              Aucun job ouvert
             </h3>
             <p className="body-f muted" style={{ maxWidth: 400, margin: '0 auto 16px', lineHeight: 1.55 }}>
-              {isClient
-                ? 'Publiez votre première tâche — c\'est gratuit en bêta. Des travailleurs postulent; vous choisissez.'
-                : 'La bêta se remplit à Montréal & Rive-Sud. Activez les alertes Telegram dans Profil et revenez bientôt — ou posez des questions dès qu\'un job apparaît.'}
+              Sois le premier : publie une job dans ton quartier.
             </p>
-            {isClient ? (
-              <Link to="/post-job" className="gold-btn" style={{ padding: '10px 20px', fontSize: 14, textDecoration: 'none', display: 'inline-block' }}>
-                Publier une tâche
-              </Link>
-            ) : (
-              <Link to="/profile" className="ghost-btn" style={{ padding: '10px 20px', fontSize: 14, textDecoration: 'none', display: 'inline-block' }}>
-                Configurer mon profil / alertes
-              </Link>
-            )}
+            <Link to={profile ? '/post-job' : '/book'} className="gold-btn" style={{ padding: '10px 20px', fontSize: 14, textDecoration: 'none', display: 'inline-block' }}>
+              Publier une job
+            </Link>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 18 }}>
@@ -359,7 +317,7 @@ export function Jobs() {
               <JobCard
                 key={job.id}
                 job={job}
-                isClient={isClient}
+                isClient={false}
                 onAccept={handleAccept}
                 onAskQuestion={handleAskQuestion}
                 onStart={handleStart}
@@ -368,8 +326,8 @@ export function Jobs() {
                 onCancelOrDelete={() => handleCancelOrDelete(job)}
                 onReview={() => setReviewJob(job)}
                 isProcessing={processingJob === job.id}
-                canApply={!isClient && taskerCanApply && (creditBalance ?? 0) > 0 && job.myApplicationStatus !== 'pending'}
-                verificationBlocked={!isClient && canTask && !taskerCanApply}
+                canApply={!!profile && canTask && taskerCanApply && (creditBalance ?? 0) > 0 && job.myApplicationStatus !== 'pending'}
+                verificationBlocked={!!profile && canTask && !taskerCanApply}
                 priceGuide={priceGuides[job.serviceType] ?? priceGuides.autre}
                 canCancel={canManageJob(job, profile)}
               />
@@ -561,9 +519,9 @@ function JobCard({ job, isClient, onAccept, onAskQuestion, onStart, onComplete, 
               </Link>
             )}
             {!canApply && !verificationBlocked && (
-              <CreditsLink className="ghost-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}>
-                Acheter crédits
-              </CreditsLink>
+              <Link to={`/login?next=/jobs/${job.id}`} className="ghost-btn" style={{ flex: 1, minWidth: 120, padding: '8px', fontSize: 13, textAlign: 'center', textDecoration: 'none' }}>
+                Connexion pour postuler
+              </Link>
             )}
           </>
         )}

@@ -10,7 +10,7 @@ import { buildClientBookingHref, formatPriceGuideShort } from "../utils/booking"
 /* --- TRANSLATIONS --- */
 const T = {
   fr: {
-    nav: { find: "Jobs ouverts", taskers: "Travailleurs", become: "Offrir mes services", login: "Connexion", signup: "S'inscrire" },
+    nav: { find: "Jobs", post: "Publier", login: "Connexion", signup: "S'inscrire" },
     beta: {
       strip: "Québec seulement — pas TaskRabbit. Français, $ CAD, votre quartier.",
       founding: "50 premiers travailleurs : 60 crédits gratuits + 20 % à vie",
@@ -20,10 +20,10 @@ const T = {
     paths: {
       title: "Un marché québécois, deux portes",
       clientTitle: "J'ai besoin d'aide",
-      clientDesc: "Publiez en 3 minutes. Des travailleurs postulent — vous choisissez. Paiement en ligne optionnel (Stripe) ou direct.",
+      clientDesc: "Décris la job. Les gens postulent. Tu choisis.",
       clientCta: "Publier gratuitement",
       taskerTitle: "Je veux travailler",
-      taskerDesc: "Postulez aux jobs près de chez vous. 1 crédit = 1 candidature (remboursé si non retenu). Offre Founding Tasker limitée.",
+      taskerDesc: "Ouvre Jobs, choisis une annonce, postule. C’est tout.",
       taskerCta: "Offrir mes services",
     },
     hero: {
@@ -99,7 +99,7 @@ const T = {
     },
   },
   en: {
-    nav: { find: "Open jobs", taskers: "Workers", become: "Offer my services", login: "Log in", signup: "Sign up" },
+    nav: { find: "Jobs", post: "Post", login: "Log in", signup: "Sign up" },
     beta: {
       strip: "Québec only — not TaskRabbit. French, CAD, your neighbourhood.",
       founding: "First 50 taskers: 60 free credits + 20% lifetime off packs",
@@ -421,8 +421,7 @@ export function LandingPage() {
           {/* Desktop links */}
           <div className="body-f nav-hide-sm" style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14 }}>
             <Link to="/jobs" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.find}</Link>
-            <Link to="/taskers" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.taskers}</Link>
-            <Link to="/recrute" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.become}</Link>
+            <Link to="/book" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.post}</Link>
             <Link to="/login" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.login}</Link>
             <button
               onClick={() => setLang(lang === "fr" ? "en" : "fr")}
@@ -475,9 +474,8 @@ export function LandingPage() {
               background: "rgba(31,47,63,0.98)",
             }}
           >
-            <Link to="/aide" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.find}</Link>
-            <Link to="/taskers" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.taskers}</Link>
-            <Link to="/recrute" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.become}</Link>
+            <Link to="/jobs" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.find}</Link>
+            <Link to="/book" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.post}</Link>
             <Link to="/login" onClick={() => setMobileOpen(false)} className="nav-link" style={{ color: "#D9B38C", padding: "10px 0" }}>{t.nav.login}</Link>
             <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
               <button
@@ -914,11 +912,11 @@ export function LandingPage() {
               </p>
             </div>
             <div className="body-f" style={{ display: "flex", gap: 20, fontSize: 13 }}>
-              <Link to="/aide" style={{ color: "#9A8468" }}>
+              <Link to="/jobs" style={{ color: "#9A8468" }}>
                 {t.nav.find}
               </Link>
-              <Link to="/recrute" style={{ color: "#9A8468" }}>
-                {t.nav.become}
+              <Link to="/book" style={{ color: "#9A8468" }}>
+                {t.nav.post}
               </Link>
               <Link to="/login" style={{ color: "#9A8468" }}>
                 {t.nav.login}

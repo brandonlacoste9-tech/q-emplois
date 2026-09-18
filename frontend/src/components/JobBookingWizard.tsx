@@ -45,8 +45,8 @@ type Lang = 'fr' | 'en';
 
 const T = {
   fr: {
-    title: 'Publier une tâche',
-    guestTitle: 'Décrivez votre besoin',
+    title: 'Publier une job',
+    guestTitle: 'Publier une job',
     steps: ['Type de service', 'Détails & lieu', 'Budget'],
     subs: ['De quel type de service avez-vous besoin ?', 'Où et quand ? (ville et code postal suffisent pour commencer)', 'Quel est votre budget ?'],
     jobTitle: 'Titre (optionnel)',

@@ -7,18 +7,18 @@ type Lang = 'fr' | 'en';
 const T = {
   fr: {
     title: 'Rejoindre Québec emplois',
-    sub: 'Bêta Montréal & Rive-Sud — comment voulez-vous utiliser la plateforme ?',
-    founding: '50 premiers travailleurs : 60 crédits gratuits + 20 % à vie',
+    sub: 'Deux choix. C’est tout.',
+    founding: 'Québec seulement.',
     client: {
       emoji: '🏠',
       title: "J'ai besoin d'aide",
-      desc: 'Publiez une tâche — déménagement, ménage, montage — et choisissez parmi les candidats. Gratuit en bêta.',
+      desc: 'Publie une job. Les gens près de chez toi postulent. Tu choisis.',
       cta: 'Créer un compte client',
     },
     tasker: {
       emoji: '💪',
       title: 'Je veux gagner de l\'argent',
-      desc: 'Postulez aux jobs près de chez vous. Offre Founding Tasker limitée (crédits gratuits).',
+      desc: 'Regarde les jobs ouverts et postule.',
       cta: 'Créer un compte travailleur',
     },
     haveAccount: 'Déjà un compte ?',

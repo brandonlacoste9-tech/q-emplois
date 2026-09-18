@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Briefcase, Home, MessageSquare, User, Coins, PlusCircle, Shield } from 'lucide-react';
+import { Briefcase, MessageSquare, User, PlusCircle, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useUnreadMessages } from '../hooks/useUnreadMessages';
 import { gold } from '../styles/design-tokens';
@@ -21,29 +21,24 @@ const itemStyle = (active: boolean): React.CSSProperties => ({
 
 export function MobileBottomNav() {
   const { pathname } = useLocation();
-  const { isClientMode, isAdmin } = useAuth();
+  const { user } = useAuth();
   const { unreadTotal } = useUnreadMessages();
 
   const isActive = (path: string) =>
     pathname === path || (path === '/jobs' && pathname.startsWith('/jobs/'));
 
-  const clientItems = [
-    { path: '/dashboard', label: 'Accueil', icon: Home },
-    { path: '/post-job', label: 'Publier', icon: PlusCircle },
-    { path: '/messages', label: 'Messages', icon: MessageSquare },
-    { path: '/profile', label: 'Profil', icon: User },
-  ];
-
-  const taskerItems = [
-    { path: '/dashboard', label: 'Accueil', icon: Home },
-    { path: '/jobs', label: 'Jobs', icon: Briefcase },
-    { path: '/credits', label: 'Crédits', icon: Coins },
-    { path: '/messages', label: 'Messages', icon: MessageSquare },
-    { path: '/profile', label: 'Profil', icon: User },
-  ];
-
-  const items = isClientMode ? clientItems : taskerItems;
-  const adminActive = pathname.startsWith('/admin');
+  const items = user
+    ? [
+        { path: '/jobs', label: 'Jobs', icon: Briefcase },
+        { path: '/post-job', label: 'Publier', icon: PlusCircle },
+        { path: '/messages', label: 'Messages', icon: MessageSquare },
+        { path: '/profile', label: 'Profil', icon: User },
+      ]
+    : [
+        { path: '/jobs', label: 'Jobs', icon: Briefcase },
+        { path: '/book', label: 'Publier', icon: PlusCircle },
+        { path: '/login', label: 'Connexion', icon: LogIn },
+      ];
 
   return (
     <nav
@@ -88,12 +83,6 @@ export function MobileBottomNav() {
             )}
           </Link>
         ))}
-        {isAdmin && (
-          <Link to="/admin" style={itemStyle(adminActive)}>
-            <Shield className="w-5 h-5" style={{ color: adminActive ? gold : '#D9A441' }} />
-            <span>Admin</span>
-          </Link>
-        )}
       </div>
     </nav>
   );

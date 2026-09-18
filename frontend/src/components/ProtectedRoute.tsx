@@ -16,7 +16,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isAuthenticated) {
-    window.location.href = '/login';
+    const next = window.location.pathname + window.location.search;
+    window.location.href = `/login?next=${encodeURIComponent(next)}`;
     return null;
   }
 
