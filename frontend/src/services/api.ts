@@ -12,11 +12,11 @@ import type {
   PriceGuideRange,
 } from '../types';
 
-const RAILWAY_API = 'https://q-emplois-api-production-f1a6.up.railway.app/api/v1';
+const RENDER_API = 'https://q-emplois-api.onrender.com/api/v1';
 const envApiUrl = import.meta.env.VITE_API_URL as string | undefined;
-// Ignore stale Render URL baked into old Vercel builds (onrender.com returns 404)
+// Ignore stale Railway host — that service returns Application not found.
 const API_BASE_URL =
-  envApiUrl && !envApiUrl.includes('onrender.com') ? envApiUrl : RAILWAY_API;
+  envApiUrl && !envApiUrl.includes('up.railway.app') ? envApiUrl : RENDER_API;
 
 class ApiService {
   private client: AxiosInstance;

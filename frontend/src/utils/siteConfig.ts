@@ -3,11 +3,11 @@
  * Keep share links, SEO, and copy pointing at the production domain.
  */
 
-export const PUBLIC_SITE_URL = 'https://www.quebec-emplois.ca';
+export const PUBLIC_SITE_URL = 'https://www.q-emplois.com';
 
-/** Live NestJS API (Railway). Fallback also hard-coded in api.ts. */
+/** Live NestJS API (Render). Fallback also hard-coded in api.ts. */
 export const PUBLIC_API_URL =
-  'https://q-emplois-api-production-f1a6.up.railway.app/api/v1';
+  'https://q-emplois-api.onrender.com/api/v1';
 
 /** Geographic wedge for beta marketing. */
 export const BETA_WEDGE = {
