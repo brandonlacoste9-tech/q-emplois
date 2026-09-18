@@ -1,0 +1,13 @@
+[build]
+  base = "frontend"
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  VITE_API_URL = "https://q-emplois-api.onrender.com/api/v1"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

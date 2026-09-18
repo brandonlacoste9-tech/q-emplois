@@ -42,6 +42,7 @@ async function bootstrap() {
     'https://www.q-emplois.com',
     'https://q-emplois.com',
     /\.vercel\.app$/,
+    /\.netlify\.app$/,
   ];
   const rawCorsOrigin = configService.get('CORS_ORIGIN');
   const extraOrigins = rawCorsOrigin
