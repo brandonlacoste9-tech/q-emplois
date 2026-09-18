@@ -3,7 +3,7 @@
  * Keep share links, SEO, and copy pointing at the production domain.
  */
 
-export const PUBLIC_SITE_URL = 'https://www.q-emplois.com';
+export const PUBLIC_SITE_URL = 'https://q-emplois.ca';
 
 /** Live NestJS API (Render). Fallback also hard-coded in api.ts. */
 export const PUBLIC_API_URL =
@@ -11,8 +11,8 @@ export const PUBLIC_API_URL =
 
 /** Geographic wedge for beta marketing. */
 export const BETA_WEDGE = {
-  fr: 'Montréal · Rive-Sud · Pointe-Claire',
-  en: 'Montreal · South Shore · Pointe-Claire',
+  fr: 'Québec seulement · Montréal · Québec · Laval · Gatineau',
+  en: 'Québec only · Montreal · Québec City · Laval · Gatineau',
 } as const;
 
 export const FOUNDING_TASKER = {

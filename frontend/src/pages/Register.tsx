@@ -9,6 +9,7 @@ import { SERVICE_TYPE_LABELS, type ServiceType } from '../types';
 import { Eye, EyeOff } from 'lucide-react';
 
 const SERVICE_TYPES: ServiceType[] = [
+  'deneigement',
   'menage',
   'demenagement',
   'montage_meubles',

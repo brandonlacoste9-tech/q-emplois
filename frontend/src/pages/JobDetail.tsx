@@ -56,6 +56,12 @@ export function JobDetail() {
     try {
       const data = await api.getJob(id);
       setJob(data);
+      if (!profile) {
+        setApplications([]);
+        setJobConversation(null);
+        setApplicantConversations({});
+        return;
+      }
       if (data.status === 'completed') {
         const reviews = await api.getReviewsForTask(id);
         const myReview = Array.isArray(reviews) ? reviews.find((r: any) => r.reviewerId === profile?.id) : null;
@@ -158,6 +164,10 @@ export function JobDetail() {
   };
 
   const handleApply = async () => {
+    if (!profile) {
+      navigate(`/login?next=/jobs/${id}`);
+      return;
+    }
     if (!job || processing) return;
     setProcessing(true);
     try {
@@ -478,6 +488,17 @@ export function JobDetail() {
             </div>
           )}
 
+          {!profile && job.status === 'pending' && (
+            <div className="stitch-box body-f" style={{ padding: 16, marginBottom: 20, background: 'rgba(184,123,68,0.12)' }}>
+              <p className="cream-hi" style={{ fontWeight: 700, marginBottom: 8 }}>Cette job est ouverte</p>
+              <p className="muted2" style={{ fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>
+                Connectez-vous pour postuler. Le client choisit parmi les candidats — adresse exacte après le choix.
+              </p>
+              <a href={`/login?next=/jobs/${job.id}`} className="gold-btn" style={{ padding: '10px 18px', fontSize: 14, textDecoration: 'none' }}>
+                Connexion pour postuler
+              </a>
+            </div>
+          )}
           {canApply && (
             <div
               className="stitch-box body-f"

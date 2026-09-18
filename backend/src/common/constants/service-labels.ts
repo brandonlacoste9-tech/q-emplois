@@ -12,6 +12,7 @@ export const SERVICE_LABELS_FR: Record<string, string> = {
   demenagement: 'Déménagement',
   montage_meubles: 'Montage de meubles',
   nettoyage: 'Nettoyage',
+  deneigement: 'Déneigement',
   livraison: 'Livraison',
   coursier: 'Coursier',
   chauffeur: 'Chauffeur',

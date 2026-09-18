@@ -41,9 +41,11 @@ class ApiService {
       (response) => response,
       (error: AxiosError) => {
         if (error.response?.status === 401) {
-          const isAuthAttempt = error.config?.url?.includes('/auth/login')
-            || error.config?.url?.includes('/auth/register');
-          if (!isAuthAttempt) {
+          const url = error.config?.url || '';
+          const isAuthAttempt = url.includes('/auth/login') || url.includes('/auth/register');
+          const onPublicBoard = window.location.pathname === '/jobs'
+            || window.location.pathname.startsWith('/jobs/');
+          if (!isAuthAttempt && !onPublicBoard) {
             localStorage.removeItem('token');
             if (!window.location.pathname.startsWith('/login')) {
               window.location.href = '/login';

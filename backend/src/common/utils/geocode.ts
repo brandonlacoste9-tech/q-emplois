@@ -34,5 +34,6 @@ export function geocodeQuebecAddress(
   if (fsa && FSA_COORDS[fsa]) return FSA_COORDS[fsa];
   if (fsa?.startsWith('H')) return CITY_COORDS.montreal;
   if (fsa?.startsWith('G')) return CITY_COORDS.quebec;
+  if (fsa?.startsWith('J')) return CITY_COORDS.longueuil ?? CITY_COORDS.gatineau;
   return null;
 }

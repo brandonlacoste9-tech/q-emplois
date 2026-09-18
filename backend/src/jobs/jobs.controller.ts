@@ -29,10 +29,11 @@ export class JobsController {
     return this.jobsService.getPriceGuides(city);
   }
 
+  @Public()
   @Get()
-  @ApiOperation({ summary: 'Lister les tâches disponibles' })
+  @ApiOperation({ summary: 'Tableau des jobs ouverts (Québec, sans compte)' })
   list(
-    @CurrentUser('userId') userId: string,
+    @CurrentUser('userId') userId: string | null,
     @Query('status') status?: string,
     @Query('serviceType') serviceType?: string,
     @Query('perspective') perspective?: string,
@@ -58,8 +59,9 @@ export class JobsController {
     return this.jobsService.listJobConversations(id, userId);
   }
 
+  @Public()
   @Get(':id')
-  get(@Param('id') id: string, @CurrentUser('userId') userId: string) {
+  get(@Param('id') id: string, @CurrentUser('userId') userId: string | null) {
     return this.jobsService.getById(id, userId);
   }
 

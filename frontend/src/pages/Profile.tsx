@@ -34,7 +34,7 @@ const card: React.CSSProperties = { background: 'rgba(21,35,50,0.7)', padding: 2
 
 // Focused on regular local jobs (not prestige trades)
 const SERVICE_TYPES: ServiceType[] = [
-  'demenagement', 'menage', 'montage_meubles', 'nettoyage',
+  'deneigement', 'demenagement', 'menage', 'montage_meubles', 'nettoyage',
   'jardinage', 'livraison', 'coursier', 'autre',
 ];
 

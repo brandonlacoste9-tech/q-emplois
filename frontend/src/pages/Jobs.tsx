@@ -44,7 +44,7 @@ const CLIENT_TABS: { value: JobStatus | 'all'; label: string }[] = [
 ];
 
 const SERVICE_TYPES: ServiceType[] = [
-  'demenagement', 'menage', 'montage_meubles', 'nettoyage',
+  'deneigement', 'demenagement', 'menage', 'montage_meubles', 'nettoyage',
   'jardinage', 'livraison', 'coursier', 'autre',
 ];
 
@@ -72,12 +72,12 @@ export function Jobs() {
   }, [isClientMode]);
 
   useEffect(() => {
-    if (!isClientMode) {
+    if (profile && !isClientMode) {
       api.getCreditBalance()
         .then((b) => setCreditBalance(b.balance))
         .catch(() => setCreditBalance(null));
     }
-  }, [isClientMode]);
+  }, [isClientMode, profile]);
 
   useEffect(() => {
     loadJobs();
@@ -87,7 +87,7 @@ export function Jobs() {
     setIsLoading(true);
     try {
       const filters: { status?: string; serviceType?: string; perspective?: 'mine' | 'board' } = {
-        perspective: isClientMode ? 'mine' : 'board',
+        perspective: profile && isClientMode ? 'mine' : 'board',
       };
       if (activeTab !== 'all') filters.status = activeTab;
       if (selectedServiceType) filters.serviceType = selectedServiceType;
@@ -126,6 +126,10 @@ export function Jobs() {
   };
 
   const handleAccept = async (jobId: string) => {
+    if (!profile) {
+      navigate(`/login?next=/jobs/${jobId}`);
+      return;
+    }
     if (!canTaskerApply(profile, profile?.verificationExpiresAt)) {
       const st = getTaskerVerificationStatus(profile, profile?.verificationExpiresAt);
       addToast(VERIFICATION_HINTS[st], 'error');

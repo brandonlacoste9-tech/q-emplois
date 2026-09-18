@@ -77,21 +77,17 @@ function App() {
           <Route
             path="/jobs"
             element={
-              <ProtectedRoute>
-                <AppShell>
-                  <Jobs />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <Jobs />
+              </AppShell>
             }
           />
           <Route
             path="/jobs/:id"
             element={
-              <ProtectedRoute>
-                <AppShell>
-                  <JobDetail />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <JobDetail />
+              </AppShell>
             }
           />
           <Route

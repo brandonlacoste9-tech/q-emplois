@@ -16,6 +16,7 @@ import { ChatService } from '../chat/chat.service';
 
 import { geocodeQuebecAddress } from '../common/utils/geocode';
 import { publicPostalSector, sanitizePublicDescription } from '../common/utils/privacy';
+import { assertQuebecJobLocation } from '../common/utils/quebec';
 import { CreateTaskDto, DeclineTaskDto, ApplyTaskDto } from './dto/job.dto';
 import { TaskStatus, TaskApplicationStatus, CreditTransactionType } from '@prisma/client';
 import { getPriceGuide, getAllPriceGuides } from '../common/constants/price-guides';
@@ -229,30 +230,40 @@ export class JobsService {
     return map[status];
   }
 
-  async list(userId: string, filters?: { status?: string; serviceType?: string; perspective?: string }) {
+  async list(
+    userId: string | null | undefined,
+    filters?: { status?: string; serviceType?: string; perspective?: string },
+  ) {
+    const viewerId = userId || '';
     const status = this.reverseStatus(filters?.status);
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { provider: true },
-    });
+    const user = viewerId
+      ? await this.prisma.user.findUnique({
+          where: { id: viewerId },
+          include: { provider: true },
+        })
+      : null;
     const provider = user?.provider;
-    const clientView = filters?.perspective === 'mine';
+    const clientView = Boolean(viewerId) && filters?.perspective === 'mine';
 
     const tasks = await this.prisma.task.findMany({
       where: clientView
         ? {
-            clientId: userId,
+            clientId: viewerId,
             ...(status ? { status } : {}),
             ...(filters?.serviceType ? { serviceType: filters.serviceType } : {}),
           }
         : {
-            ...(status ? { status } : {}),
             ...(filters?.serviceType ? { serviceType: filters.serviceType } : {}),
-            OR: [
-              { status: TaskStatus.open },
-              { taskerId: userId },
-              { clientId: userId },
-            ],
+            ...(viewerId
+              ? {
+                  ...(status ? { status } : {}),
+                  OR: [
+                    { status: TaskStatus.open },
+                    { taskerId: viewerId },
+                    { clientId: viewerId },
+                  ],
+                }
+              : { status: TaskStatus.open }),
           },
       include: {
         client: { 
@@ -269,11 +280,11 @@ export class JobsService {
     });
 
     let conversationByTaskId = new Map<string, string>();
-    if (!clientView && tasks.length > 0) {
+    if (viewerId && !clientView && tasks.length > 0) {
       try {
         const conversations = await this.prisma.conversation.findMany({
           where: {
-            providerId: userId,
+            providerId: viewerId,
             taskId: { in: tasks.map((t) => t.id) },
           },
           select: { taskId: true, status: true },
@@ -287,13 +298,13 @@ export class JobsService {
     }
 
     let results = tasks.map((t) =>
-      this.mapTask(t, provider, userId, conversationByTaskId.get(t.id) ?? null),
+      this.mapTask(t, provider, viewerId, conversationByTaskId.get(t.id) ?? null),
     );
 
     if (!clientView && provider) {
       results = results.filter((job) => {
         if (job.status !== 'pending') return true;
-        if (job.clientId === userId) return true;
+        if (job.clientId === viewerId) return true;
         if (provider.serviceTypes?.length && !provider.serviceTypes.includes(job.serviceType)) {
           return false;
         }
@@ -320,11 +331,14 @@ export class JobsService {
     return results;
   }
 
-  async getById(id: string, userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { provider: true },
-    });
+  async getById(id: string, userId: string | null | undefined) {
+    const viewerId = userId || '';
+    const user = viewerId
+      ? await this.prisma.user.findUnique({
+          where: { id: viewerId },
+          include: { provider: true },
+        })
+      : null;
     const task = await this.prisma.task.findUnique({
       where: { id },
       include: {
@@ -342,25 +356,28 @@ export class JobsService {
     if (!task) throw new NotFoundException('Tâche non trouvée.');
     if (
       task.status !== TaskStatus.open &&
-      task.clientId !== userId &&
-      task.taskerId !== userId
+      task.clientId !== viewerId &&
+      task.taskerId !== viewerId
     ) {
       throw new ForbiddenException('Accès refusé.');
     }
     let myConversationStatus: string | null = null;
-    try {
-      const myConversation = await this.prisma.conversation.findFirst({
-        where: { taskId: id, providerId: userId },
-        select: { status: true },
-      });
-      myConversationStatus = myConversation?.status ?? null;
-    } catch {
-      // Messaging schema may not be migrated yet.
+    if (viewerId) {
+      try {
+        const myConversation = await this.prisma.conversation.findFirst({
+          where: { taskId: id, providerId: viewerId },
+          select: { status: true },
+        });
+        myConversationStatus = myConversation?.status ?? null;
+      } catch {
+        // Messaging schema may not be migrated yet.
+      }
     }
-    return this.mapTask(task, user?.provider, userId, myConversationStatus);
+    return this.mapTask(task, user?.provider, viewerId, myConversationStatus);
   }
 
   async create(clientId: string, dto: CreateTaskDto) {
+    assertQuebecJobLocation(dto.city, dto.postalCode);
     let locationLat = dto.locationLat;
     let locationLng = dto.locationLng;
     if (locationLat == null || locationLng == null) {

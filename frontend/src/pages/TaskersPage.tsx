@@ -11,6 +11,7 @@ import { Loader2, Search } from 'lucide-react';
 import { gold } from '../styles/design-tokens';
 
 const POPULAR: { service: ServiceType; label: string }[] = [
+  { service: 'deneigement', label: 'Déneigement' },
   { service: 'menage', label: 'Ménage' },
   { service: 'demenagement', label: 'Déménagement' },
   { service: 'montage_meubles', label: 'Montage' },

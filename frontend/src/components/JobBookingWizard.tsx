@@ -9,6 +9,7 @@ import { AddressAutocomplete } from './AddressAutocomplete';
 import { ImageUpload } from './ImageUpload';
 
 const SERVICE_TYPES: { type: ServiceType; emoji: string }[] = [
+  { type: 'deneigement', emoji: '❄️' },
   { type: 'menage', emoji: '🧹' },
   { type: 'demenagement', emoji: '📦' },
   { type: 'montage_meubles', emoji: '🔧' },

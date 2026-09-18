@@ -10,15 +10,15 @@ import { buildClientBookingHref, formatPriceGuideShort } from "../utils/booking"
 /* --- TRANSLATIONS --- */
 const T = {
   fr: {
-    nav: { find: "Trouver de l'aide", taskers: "Voir les travailleurs", become: "Offrir mes services", login: "Connexion", signup: "S'inscrire" },
+    nav: { find: "Jobs ouverts", taskers: "Travailleurs", become: "Offrir mes services", login: "Connexion", signup: "S'inscrire" },
     beta: {
-      strip: "Bêta ouverte — Montréal & Rive-Sud · Publier une tâche est gratuit",
+      strip: "Québec seulement — pas TaskRabbit. Français, $ CAD, votre quartier.",
       founding: "50 premiers travailleurs : 60 crédits gratuits + 20 % à vie",
       joinTasker: "Devenir travailleur",
       postTask: "Publier une tâche",
     },
     paths: {
-      title: "Deux chemins, un marché local",
+      title: "Un marché québécois, deux portes",
       clientTitle: "J'ai besoin d'aide",
       clientDesc: "Publiez en 3 minutes. Des travailleurs postulent — vous choisissez. Paiement en ligne optionnel (Stripe) ou direct.",
       clientCta: "Publier gratuitement",
@@ -27,13 +27,13 @@ const T = {
       taskerCta: "Offrir mes services",
     },
     hero: {
-      badge: "Le marché de services local du Québec",
-      h1: "De l'aide près de chez vous, en quelques clics.",
-      sub: "Déneigement, déménagement, montage de meubles, ménage. Des Québécois vérifiés, un prix clair — vous choisissez votre travailleur parmi les candidats.",
+      badge: "Québec seulement — pas TaskRabbit",
+      h1: "Une job dans ton quartier. Pas une app américaine.",
+      sub: "Déneigement ce soir, ménage du 3½, montage IKEA, déménagement d'escalier. En français, en dollars, avec un voisin — pas un réseau californien.",
       ph: "De quoi avez-vous besoin ? (ex. déneigement)",
       cta: "Trouver un pro",
-      publishFree: "Publier gratuitement — sans compte",
-      city: "Pointe-Claire · Montréal · Rive-Sud",
+      publishFree: "Publier une job — c'est gratuit",
+      city: "Montréal · Québec · Laval · Longueuil · Gatineau · Sherbrooke",
     },
     trust: {
       title: "Conçu pour le Québec, fait pour la confiance",
@@ -48,7 +48,7 @@ const T = {
       title: "Nos services les plus demandés",
       priceFrom: "Typique",
       items: [
-        { icon: "❄️", name: "Déneigement", desc: "Entrées, balcons, escaliers — avant la tempête.", service: "nettoyage", need: "Déneigement" },
+        { icon: "❄️", name: "Déneigement", desc: "Entrées, balcons, escaliers — avant la tempête.", service: "deneigement", need: "Déneigement" },
         { icon: "📦", name: "Déménagement & transport", desc: "Aide au déménagement, portage, livraison.", service: "demenagement", need: "Déménagement" },
         { icon: "🔧", name: "Montage & petits travaux", desc: "Montage de meubles, fixations, réparations.", service: "montage_meubles", need: "Montage de meubles" },
         { icon: "🧹", name: "Ménage & entretien", desc: "Ménage résidentiel, après-déménagement.", service: "menage", need: "Ménage" },
@@ -99,9 +99,9 @@ const T = {
     },
   },
   en: {
-    nav: { find: "Find help", taskers: "Browse taskers", become: "Offer my services", login: "Log in", signup: "Sign up" },
+    nav: { find: "Open jobs", taskers: "Workers", become: "Offer my services", login: "Log in", signup: "Sign up" },
     beta: {
-      strip: "Open beta — Montreal & South Shore · Posting a task is free",
+      strip: "Québec only — not TaskRabbit. French, CAD, your neighbourhood.",
       founding: "First 50 taskers: 60 free credits + 20% lifetime off packs",
       joinTasker: "Become a tasker",
       postTask: "Post a task",
@@ -116,13 +116,13 @@ const T = {
       taskerCta: "Offer my services",
     },
     hero: {
-      badge: "Québec's local services marketplace",
-      h1: "Trusted local help, just a few clicks away.",
-      sub: "Snow removal, moving, furniture assembly, cleaning. Verified Quebecers, clear pricing — you choose your tasker from applicants.",
+      badge: "Québec only — not TaskRabbit",
+      h1: "A job on your street. Not a California app.",
+      sub: "Snow tonight, a 3½ clean, IKEA build, a walk-up move. In French, in dollars, from someone nearby.",
       ph: "What do you need? (e.g. snow removal)",
       cta: "Find a pro",
-      publishFree: "Post for free — no account needed",
-      city: "Pointe-Claire · Montreal · South Shore",
+      publishFree: "Post a job — it's free",
+      city: "Montreal · Québec City · Laval · Longueuil · Gatineau · Sherbrooke",
     },
     trust: {
       title: "Built for Québec, made for trust",
@@ -137,7 +137,7 @@ const T = {
       title: "Our most-requested services",
       priceFrom: "Typical",
       items: [
-        { icon: "❄️", name: "Snow removal", desc: "Driveways, balconies, stairs — before the storm.", service: "nettoyage", need: "Snow removal" },
+        { icon: "❄️", name: "Snow removal", desc: "Driveways, balconies, stairs — before the storm.", service: "deneigement", need: "Snow removal" },
         { icon: "📦", name: "Moving & transport", desc: "Moving help, lifting, delivery.", service: "demenagement", need: "Moving help" },
         { icon: "🔧", name: "Assembly & small jobs", desc: "Furniture assembly, mounting, repairs.", service: "montage_meubles", need: "Furniture assembly" },
         { icon: "🧹", name: "Cleaning & upkeep", desc: "Home cleaning, move-out cleaning.", service: "menage", need: "Home cleaning" },
@@ -225,8 +225,8 @@ export function LandingPage() {
   const seoContent = {
     fr: {
       title: "Québec emplois | Déneigement, déménagement & aide à domicile au Québec",
-      description: "Trouvez de l'aide près de chez vous : déneigement, déménagement, montage de meubles, ménage. Travailleurs vérifiés, prix clair et paiement en ligne optionnel (Stripe). Pointe-Claire, Montréal, Rive-Sud.",
-      keywords: "déneigement montréal, déneigement pointe-claire, aide déménagement québec, montage meubles, ménage résidentiel, nettoyage de cour, débarras, aide à domicile, services à domicile québec, travailleurs vérifiés, taskrabbit québec, marché de services local, manutention, aide aînés"
+      description: "Le marché de jobs du Québec. Déneigement, ménage, montage, déménagement. En français, en dollars, dans votre quartier — pas TaskRabbit.",
+      keywords: "jobs québec, déneigement montréal, ménage 3½, montage IKEA, déménagement escalier, workers québec, RBQ, Laval, Gatineau, Longueuil, alternative taskrabbit québec"
     },
     en: {
       title: "Québec emplois | Snow removal, moving & home help in Québec",
@@ -420,7 +420,7 @@ export function LandingPage() {
           </Link>
           {/* Desktop links */}
           <div className="body-f nav-hide-sm" style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14 }}>
-            <Link to="/aide" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.find}</Link>
+            <Link to="/jobs" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.find}</Link>
             <Link to="/taskers" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.taskers}</Link>
             <Link to="/recrute" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.become}</Link>
             <Link to="/login" className="nav-link" style={{ color: "#D9B38C" }}>{t.nav.login}</Link>
@@ -626,6 +626,38 @@ export function LandingPage() {
                 {t.paths.taskerCta}
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="leather" style={{ padding: "28px 24px 8px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div className="stitch-box" style={{ padding: "28px 24px", background: "rgba(184,123,68,0.10)" }}>
+            <p className="serif cream-hi" style={{ fontSize: "clamp(1.2rem, 3vw, 1.6rem)", fontWeight: 800, margin: "0 0 10px" }}>
+              {lang === "fr" ? "TaskRabbit n’est pas d’ici. Nous, oui." : "TaskRabbit isn’t from here. We are."}
+            </p>
+            <p className="body-f muted" style={{ fontSize: 15, lineHeight: 1.6, margin: 0 }}>
+              {lang === "fr"
+                ? "Pas d’app US traduite à la va-vite. Prix en dollars canadiens. Déneigement, 3½, RBQ, Loi 25. Montréal, Québec, Laval, Gatineau — pas Toronto."
+                : "Not a US app with a French toggle. Prices in Canadian dollars. Snow, walk-ups, RBQ, Law 25. Montreal, Québec City, Laval, Gatineau — not Toronto."}
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
+              {(lang === "fr"
+                ? ["Québec seulement", "Français d’abord", "$ CAD", "Déneigement", "RBQ", "Loi 25"]
+                : ["Québec only", "French first", "CAD $", "Snow removal", "RBQ", "Law 25"]
+              ).map((chip) => (
+                <span key={chip} className="body-f" style={{
+                  fontSize: 12, letterSpacing: "0.04em",
+                  border: "1px dashed rgba(217,179,140,0.4)",
+                  borderRadius: 999, padding: "6px 12px", color: "#E8CDB0",
+                }}>{chip}</span>
+              ))}
+            </div>
+            <p style={{ marginTop: 18 }}>
+              <Link to="/jobs" className="gold-btn" style={{ padding: "10px 18px", fontSize: 14, textDecoration: "none" }}>
+                {lang === "fr" ? "Voir les jobs ouverts" : "See open jobs"}
+              </Link>
+            </p>
           </div>
         </div>
       </section>

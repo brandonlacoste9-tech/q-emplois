@@ -18,6 +18,8 @@ export type DemoJobTemplate = {
 export const DEMO_JOB_ROTATIONS: DemoJobTemplate[][] = [
   // Set A — spring / general home services
   [
+    { title: 'Déneigement entrée Rosemont', description: 'Pelleter entrée, balcon et escalier avant 8h. Pelle sur place.', serviceType: 'deneigement', address: '1230 Rue Beaubien E', city: 'Montréal', postalCode: 'H2S 1T7', price: 55 },
+    { title: 'Déneigement stationnement Laval', description: '2 places + trottoir, sel fourni.', serviceType: 'deneigement', address: '1800 Rue Provost', city: 'Laval', postalCode: 'H7S 1X8', price: 70 },
     { title: 'Ménage printemps 3½', description: 'Nettoyage complet d\'un 3½ à Rosemont.', serviceType: 'menage', address: '1230 Rue Beaubien E', city: 'Montréal', postalCode: 'H2S 1T7', price: 120 },
     { title: 'Déménagement studio', description: 'Aide pour déménager un studio (2e étage sans ascenseur).', serviceType: 'demenagement', address: '4500 Rue Saint-Denis', city: 'Montréal', postalCode: 'H2J 2L3', price: 180 },
     { title: 'Montage IKEA', description: 'Montage d\'un lit et d\'une commode IKEA.', serviceType: 'montage_meubles', address: '7890 Boul. Décarie', city: 'Montréal', postalCode: 'H4P 1H5', price: 95 },
@@ -60,9 +62,7 @@ export const DEMO_JOB_ROTATIONS: DemoJobTemplate[][] = [
     { title: 'Aide préparation fête', description: 'Installation tables, chaises et déco cour.', serviceType: 'manutention', address: '5200 Boul. Saint-Laurent', city: 'Montréal', postalCode: 'H2T 1S5', price: 90 },
     { title: 'Courses semaine famille', description: 'Épicerie pour 4 personnes, livraison.', serviceType: 'coursier', address: '1900 Rue Atateken', city: 'Montréal', postalCode: 'H2L 3L8', price: 40 },
   ],
-].map((set) =>
-  set.filter((t) => !/déneigement|deneigement|snow removal/i.test(t.title)),
-);
+];
 
 export const DEMO_ROTATION_EPOCH = new Date('2026-01-01T05:00:00-05:00');
 

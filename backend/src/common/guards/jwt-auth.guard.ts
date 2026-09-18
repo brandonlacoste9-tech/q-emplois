@@ -19,27 +19,47 @@ export class JwtAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true;
-
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
+
+    if (isPublic) {
+      if (token) {
+        await this.attachUser(request, token, false);
+      }
+      return true;
+    }
 
     if (!token) {
       throw new UnauthorizedException('Token manquant. Veuillez vous connecter.');
     }
 
+    const ok = await this.attachUser(request, token, true);
+    if (!ok) {
+      throw new UnauthorizedException('Token invalide ou expiré. Veuillez vous reconnecter.');
+    }
+    return true;
+  }
+
+  private async attachUser(
+    request: any,
+    token: string,
+    strict: boolean,
+  ): Promise<boolean> {
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get('JWT_SECRET'),
       });
-      
+
       const account = await this.prisma.user.findUnique({
         where: { id: payload.sub },
         select: { id: true, deletedAt: true, suspendedAt: true },
       });
 
       if (!account || account.deletedAt || account.suspendedAt) {
-        throw new UnauthorizedException('Compte indisponible. Veuillez vous reconnecter.');
+        if (strict) {
+          throw new UnauthorizedException('Compte indisponible. Veuillez vous reconnecter.');
+        }
+        return false;
       }
 
       request.user = {
@@ -47,10 +67,13 @@ export class JwtAuthGuard implements CanActivate {
         email: payload.email,
         role: payload.role,
       };
-
       return true;
     } catch (error) {
-      throw new UnauthorizedException('Token invalide ou expiré. Veuillez vous reconnecter.');
+      if (strict && error instanceof UnauthorizedException) throw error;
+      if (strict) {
+        throw new UnauthorizedException('Token invalide ou expiré. Veuillez vous reconnecter.');
+      }
+      return false;
     }
   }
 

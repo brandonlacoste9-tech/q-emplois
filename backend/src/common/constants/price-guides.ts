@@ -29,6 +29,7 @@ const BASE_GUIDES: Record<string, PriceGuideRange> = {
   menage: { min: 49, max: 129, unit: 'job' },
   montage_meubles: { min: 45, max: 99, unit: 'job' },
   nettoyage: { min: 49, max: 149, unit: 'job' },
+  deneigement: { min: 45, max: 120, unit: 'job', note: 'Entrée, balcon, escaliers — avant la tempête' },
   jardinage: { min: 39, max: 89, unit: 'hour' },
   livraison: { min: 25, max: 65, unit: 'job' },
   coursier: { min: 20, max: 55, unit: 'job' },

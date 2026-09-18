@@ -48,6 +48,7 @@ export type ServiceType =
   | 'demenagement'
   | 'montage_meubles'
   | 'nettoyage'
+  | 'deneigement'
   // 🚚 Livraison & Transport
   | 'livraison'
   | 'coursier'
@@ -99,6 +100,7 @@ export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
   demenagement: 'Déménagement',
   montage_meubles: 'Montage de meubles',
   nettoyage: 'Nettoyage professionnel',
+  deneigement: 'Déneigement',
   // Livraison & Transport
   livraison: 'Livraison',
   coursier: 'Coursier',
