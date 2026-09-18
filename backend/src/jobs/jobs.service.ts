@@ -70,12 +70,12 @@ export class JobsService {
         'Complétez votre profil travailleur et téléversez une pièce d\'identité pour postuler.',
       );
     }
-    if (!provider.licenseDocumentUrl) {
-      throw new BadRequestException(
-        'Téléversez une pièce d\'identité sur votre profil avant de postuler.',
-      );
-    }
     if (!provider.isVerified) {
+      if (!provider.licenseDocumentUrl) {
+        throw new BadRequestException(
+          'Téléversez une pièce d\'identité sur votre profil avant de postuler.',
+        );
+      }
       throw new BadRequestException(
         'Votre profil est en cours de vérification. Vous pourrez postuler une fois approuvé.',
       );

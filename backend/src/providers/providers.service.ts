@@ -158,21 +158,18 @@ export class ProvidersService {
   }
 
   async search(serviceType?: string, city?: string, postalCode?: string, verifiedOnly?: boolean) {
+    const now = new Date();
     const providers = await this.prisma.provider.findMany({
       where: {
-        // Include all providers except those with expired verification
-        NOT: {
-          isVerified: true,
-          verificationExpiresAt: { lte: new Date() },
-        },
+        // Keep unverified + verified-not-expired. Prisma `NOT { a, b }` was
+        // dropping every verified row (compound NOT applied per field).
+        OR: [
+          { isVerified: false },
+          { verificationExpiresAt: null },
+          { verificationExpiresAt: { gt: now } },
+        ],
         ...(verifiedOnly ? { isVerified: true } : {}),
-        serviceTypes: { isEmpty: false },
         ...(serviceType ? { serviceTypes: { has: serviceType } } : {}),
-        ...(city
-          ? {
-              locationAddress: { contains: city, mode: 'insensitive' as const },
-            }
-          : {}),
       },
       include: {
         user: {

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { User, TradesmanProfile, ServiceType } from '../types';
 import { api } from '../services/api';
 import { socketService } from '../services/socket';
+import { PUBLIC_API_URL } from '../utils/siteConfig';
 
 export type AppMode = 'client' | 'tasker';
 const MODE_STORAGE_KEY = 'qemplois_mode';
@@ -90,10 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const token = localStorage.getItem('token');
       if (token && !background) {
-        socketService.connect(token, (() => {
-          const url = import.meta.env.VITE_API_URL as string | undefined;
-          return url && !url.includes('onrender.com') ? url : 'https://q-emplois-api-production-f1a6.up.railway.app/api/v1';
-        })());
+        socketService.connect(token, PUBLIC_API_URL);
       }
       return profileData;
     } catch (error) {
